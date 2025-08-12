@@ -1,39 +1,46 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkles, ArrowRight, Heart, Users, Building2 } from 'lucide-react'
-import { useToast } from '@/hooks/useToast'
-import { handleButtonClick } from '@/api/home'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Sparkles, ArrowRight, Heart, Users, Building2 } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
+import { handleButtonClick } from "@/api/home";
 
 export function Home() {
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handlePinkButtonClick = async () => {
-    console.log('Pink button clicked - starting interaction')
-    setIsLoading(true)
-    
+    console.log("Pink button clicked - starting interaction");
+    setIsLoading(true);
+
     try {
-      const response = await handleButtonClick({ action: 'pink_button_click' })
-      console.log('Button click response:', response)
-      
+      const response = await handleButtonClick({ action: "pink_button_click" });
+      console.log("Button click response:", response);
+
       toast({
         title: "Success!",
         description: "Pink button clicked successfully!",
         duration: 3000,
-      })
+      });
     } catch (error) {
-      console.error('Error handling button click:', error)
+      console.error("Error handling button click:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
         duration: 3000,
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
@@ -46,15 +53,16 @@ export function Home() {
               Plataforma para ONGs
             </span>
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-            Connecta.Ongs
+            Rede Feminina de Combate ao Câncer
           </h1>
-          
+
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Somos uma plataforma voltada para divulgar produtos e doações de projetos sem fins lucrativos. 
-            Conectamos ONGs com pessoas que querem fazer a diferença, começando com a Casa de Apoio às Mulheres 
-            com Câncer e expandindo para outras organizações que transformam vidas.
+            Somos uma plataforma voltada para divulgar produtos e doações de
+            projetos sem fins lucrativos. Conectamos ONGs com pessoas que querem
+            fazer a diferença, começando com a Casa de Apoio às Mulheres com
+            Câncer e expandindo para outras organizações que transformam vidas.
           </p>
         </div>
 
@@ -66,10 +74,11 @@ export function Home() {
               Faça Parte da Mudança
             </CardTitle>
             <CardDescription className="text-base">
-              Explore nossa plataforma e descubra como você pode contribuir com causas importantes
+              Explore nossa plataforma e descubra como você pode contribuir com
+              causas importantes
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="flex flex-col items-center space-y-8 pb-12">
             {/* Main Pink Button */}
             <Button
@@ -91,7 +100,7 @@ export function Home() {
                   </>
                 )}
               </div>
-              
+
               {/* Hover effect overlay */}
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-300/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Button>
@@ -158,12 +167,13 @@ export function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground text-center">
-                Conectamos doadores, voluntários e organizações em uma só plataforma
+                Conectamos doadores, voluntários e organizações em uma só
+                plataforma
               </p>
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }
