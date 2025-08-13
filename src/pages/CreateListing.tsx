@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, X, DollarSign, MapPin, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/useToast'
-import { createProduct } from '@/api/marketplace'
+import { createProduct } from '@/api/store'
 
 export function CreateListing() {
   const [isLoading, setIsLoading] = useState(false)
