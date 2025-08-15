@@ -35,6 +35,33 @@ const mockProducts: Product[] = [
     category: 'Calçados',
     images: ['/img/shoes/havaianas-slipper-cozy.jpg'],
     stock: 12,
+  },
+  {
+    _id: '4',
+    name: 'Jogo Americano Redondo Vermelho',
+    description: 'Um jogo americano é um item essencial para quem gosta de receber bem. Ele protege a mesa e ainda traz um toque especial à decoração.',
+    price: 29.90,
+    category: 'Decoração',
+    images: ['/img/shoes/jogo_americano.jpg'],
+    stock: 12,
+  },
+  {
+    _id: '5',
+    name: 'Jogo Americano Redondo Cinza',
+    description: 'Um jogo americano é um item essencial para quem gosta de receber bem. Ele protege a mesa e ainda traz um toque especial à decoração.',
+    price: 29.90,
+    category: 'Decoração',
+    images: ['/img/shoes/jogo_americano_2.jpg'],
+    stock: 12,
+  },
+  {
+    _id: '6',
+    name: 'Brinco Artesanal',
+    description: 'Item feito à mão, com design exclusivo e materiais de alta qualidade.',
+    price: 9.90,
+    category: 'Decoração',
+    images: ['/img/shoes/brincos.jpg'],
+    stock: 12,
   }
 ];
 

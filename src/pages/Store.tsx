@@ -83,7 +83,7 @@ export function Store() {
             Nossos Produtos
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-            Calçados que apoiam uma grande causa! 👠
+            Produtos que apoiam uma grande causa! 
           </p>
         </div>
 
