@@ -62,6 +62,15 @@ const mockProducts: Product[] = [
     category: 'Decoração',
     images: ['/img/shoes/brincos.jpg'],
     stock: 12,
+  },
+  {
+    _id: '7',
+    name: 'Boneca de Crochê Artesanal',
+    description: 'Item feito à mão, pelos nossos voluntários.',
+    price: 39.90,
+    category: 'Decoração',
+    images: ['/img/shoes/amigurumi-croche-menina.jpg'],
+    stock: 12,
   }
 ];
 
