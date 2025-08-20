@@ -1,52 +1,68 @@
 // Load environment variables
 require("dotenv").config();
-const mongoose = require("mongoose");
 const express = require("express");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
-const basicRoutes = require("./routes/index");
-const { connectDB } = require("./config/database");
 const cors = require("cors");
-
-// if (!process.env.DATABASE_URL) {
-//   console.error("Error: DATABASE_URL variables in .env missing.");
-//   process.exit(-1);
-// }
+const { connectDB } = require("./config/database");
+const AppFactory = require("./src/main/factories");
 
 const app = express();
 const port = process.env.PORT || 3000;
+
 // Pretty-print JSON responses
 app.enable("json spaces");
 // We want to be consistent with URL paths, so we enable strict routing
 app.enable("strict routing");
 
-app.use(cors({}));
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database connection
-// connectDB();
+connectDB();
 
+// Create factory and routes
+const appFactory = new AppFactory();
+
+// Routes
+app.use("/api/auth", appFactory.createAuthRoutes());
+app.use("/api", appFactory.createProductRoutes());
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Error handling
 app.on("error", (error) => {
   console.error(`Server error: ${error.message}`);
   console.error(error.stack);
 });
 
-// Basic Routes
-app.use(basicRoutes);
-
 // If no routes handled the request, it's a 404
 app.use((req, res, next) => {
-  res.status(404).send("Page not found.");
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
-// Error handling
+// Global error handling middleware
 app.use((err, req, res, next) => {
   console.error(`Unhandled application error: ${err.message}`);
   console.error(err.stack);
-  res.status(500).send("There was an error serving your request.");
+
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+  });
 });
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+  console.log(`Health check: http://localhost:${port}/health`);
 });
