@@ -8,6 +8,11 @@
     "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx pretty-quick --staged ng lint ng test",
+      "pre-push": "ng build --aot true"
+    },  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -31,5 +36,6 @@
     "pino": "^9.5.0",
     "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5"
-  }
+  },
+  "prepare": "cd .. && husky install client/.husky"
 }
