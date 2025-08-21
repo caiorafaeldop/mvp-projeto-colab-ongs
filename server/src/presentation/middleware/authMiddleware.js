@@ -38,3 +38,4 @@ module.exports = {
   authMiddleware,
   organizationMiddleware,
 };
+

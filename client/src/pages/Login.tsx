@@ -1,66 +1,82 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useToast } from '@/hooks/useToast'
-import { loginUser, registerUser } from '@/api/auth'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/useToast";
+import { loginUser, registerUser } from "@/api/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Login() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [loginData, setLoginData] = useState({ email: '', password: '' })
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    userType: 'buyer'
-  })
-  const navigate = useNavigate()
-  const { toast } = useToast()
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    userType: "buyer",
+  });
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await loginUser(loginData)
+      const response = await loginUser(loginData);
+      login(response.user);
       toast({
         title: "Sucesso!",
         description: "Login realizado com sucesso!",
-      })
-      // Redirect based on user type or to marketplace
-      navigate('/marketplace')
+      });
+      // Redirect based on user type or to store
+      navigate("/loja");
     } catch (error) {
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao fazer login",
+        description:
+          error instanceof Error ? error.message : "Erro ao fazer login",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRegister = async (e) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (registerData.password !== registerData.confirmPassword) {
       toast({
         title: "Erro",
         description: "As senhas não coincidem",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const response = await registerUser({
@@ -68,23 +84,25 @@ export function Login() {
         email: registerData.email,
         password: registerData.password,
         phone: registerData.phone,
-        userType: registerData.userType
-      })
+        userType: registerData.userType,
+      });
+      login(response.user);
       toast({
         title: "Sucesso!",
         description: "Conta criada com sucesso!",
-      })
-      navigate('/marketplace')
+      });
+      navigate("/loja");
     } catch (error) {
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao criar conta",
+        description:
+          error instanceof Error ? error.message : "Erro ao criar conta",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
@@ -114,7 +132,9 @@ export function Login() {
                         type="email"
                         placeholder="seu@email.com"
                         value={loginData.email}
-                        onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                        onChange={(e) =>
+                          setLoginData({ ...loginData, email: e.target.value })
+                        }
                         className="pl-10"
                         required
                       />
@@ -130,7 +150,12 @@ export function Login() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Sua senha"
                         value={loginData.password}
-                        onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                        onChange={(e) =>
+                          setLoginData({
+                            ...loginData,
+                            password: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10"
                         required
                       />
@@ -150,8 +175,8 @@ export function Login() {
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                     disabled={isLoading}
                   >
@@ -171,7 +196,12 @@ export function Login() {
                         type="text"
                         placeholder="Seu nome completo"
                         value={registerData.name}
-                        onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            name: e.target.value,
+                          })
+                        }
                         className="pl-10"
                         required
                       />
@@ -187,7 +217,12 @@ export function Login() {
                         type="email"
                         placeholder="seu@email.com"
                         value={registerData.email}
-                        onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            email: e.target.value,
+                          })
+                        }
                         className="pl-10"
                         required
                       />
@@ -203,7 +238,12 @@ export function Login() {
                         type="tel"
                         placeholder="(11) 99999-9999"
                         value={registerData.phone}
-                        onChange={(e) => setRegisterData({...registerData, phone: e.target.value})}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            phone: e.target.value,
+                          })
+                        }
                         className="pl-10"
                         required
                       />
@@ -212,7 +252,12 @@ export function Login() {
 
                   <div className="space-y-2">
                     <Label htmlFor="userType">Tipo de usuário</Label>
-                    <Select value={registerData.userType} onValueChange={(value) => setRegisterData({...registerData, userType: value})}>
+                    <Select
+                      value={registerData.userType}
+                      onValueChange={(value) =>
+                        setRegisterData({ ...registerData, userType: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -232,7 +277,12 @@ export function Login() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Sua senha"
                         value={registerData.password}
-                        onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            password: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10"
                         required
                       />
@@ -261,15 +311,20 @@ export function Login() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Confirme sua senha"
                         value={registerData.confirmPassword}
-                        onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                        onChange={(e) =>
+                          setRegisterData({
+                            ...registerData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
                         className="pl-10"
                         required
                       />
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
                     disabled={isLoading}
                   >
@@ -282,5 +337,5 @@ export function Login() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

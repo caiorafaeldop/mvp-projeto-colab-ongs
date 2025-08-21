@@ -21,3 +21,4 @@ const createAuthRoutes = (authService) => {
 };
 
 module.exports = createAuthRoutes;
+

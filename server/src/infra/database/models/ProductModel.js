@@ -48,3 +48,4 @@ productSchema.index({ organizationId: 1 });
 productSchema.index({ isAvailable: 1 });
 
 module.exports = mongoose.model("Product", productSchema);
+

@@ -33,3 +33,4 @@ class IProductRepository {
 }
 
 module.exports = IProductRepository;
+

@@ -111,3 +111,4 @@ class MongoProductRepository extends IProductRepository {
 }
 
 module.exports = MongoProductRepository;
+
