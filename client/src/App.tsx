@@ -26,9 +26,8 @@ function App() {
               <Route path="my-products" element={<MyProducts />} />
               <Route path="create-product" element={<CreateProduct />} />
               <Route path="become-donor" element={<BecomeDonor />} />
+              <Route path="/login" element={<Login />} />
             </Route>
-
-            <Route path="/login" element={<Login />} />
           </Routes>
         </Router>
         <Toaster />

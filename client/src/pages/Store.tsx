@@ -30,14 +30,15 @@ export function Store() {
     { value: "Acessórios", label: "Acessórios" },
   ];
 
+  // Load products on mount
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setIsLoading(true);
         const response = await getProducts();
         if (response.success) {
-          setProducts(response.products);
-          setFilteredProducts(response.products);
+          setProducts(response.products || []); // Ensure products is always an array
+          setFilteredProducts(response.products || []);
         } else {
           throw new Error("Erro ao carregar produtos");
         }
@@ -47,7 +48,7 @@ export function Store() {
           description:
             error instanceof Error
               ? error.message
-              : "Não foi possível buscar os produtos. Tente novamente mais tarde.",
+              : "Não foi possível buscarЛАЙФХАК buscar os produtos. Tente novamente mais tarde.",
           variant: "destructive",
         });
       } finally {
@@ -57,51 +58,41 @@ export function Store() {
     loadProducts();
   }, [toast]);
 
-  // Debounced search
+  // Combined search and category filtering
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
+      let results: Product[] = products || []; // Ensure results is always an array
+
+      // Apply search
       if (searchTerm.trim()) {
         setIsSearching(true);
         try {
           const response = await searchProducts(searchTerm);
           if (response.success) {
-            setFilteredProducts(response.products);
+            results = response.products || [];
           } else {
-            setFilteredProducts([]);
+            results = [];
           }
         } catch (error) {
           console.error("Erro na busca:", error);
-          setFilteredProducts([]);
+          results = [];
         } finally {
           setIsSearching(false);
         }
-      } else {
-        // If no search term, filter by category only
-        let results = products;
-        if (selectedCategory !== "all") {
-          results = results.filter(
-            (product) => product.category === selectedCategory
-          );
-        }
-        setFilteredProducts(results);
       }
-    }, 500);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, products, selectedCategory]);
-
-  // Filter by category when no search term
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      let results = products;
+      // Apply category filter
       if (selectedCategory !== "all") {
         results = results.filter(
           (product) => product.category === selectedCategory
         );
       }
+
       setFilteredProducts(results);
-    }
-  }, [selectedCategory, products, searchTerm]);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, selectedCategory, products]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -171,7 +162,7 @@ export function Store() {
             <ProductSkeleton key={i} />
           ))}
         </div>
-      ) : filteredProducts?.length > 0 ? (
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <Link to={`/produto/${product._id}`} key={product._id}>

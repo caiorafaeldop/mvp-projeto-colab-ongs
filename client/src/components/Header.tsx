@@ -56,7 +56,7 @@ export function Header() {
             className="text-muted-foreground transition-colors hover:text-foreground"
             style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
           >
-            Loja
+            Bazar
           </NavLink>
           <NavLink
             to="/donations"
