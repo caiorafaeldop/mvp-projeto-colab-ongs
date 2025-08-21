@@ -10,6 +10,7 @@ import { Login } from "./pages/Login";
 import { MyProducts } from "./pages/MyProducts";
 import { CreateProduct } from "./pages/CreateProduct";
 import { AuthProvider } from "./contexts/AuthContext";
+import { BecomeDonor } from "./pages/BecomeDonor";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="donations" element={<Donations />} />
               <Route path="my-products" element={<MyProducts />} />
               <Route path="create-product" element={<CreateProduct />} />
+              <Route path="become-donor" element={<BecomeDonor />} />
             </Route>
 
             <Route path="/login" element={<Login />} />
