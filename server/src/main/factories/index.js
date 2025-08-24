@@ -1,9 +1,10 @@
-const MongoUserRepository = require("../../data/repositories/MongoUserRepository");
-const MongoProductRepository = require("../../data/repositories/MongoProductRepository");
+const MongoUserRepository = require("../../infra/repositories/MongoUserRepository");
+const MongoProductRepository = require("../../infra/repositories/MongoProductRepository");
 const JwtAuthService = require("../../infra/services/JwtAuthService");
 const ProductService = require("../../domain/services/ProductService");
 const createAuthRoutes = require("../../presentation/routes/authRoutes");
 const createProductRoutes = require("../../presentation/routes/productRoutes");
+const bcrypt = require("bcrypt");
 
 class AppFactory {
   constructor() {
@@ -58,7 +59,23 @@ class AppFactory {
     const authService = this.createAuthService();
     return createProductRoutes(productService, authService);
   }
+
+  async comparePassword(password, hashedPassword) {
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+    if (!isMatch) {
+      throw new Error("Login failed: Invalid credentials");
+    }
+  }
+
+  async jwtLogin(user, password) {
+    console.log("[JWT LOGIN] User found:", user);
+    console.log("[JWT LOGIN] Comparing password:", password, "with hash:", user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("[JWT LOGIN] Password match result:", isMatch);
+    if (!isMatch) {
+      throw new Error("Login failed: Invalid credentials");
+    }
+  }
 }
 
 module.exports = AppFactory;
-

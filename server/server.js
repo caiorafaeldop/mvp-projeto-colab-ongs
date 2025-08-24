@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./config/database");
 const AppFactory = require("./src/main/factories");
+const uploadRouter = require("./src/presentation/routes/UploadRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ const appFactory = new AppFactory();
 // Routes
 app.use("/api/auth", appFactory.createAuthRoutes());
 app.use("/api", appFactory.createProductRoutes());
+app.use("/api/upload", uploadRouter);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

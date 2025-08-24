@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "./api";
 
 export interface Product {
@@ -30,6 +31,21 @@ export interface UpdateProductData {
   category?: string;
   images?: string[];
   stock?: number;
+}
+
+export interface ApiProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category?: string;
+  stock?: number;
+  isAvailable?: boolean;
+  organizationId?: string;
+  organizationName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Description: Get all available products
@@ -73,10 +89,10 @@ export const searchProducts = async (
 
 // Description: Get product by ID
 // Endpoint: GET /api/products/:id
-// Response: { success: boolean, product: Product }
+// Response: { success: boolean, data: ApiProduct }
 export const getProductById = async (
   id: string
-): Promise<{ success: boolean; product: Product }> => {
+): Promise<{ success: boolean; data: ApiProduct }> => {
   try {
     const response = await api.get(`/api/products/${id}`);
     return response.data;

@@ -24,8 +24,21 @@ export function ProductDetail() {
       try {
         setIsLoading(true);
         const response = await getProductById(id);
-        if (response.success && response.product) {
-          setProduct(response.product);
+        if (response.success && response.data) {
+          const apiProduct = response.data;
+          setProduct({
+            _id: apiProduct.id,
+            images: [apiProduct.imageUrl],
+            name: apiProduct.name,
+            description: apiProduct.description,
+            price: apiProduct.price,
+            stock: apiProduct.stock ?? 1,
+            category: apiProduct.category || "Outros",
+            isActive: apiProduct.isAvailable,
+            organizationId: apiProduct.organizationId,
+            createdAt: apiProduct.createdAt,
+            updatedAt: apiProduct.updatedAt,
+          });
         } else {
           throw new Error("Produto não encontrado.");
         }

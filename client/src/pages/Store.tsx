@@ -37,8 +37,18 @@ export function Store() {
         setIsLoading(true);
         const response = await getProducts();
         if (response.success) {
-          setProducts(response.products || []); // Ensure products is always an array
-          setFilteredProducts(response.products || []);
+          // Transforma os dados para o formato esperado pelo frontend
+          const transformedProducts = (response.data || []).map(
+            (item: any) => ({
+              _id: item.id,
+              images: [item.imageUrl],
+              name: item.name,
+              category: item.category || "Outros", // fallback se não vier da API
+              price: item.price,
+            })
+          );
+          setProducts(transformedProducts);
+          setFilteredProducts(transformedProducts);
         } else {
           throw new Error("Erro ao carregar produtos");
         }
@@ -48,7 +58,7 @@ export function Store() {
           description:
             error instanceof Error
               ? error.message
-              : "Não foi possível buscarЛАЙФХАК buscar os produtos. Tente novamente mais tarde.",
+              : "Não foi possível buscar os produtos. Tente novamente mais tarde.",
           variant: "destructive",
         });
       } finally {
@@ -61,15 +71,21 @@ export function Store() {
   // Combined search and category filtering
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
-      let results: Product[] = products || []; // Ensure results is always an array
+      let results: Product[] = products || [];
 
-      // Apply search
+      // Aplica busca
       if (searchTerm.trim()) {
         setIsSearching(true);
         try {
           const response = await searchProducts(searchTerm);
           if (response.success) {
-            results = response.products || [];
+            results = (response.products || []).map((item: any) => ({
+              _id: item.id,
+              images: [item.imageUrl],
+              name: item.name,
+              category: item.category || "Outros",
+              price: item.price,
+            }));
           } else {
             results = [];
           }
@@ -81,7 +97,7 @@ export function Store() {
         }
       }
 
-      // Apply category filter
+      // Aplica filtro de categoria
       if (selectedCategory !== "all") {
         results = results.filter(
           (product) => product.category === selectedCategory
