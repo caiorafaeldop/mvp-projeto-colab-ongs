@@ -84,7 +84,7 @@ class JwtAuthService extends IAuthService {
 
       return {
         user: {
-          id: user.id,
+          id: user._id,
           name: user.name,
           email: user.email,
           userType: user.userType,
@@ -100,7 +100,7 @@ class JwtAuthService extends IAuthService {
   async generateToken(user) {
     try {
       const payload = {
-        id: user.id,
+        id: user._id,
         email: user.email,
         userType: user.userType,
       };
@@ -149,4 +149,3 @@ class JwtAuthService extends IAuthService {
 }
 
 module.exports = JwtAuthService;
-

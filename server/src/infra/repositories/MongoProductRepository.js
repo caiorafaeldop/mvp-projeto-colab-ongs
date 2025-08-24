@@ -1,5 +1,5 @@
 const IProductRepository = require("../../domain/repositories/IProductRepository");
-const ProductModel = require("../../infra/database/models/ProductModel");
+const ProductModel = require("../database/models/ProductModel");
 const Product = require("../../domain/entities/Product");
 
 class MongoProductRepository extends IProductRepository {
@@ -111,4 +111,3 @@ class MongoProductRepository extends IProductRepository {
 }
 
 module.exports = MongoProductRepository;
-

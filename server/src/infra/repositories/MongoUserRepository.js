@@ -1,5 +1,5 @@
 const IUserRepository = require("../../domain/repositories/IUserRepository");
-const UserModel = require("../../infra/database/models/UserModel");
+const UserModel = require("../database/models/UserModel");
 const User = require("../../domain/entities/User");
 
 class MongoUserRepository extends IUserRepository {
@@ -31,7 +31,10 @@ class MongoUserRepository extends IUserRepository {
 
   async findByEmail(email) {
     try {
-      const user = await UserModel.findOne({ email: email.toLowerCase() });
+      // Garante que o campo password venha do banco
+      const user = await UserModel.findOne({
+        email: email.toLowerCase(),
+      }).select("+password");
       return user ? this._mapToEntity(user) : null;
     } catch (error) {
       throw new Error(`Error finding user by email: ${error.message}`);
