@@ -1,3 +1,5 @@
+import api from "./api";
+
 export interface Product {
   _id: string;
   name: string;
@@ -5,88 +7,197 @@ export interface Product {
   price: number;
   category: string;
   images: string[];
-  stock: number; 
+  stock: number;
+  isActive?: boolean;
+  organizationId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-const mockProducts: Product[] = [
-  {
-    _id: '1',
-    name: 'Alpargatas Havaianas Mule Evolution II',
-    description: 'Em estilo casual e cheia de elegância, fica linda nos pés e remete a descontração do clima praiano mas também valoriza composições chiques e urbanas.',
-    price: 103.99,
-    category: 'Calçados',
-    images: ['/img/shoes/havaianas-mule-evolution.jpg'],
-    stock: 15,
-  },
-  {
-    _id: '2',
-    name: 'Alpargatas Havaianas Mule Clássica',
-    description: 'Prático, charmoso e confortável, o sapato tipo Mule, aberto na parte de trás, é daqueles que é só calçar e pronto, não tem complicação.',
-    price: 70.00,
-    category: 'Calçados',
-    images: ['/img/shoes/havaianas-mule-classic.jpg'],
-    stock: 8,
-  },
-  {
-    _id: '3',
-    name: 'Alpargatas Havaianas Slipper Cozy II',
-    description: 'Nossa slipper tipo mule é o calçado mais aconchegante (e estiloso) que você pode ter para os dias frios. Sinta-se caminhando nas nuvens!',
-    price: 144.49,
-    category: 'Calçados',
-    images: ['/img/shoes/havaianas-slipper-cozy.jpg'],
-    stock: 12,
-  },
-  {
-    _id: '4',
-    name: 'Jogo Americano Redondo Vermelho',
-    description: 'Um jogo americano é um item essencial para quem gosta de receber bem. Ele protege a mesa e ainda traz um toque especial à decoração.',
-    price: 29.90,
-    category: 'Decoração',
-    images: ['/img/shoes/jogo_americano.jpg'],
-    stock: 12,
-  },
-  {
-    _id: '5',
-    name: 'Jogo Americano Redondo Cinza',
-    description: 'Um jogo americano é um item essencial para quem gosta de receber bem. Ele protege a mesa e ainda traz um toque especial à decoração.',
-    price: 29.90,
-    category: 'Decoração',
-    images: ['/img/shoes/jogo_americano_2.jpg'],
-    stock: 12,
-  },
-  {
-    _id: '6',
-    name: 'Brinco Artesanal',
-    description: 'Item feito à mão, com design exclusivo e materiais de alta qualidade.',
-    price: 9.90,
-    category: 'Decoração',
-    images: ['/img/shoes/brincos.jpg'],
-    stock: 12,
-  },
-  {
-    _id: '7',
-    name: 'Boneca de Crochê Artesanal',
-    description: 'Item feito à mão, pelos nossos voluntários.',
-    price: 39.90,
-    category: 'Decoração',
-    images: ['/img/shoes/amigurumi-croche-menina.jpg'],
-    stock: 12,
-  }
-];
+export interface CreateProductData {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  images: string[];
+  stock: number;
+}
 
-export const getProducts = (): Promise<{ products: Product[] }> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ products: mockProducts });
-    }, 500);
-  });
+export interface UpdateProductData {
+  name?: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  images?: string[];
+  stock?: number;
+}
+
+// Description: Get all available products
+// Endpoint: GET /api/products
+// Response: { success: boolean, products: Product[] }
+export const getProducts = async (): Promise<{
+  success: boolean;
+  products: Product[];
+}> => {
+  try {
+    const response = await api.get("/api/products");
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao buscar produtos"
+    );
+  }
 };
 
-export const getProductById = (id: string): Promise<{ product: Product | undefined }> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const product = mockProducts.find(p => p._id === id);
-      resolve({ product });
-    }, 500);
-  });
+// Description: Search products by term
+// Endpoint: GET /api/products/search?q=termo
+// Response: { success: boolean, products: Product[] }
+export const searchProducts = async (
+  query: string
+): Promise<{ success: boolean; products: Product[] }> => {
+  try {
+    const response = await api.get(
+      `/api/products/search?q=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao buscar produtos"
+    );
+  }
+};
+
+// Description: Get product by ID
+// Endpoint: GET /api/products/:id
+// Response: { success: boolean, product: Product }
+export const getProductById = async (
+  id: string
+): Promise<{ success: boolean; product: Product }> => {
+  try {
+    const response = await api.get(`/api/products/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao buscar produto"
+    );
+  }
+};
+
+// Description: Get WhatsApp link for product
+// Endpoint: GET /api/products/:id/whatsapp?phone=numero
+// Response: { success: boolean, whatsappLink: string }
+export const getWhatsAppLink = async (
+  productId: string,
+  phone: string
+): Promise<{ success: boolean; whatsappLink: string }> => {
+  try {
+    const response = await api.get(
+      `/api/products/${productId}/whatsapp?phone=${encodeURIComponent(phone)}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao gerar link do WhatsApp"
+    );
+  }
+};
+
+// Description: Create new product (requires authentication)
+// Endpoint: POST /api/products
+// Request: CreateProductData
+// Response: { success: boolean, product: Product, message: string }
+export const createProduct = async (
+  data: CreateProductData
+): Promise<{ success: boolean; product: Product; message: string }> => {
+  try {
+    const response = await api.post("/api/products", data);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao criar produto"
+    );
+  }
+};
+
+// Description: Update product (requires authentication)
+// Endpoint: PUT /api/products/:id
+// Request: UpdateProductData
+// Response: { success: boolean, product: Product, message: string }
+export const updateProduct = async (
+  id: string,
+  data: UpdateProductData
+): Promise<{ success: boolean; product: Product; message: string }> => {
+  try {
+    const response = await api.put(`/api/products/${id}`, data);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao atualizar produto"
+    );
+  }
+};
+
+// Description: Delete product (requires authentication)
+// Endpoint: DELETE /api/products/:id
+// Response: { success: boolean, message: string }
+export const deleteProduct = async (
+  id: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.delete(`/api/products/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao deletar produto"
+    );
+  }
+};
+
+// Description: Toggle product availability (requires authentication)
+// Endpoint: PATCH /api/products/:id/toggle
+// Response: { success: boolean, product: Product, message: string }
+export const toggleProductAvailability = async (
+  id: string
+): Promise<{ success: boolean; product: Product; message: string }> => {
+  try {
+    const response = await api.patch(`/api/products/${id}/toggle`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao alterar disponibilidade do produto"
+    );
+  }
+};
+
+// Description: Get products by organization (requires authentication)
+// Endpoint: GET /api/my-products
+// Response: { success: boolean, products: Product[] }
+export const getMyProducts = async (): Promise<{
+  success: boolean;
+  products: Product[];
+}> => {
+  try {
+    const response = await api.get("/api/my-products");
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao buscar seus produtos"
+    );
+  }
 };

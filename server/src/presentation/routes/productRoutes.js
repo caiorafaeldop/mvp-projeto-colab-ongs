@@ -3,7 +3,7 @@ const ProductController = require("../controllers/ProductController");
 const {
   authMiddleware,
   organizationMiddleware,
-} = require("../middleware/authMiddleware");
+} = require("../middleware/AuthMiddleware");
 
 const createProductRoutes = (productService, authService) => {
   const router = express.Router();

@@ -7,24 +7,31 @@ import { Store } from "./pages/Store";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Donations } from "./pages/Donations";
 import { Login } from "./pages/Login";
+import { MyProducts } from "./pages/MyProducts";
+import { CreateProduct } from "./pages/CreateProduct";
+import { AuthProvider } from "./contexts/AuthContext";
+import { BecomeDonor } from "./pages/BecomeDonor";
 
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-      <Router>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="loja" element={<Store />} />
-            <Route path="produto/:id" element={<ProductDetail />} />
-            <Route path="donations" element={<Donations />} />
-          </Route>
-          
-          <Route path="/login" element={<Login />} />
-
-        </Routes>
-      </Router>
-      <Toaster />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="loja" element={<Store />} />
+              <Route path="produto/:id" element={<ProductDetail />} />
+              <Route path="donations" element={<Donations />} />
+              <Route path="my-products" element={<MyProducts />} />
+              <Route path="create-product" element={<CreateProduct />} />
+              <Route path="become-donor" element={<BecomeDonor />} />
+              <Route path="/login" element={<Login />} />
+            </Route>
+          </Routes>
+        </Router>
+        <Toaster />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

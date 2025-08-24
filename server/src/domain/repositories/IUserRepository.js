@@ -29,3 +29,4 @@ class IUserRepository {
 }
 
 module.exports = IUserRepository;
+
