@@ -9,10 +9,13 @@ class MongoProductRepository extends IProductRepository {
         name: product.name,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls,
         organizationId: product.organizationId,
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
+        category: product.category,
+        createdAt: product.createdAt || new Date(), // Explicitly set
+        updatedAt: product.updatedAt || new Date(), // Explicitly set
       };
 
       const savedProduct = await ProductModel.create(productData);
@@ -100,12 +103,13 @@ class MongoProductRepository extends IProductRepository {
       productDoc.name,
       productDoc.description,
       productDoc.price,
-      productDoc.imageUrl,
+      productDoc.imageUrls,
       productDoc.organizationId.toString(),
       productDoc.organizationName,
       productDoc.isAvailable,
       productDoc.createdAt,
-      productDoc.updatedAt
+      productDoc.updatedAt,
+      productDoc.category
     );
   }
 }

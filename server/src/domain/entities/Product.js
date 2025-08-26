@@ -4,50 +4,58 @@ class Product {
     name,
     description,
     price,
-    imageUrl,
+    imageUrls,
     organizationId,
     organizationName,
     isAvailable,
     createdAt,
-    updatedAt
+    updatedAt,
+    category
   ) {
     this.id = id;
     this.name = name;
     this.description = description;
     this.price = price;
-    this.imageUrl = imageUrl;
+    this.imageUrls = imageUrls;
     this.organizationId = organizationId;
     this.organizationName = organizationName;
     this.isAvailable = isAvailable !== false; // default true
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
+    this.category = category;
   }
 
   static create(
     name,
     description,
     price,
-    imageUrl,
+    imageUrls,
     organizationId,
-    organizationName
+    organizationName,
+    category
   ) {
     return new Product(
       null,
       name,
       description,
       price,
-      imageUrl,
+      imageUrls,
       organizationId,
       organizationName,
-      true
+      true,
+      new Date(), // Explicitly set createdAt
+      new Date(), // Explicitly set updatedAt
+      category // Pass category to constructor
     );
   }
 
-  update(name, description, price, imageUrl) {
+  update(name, description, price, imageUrls, category) {
+    // Add category parameter
     this.name = name;
     this.description = description;
     this.price = price;
-    this.imageUrl = imageUrl;
+    this.imageUrls = imageUrls;
+    this.category = category; // Update category
     this.updatedAt = new Date();
   }
 
@@ -65,4 +73,3 @@ class Product {
 }
 
 module.exports = Product;
-

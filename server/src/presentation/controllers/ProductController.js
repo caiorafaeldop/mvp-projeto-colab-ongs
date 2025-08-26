@@ -8,7 +8,7 @@ class ProductController {
 
   createProduct = async (req, res) => {
     try {
-      const productData = Validators.sanitizeObject(req.body);
+      const productData = req.body;
       const organizationId = req.user.id;
 
       // Validate product data
