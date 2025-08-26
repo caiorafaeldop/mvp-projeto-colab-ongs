@@ -1,37 +1,44 @@
-import api, { setAccessToken } from "./api";
+import api from "./api";
 
 export interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   userType: string;
-  phone?: string;
+  phone: string;
 }
 
-export interface AuthResponse {
+export interface LoginResponse {
   success: boolean;
-  user: User;
-  token: string;
+  data: {
+    user: User;
+    token: string;
+  };
   message: string;
 }
 
-// Description: Login user with email and password
-// Endpoint: POST /api/auth/login
-// Request: { email: string, password: string }
-// Response: { success: boolean, user: { _id: string, name: string, email: string, userType: string }, token: string, message: string }
+export interface RegisterResponse {
+  success: boolean;
+  data: {
+    user: User;
+    token: string;
+  };
+  message: string;
+}
+
+export interface ProfileResponse {
+  success: boolean;
+  user: User;
+}
+
+// Login
 export const loginUser = async (data: {
   email: string;
   password: string;
-}): Promise<AuthResponse> => {
+}): Promise<LoginResponse> => {
   try {
     const response = await api.post("/api/auth/login", data);
-    const result = response.data;
-
-    if (result.success && result.token) {
-      setAccessToken(result.token);
-    }
-
-    return result;
+    return response.data;
   } catch (error: any) {
     throw new Error(
       error?.response?.data?.message || error.message || "Erro ao fazer login"
@@ -39,55 +46,41 @@ export const loginUser = async (data: {
   }
 };
 
-// Description: Register new user
-// Endpoint: POST /api/auth/register
-// Request: { name: string, email: string, password: string, phone: string, userType: string }
-// Response: { success: boolean, user: { _id: string, name: string, email: string, userType: string }, token: string, message: string }
+// Register
 export const registerUser = async (data: {
   name: string;
   email: string;
   password: string;
   phone: string;
   userType: string;
-}): Promise<AuthResponse> => {
+}): Promise<RegisterResponse> => {
   try {
     const response = await api.post("/api/auth/register", data);
-    const result = response.data;
-
-    if (result.success && result.token) {
-      setAccessToken(result.token);
-    }
-
-    return result;
+    return response.data;
   } catch (error: any) {
     throw new Error(
-      error?.response?.data?.message ||
-        error.message ||
-        "Erro ao registrar usuário"
+      error?.response?.data?.message || error.message || "Erro ao criar conta"
     );
   }
 };
 
-// Description: Get user profile
-// Endpoint: GET /api/auth/profile
-// Response: { success: boolean, user: { _id: string, name: string, email: string, userType: string } }
-export const getUserProfile = async (): Promise<{
-  success: boolean;
-  user: User;
-}> => {
+// Get user profile
+export const getUserProfile = async (): Promise<ProfileResponse> => {
   try {
     const response = await api.get("/api/auth/profile");
     return response.data;
   } catch (error: any) {
     throw new Error(
-      error?.response?.data?.message ||
-        error.message ||
-        "Erro ao obter perfil do usuário"
+      error?.response?.data?.message || error.message || "Erro ao buscar perfil"
     );
   }
 };
 
-// Description: Logout user
-export const logoutUser = (): void => {
-  setAccessToken(null);
+// Logout
+export const logoutUser = async (): Promise<void> => {
+  try {
+    await api.post("/api/auth/logout");
+  } catch (error: any) {
+    console.error("Erro ao fazer logout:", error);
+  }
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,13 @@ import {
 import { Search, Filter } from "lucide-react";
 import { getProducts, searchProducts, Product } from "@/api/store";
 import { useToast } from "@/hooks/useToast";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export function Store() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,6 +36,7 @@ export function Store() {
     { value: "Decoração", label: "Decoração" },
     { value: "Roupas", label: "Roupas" },
     { value: "Acessórios", label: "Acessórios" },
+    { value: "Outros", label: "Outros" }, // Adicionado para consistência com o fallback
   ];
 
   // Load products on mount
@@ -41,7 +50,10 @@ export function Store() {
           const transformedProducts = (response.data || []).map(
             (item: any) => ({
               _id: item.id,
-              images: [item.imageUrl],
+              images:
+                item.imageUrls?.length > 0
+                  ? item.imageUrls
+                  : ["/placeholder-cause.jpg"],
               name: item.name,
               category: item.category || "Outros", // fallback se não vier da API
               price: item.price,
@@ -79,9 +91,12 @@ export function Store() {
         try {
           const response = await searchProducts(searchTerm);
           if (response.success) {
-            results = (response.products || []).map((item: any) => ({
+            results = (response.data || []).map((item: any) => ({
               _id: item.id,
-              images: [item.imageUrl],
+              images:
+                item.imageUrls?.length > 0
+                  ? item.imageUrls
+                  : ["/placeholder-cause.jpg"],
               name: item.name,
               category: item.category || "Outros",
               price: item.price,
@@ -130,8 +145,8 @@ export function Store() {
   return (
     <div className="container mx-auto py-8">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-          Nossos Produtos
+        <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight">
+          Bazar Solidário
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
           Produtos que apoiam uma grande causa!
@@ -144,7 +159,7 @@ export function Store() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Buscar pelo nome do calçado..."
+                placeholder="Buscar pelo nome do produto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-10"
@@ -172,7 +187,7 @@ export function Store() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
+      {isLoading || isSearching ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
             <ProductSkeleton key={i} />
@@ -181,15 +196,43 @@ export function Store() {
       ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <Link to={`/produto/${product._id}`} key={product._id}>
-              <Card className="overflow-hidden h-full flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300">
-                <div className="relative h-60 overflow-hidden">
-                  <img
-                    src={product.images[0] || "/placeholder-cause.jpg"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+            <Card
+              className="overflow-hidden h-full flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300"
+              style={{ zIndex: 1 }}
+            >
+              <div className="relative h-60 overflow-hidden">
+                <Carousel
+                  opts={{
+                    loop: true,
+                  }}
+                  className="w-full h-full"
+                >
+                  <CarouselContent className="w-full h-full">
+                    {product.images.map((image, index) => (
+                      <CarouselItem key={index} className="w-full h-full">
+                        <img
+                          src={image || "/placeholder-cause.jpg"}
+                          alt={`${product.name} - Image ${index + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {product.images.length > 1 && (
+                    <>
+                      <CarouselPrevious
+                        className="left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
+                        style={{ pointerEvents: "auto" }}
+                      />
+                      <CarouselNext
+                        className="right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
+                        style={{ pointerEvents: "auto" }}
+                      />
+                    </>
+                  )}
+                </Carousel>
+              </div>
+              <Link to={`/produto/${product._id}`} key={product._id}>
                 <CardContent className="p-4 flex-grow flex flex-col justify-between">
                   <div>
                     <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full">
@@ -203,8 +246,8 @@ export function Store() {
                     {formatPrice(product.price)}
                   </span>
                 </CardContent>
-              </Card>
-            </Link>
+              </Link>
+            </Card>
           ))}
         </div>
       ) : (
