@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -13,61 +14,117 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Plus, X } from "lucide-react";
-import { createProduct, CreateProductData } from "@/api/store";
 import { useToast } from "@/hooks/useToast";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import api from "@/api/api";
+
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrls: string[];
+  quantity: number;
+}
 
 export function CreateProduct() {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<CreateProductData>({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     description: "",
     price: 0,
     category: "",
-    images: [""],
-    stock: 0,
+    imageUrls: [""],
+    quantity: 0,
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth(); // Corrigido: useAuth correto
 
   const categories = [
-    { value: "Calçados", label: "Calçados" },
-    { value: "Decoração", label: "Decoração" },
-    { value: "Roupas", label: "Roupas" },
-    { value: "Acessórios", label: "Acessórios" },
-    { value: "Livros", label: "Livros" },
-    { value: "Outros", label: "Outros" },
+    { value: "calçados", label: "Calçados" },
+    { value: "decoração", label: "Decoração" },
+    { value: "roupas", label: "Roupas" },
+    { value: "acessórios", label: "Acessórios" },
+    { value: "livros", label: "Livros" },
+    { value: "outros", label: "Outros" },
   ];
 
-  const handleInputChange = (field: keyof CreateProductData, value: any) => {
+  const handleInputChange = (field: keyof ProductFormData, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleImageChange = (index: number, value: string) => {
-    const newImages = [...formData.images];
-    newImages[index] = value;
-    setFormData((prev) => ({
-      ...prev,
-      images: newImages,
-    }));
+  const handleImageUpload = async (file: File, index: number) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+
+      const response = await api.post("/api/upload", uploadData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        const newImageUrls = [...formData.imageUrls];
+        newImageUrls[index] = response.data.url;
+        setFormData((prev) => ({
+          ...prev,
+          imageUrls: newImageUrls,
+        }));
+        toast({
+          title: "Sucesso",
+          description: "Imagem enviada com sucesso!",
+        });
+      } else {
+        throw new Error("Erro ao enviar imagem");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description:
+          error instanceof Error ? error.message : "Erro ao enviar imagem",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageChange = (index: number, file: File | null) => {
+    if (file) {
+      handleImageUpload(file, index);
+    }
   };
 
   const addImageField = () => {
     setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, ""],
+      imageUrls: [...prev.imageUrls, ""],
     }));
   };
 
   const removeImageField = (index: number) => {
-    if (formData.images.length > 1) {
-      const newImages = formData.images.filter((_, i) => i !== index);
+    if (formData.imageUrls.length > 1) {
+      const newImageUrls = formData.imageUrls.filter((_, i) => i !== index);
       setFormData((prev) => ({
         ...prev,
-        images: newImages,
+        imageUrls: newImageUrls,
       }));
     }
   };
@@ -75,7 +132,7 @@ export function CreateProduct() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
+    // Validação
     if (!formData.name.trim()) {
       toast({
         title: "Erro",
@@ -112,7 +169,7 @@ export function CreateProduct() {
       return;
     }
 
-    if (formData.stock < 0) {
+    if (formData.quantity < 0) {
       toast({
         title: "Erro",
         description: "Estoque não pode ser negativo",
@@ -121,9 +178,10 @@ export function CreateProduct() {
       return;
     }
 
-    // Filter out empty image URLs
-    const filteredImages = formData.images.filter((img) => img.trim() !== "");
-    if (filteredImages.length === 0) {
+    const filteredImageUrls = formData.imageUrls.filter(
+      (img) => img.trim() !== ""
+    );
+    if (filteredImageUrls.length === 0) {
       toast({
         title: "Erro",
         description: "Pelo menos uma imagem é obrigatória",
@@ -135,19 +193,34 @@ export function CreateProduct() {
     setIsLoading(true);
 
     try {
+      // Verifica autenticação
+      if (!isAuthenticated || !user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado. Faça login novamente.",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+
       const productData = {
-        ...formData,
-        images: filteredImages,
+        name: formData.name,
+        description: formData.description,
+        category: formData.category,
+        price: formData.price,
+        quantity: formData.quantity,
+        imageUrls: filteredImageUrls, // Corrigido: usa imageUrls (plural)
       };
 
-      const response = await createProduct(productData);
+      const response = await api.post("/api/products", productData); // Sem header manual, interceptor cuida
 
-      if (response.success) {
+      if (response.data.success) {
         toast({
           title: "Sucesso!",
           description: "Produto criado com sucesso!",
         });
-        navigate("/my-products");
+        navigate("/create-product"); // Ajustado para ir para create-product, como no botão Voltar
       } else {
         throw new Error("Erro ao criar produto");
       }
@@ -167,9 +240,9 @@ export function CreateProduct() {
     <ProtectedRoute>
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate("/my-products")}>
+          <Button variant="ghost" onClick={() => navigate("/create-product")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Meus Produtos
+            Voltar para Criar Produto
           </Button>
         </div>
 
@@ -227,14 +300,17 @@ export function CreateProduct() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="stock">Estoque *</Label>
+                  <Label htmlFor="quantity">Estoque *</Label>
                   <Input
-                    id="stock"
+                    id="quantity"
                     type="number"
                     min="0"
-                    value={formData.stock}
+                    value={formData.quantity}
                     onChange={(e) =>
-                      handleInputChange("stock", parseInt(e.target.value) || 0)
+                      handleInputChange(
+                        "quantity",
+                        parseInt(e.target.value) || 0
+                      )
                     }
                     placeholder="0"
                     required
@@ -266,18 +342,20 @@ export function CreateProduct() {
               <div className="space-y-2">
                 <Label>Imagens *</Label>
                 <div className="space-y-3">
-                  {formData.images.map((image, index) => (
-                    <div key={index} className="flex gap-2">
+                  {formData.imageUrls.map((imageUrl, index) => (
+                    <div key={index} className="flex gap-2 items-center">
                       <Input
-                        type="url"
-                        value={image}
+                        type="file"
+                        accept="image/png, image/jpeg"
                         onChange={(e) =>
-                          handleImageChange(index, e.target.value)
+                          handleImageChange(
+                            index,
+                            (e.target.files as FileList)[0]
+                          )
                         }
-                        placeholder="URL da imagem"
                         className="flex-1"
                       />
-                      {formData.images.length > 1 && (
+                      {formData.imageUrls.length > 1 && (
                         <Button
                           type="button"
                           variant="outline"
@@ -286,6 +364,13 @@ export function CreateProduct() {
                         >
                           <X className="w-4 h-4" />
                         </Button>
+                      )}
+                      {imageUrl && (
+                        <img
+                          src={imageUrl}
+                          alt={`Imagem ${index + 1}`}
+                          className="w-16 h-16 object-cover rounded-md"
+                        />
                       )}
                     </div>
                   ))}
@@ -305,7 +390,7 @@ export function CreateProduct() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/my-products")}
+                  onClick={() => navigate("/create-product")}
                   className="flex-1"
                 >
                   Cancelar
@@ -322,3 +407,4 @@ export function CreateProduct() {
   );
 }
 
+export default CreateProduct;

@@ -4,11 +4,11 @@ import api from "./api";
 export interface Product {
   _id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   category: string;
   images: string[];
-  stock: number;
+  stock?: number;
   isActive?: boolean;
   organizationId?: string;
   createdAt?: string;
@@ -52,6 +52,7 @@ export interface ApiProduct {
 // Endpoint: GET /api/products
 // Response: { success: boolean, products: Product[] }
 export const getProducts = async (): Promise<{
+  data: never[];
   success: boolean;
   products: Product[];
 }> => {
@@ -72,7 +73,11 @@ export const getProducts = async (): Promise<{
 // Response: { success: boolean, products: Product[] }
 export const searchProducts = async (
   query: string
-): Promise<{ success: boolean; products: Product[] }> => {
+): Promise<{
+  data: never[];
+  success: boolean;
+  products: Product[];
+}> => {
   try {
     const response = await api.get(
       `/api/products/search?q=${encodeURIComponent(query)}`
