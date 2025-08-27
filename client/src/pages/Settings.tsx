@@ -32,7 +32,7 @@ export function Settings() {
   const [darkMode, setDarkMode] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
-
+ // comment
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -116,7 +116,7 @@ export function Settings() {
     <Lock className="w-4 h-4 mr-2" />
     Alterar Senha
   </Button>
- 
+
 </div>
           </CardContent>
         </Card>
