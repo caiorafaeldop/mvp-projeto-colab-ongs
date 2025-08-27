@@ -65,22 +65,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         const token = getAccessToken();
+        console.log("Initializing auth, token found:", !!token);
+        
         if (token) {
           try {
+            console.log("Attempting to get user profile...");
             const response = await getUserProfile();
-            if (response.success) {
+            console.log("Profile response:", response);
+            
+            if (response.success && response.user) {
+              console.log("Setting user:", response.user);
               setUser(response.user);
             } else {
-              // Token is invalid, clear it
+              console.log("Profile response not successful, clearing token");
               setAccessToken(null);
               setUser(null);
             }
           } catch (error) {
             console.error("Error getting user profile:", error);
-            // Token is invalid or expired, clear it
-            setAccessToken(null);
-            setUser(null);
+            // Only clear token if it's a 401 (unauthorized)
+            if ((error as any)?.response?.status === 401) {
+              console.log("401 error, clearing token");
+              setAccessToken(null);
+              setUser(null);
+            } else {
+              console.log("Non-401 error, keeping token for retry");
+            }
           }
+        } else {
+          console.log("No token found, user not authenticated");
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
