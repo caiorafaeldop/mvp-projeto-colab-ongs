@@ -24,7 +24,7 @@ interface ProductFormData {
   price: number;
   category: string;
   imageUrls: string[];
-  quantity: number;
+  stock: number;
 }
 
 export function CreateProduct() {
@@ -35,7 +35,7 @@ export function CreateProduct() {
     price: 0,
     category: "",
     imageUrls: [""],
-    quantity: 0,
+    stock: 0,
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -169,7 +169,7 @@ export function CreateProduct() {
       return;
     }
 
-    if (formData.quantity < 0) {
+    if (formData.stock < 0) {
       toast({
         title: "Erro",
         description: "Estoque não pode ser negativo",
@@ -209,7 +209,7 @@ export function CreateProduct() {
         description: formData.description,
         category: formData.category,
         price: formData.price,
-        quantity: formData.quantity,
+        stock: formData.stock,
         imageUrls: filteredImageUrls, // Corrigido: usa imageUrls (plural)
       };
 
@@ -300,15 +300,15 @@ export function CreateProduct() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Estoque *</Label>
+                  <Label htmlFor="stock">Estoque *</Label>
                   <Input
-                    id="quantity"
+                    id="stock"
                     type="number"
                     min="0"
-                    value={formData.quantity}
+                    value={formData.stock}
                     onChange={(e) =>
                       handleInputChange(
-                        "quantity",
+                        "stock",
                         parseInt(e.target.value) || 0
                       )
                     }
