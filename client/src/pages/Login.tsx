@@ -10,13 +10,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/useToast";
@@ -34,7 +27,7 @@ export function Login() {
     password: "",
     confirmPassword: "",
     phone: "",
-    userType: "buyer",
+    userType: "common",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -90,7 +83,7 @@ export function Login() {
         email: registerData.email,
         password: registerData.password,
         phone: registerData.phone,
-        userType: registerData.userType,
+        userType: "common",
       });
       setAccessToken(response.data.token); // Save token to localStorage
       login(response.data.user, response.data.token); // Pass user and token
@@ -257,23 +250,6 @@ export function Login() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="userType">Tipo de usuário</Label>
-                    <Select
-                      value={registerData.userType}
-                      onValueChange={(value) =>
-                        setRegisterData({ ...registerData, userType: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="buyer">Comprador</SelectItem>
-                        <SelectItem value="seller">Vendedor</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Senha</Label>

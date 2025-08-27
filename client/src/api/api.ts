@@ -60,9 +60,9 @@ localApi.interceptors.response.use(
   },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expirado ou inválido
+      // Token expirado ou inválido - apenas limpa o token
+      // Deixa o AuthContext lidar com o redirecionamento
       setAccessToken(null);
-      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

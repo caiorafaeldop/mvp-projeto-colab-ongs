@@ -27,7 +27,8 @@ class ProductService extends IProductService {
         productData.imageUrls,
         organizationId,
         organization.name,
-        productData.category
+        productData.category,
+        productData.stock || 1
       );
 
       // Save product
@@ -44,6 +45,7 @@ class ProductService extends IProductService {
         isAvailable: savedProduct.isAvailable,
         createdAt: savedProduct.createdAt,
         category: savedProduct.category,
+        stock: savedProduct.stock,
       };
     } catch (error) {
       throw new Error(`Error creating product: ${error.message}`);
@@ -72,6 +74,7 @@ class ProductService extends IProductService {
         price: productData.price,
         imageUrls: productData.imageUrls,
         category: productData.category,
+        stock: productData.stock !== undefined ? productData.stock : existingProduct.stock,
       });
 
       return {
@@ -85,6 +88,7 @@ class ProductService extends IProductService {
         isAvailable: updatedProduct.isAvailable,
         updatedAt: updatedProduct.updatedAt,
         category: updatedProduct.category,
+        stock: updatedProduct.stock,
       };
     } catch (error) {
       throw new Error(`Error updating product: ${error.message}`);
@@ -129,6 +133,7 @@ class ProductService extends IProductService {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
         category: product.category,
+        stock: product.stock,
       };
     } catch (error) {
       throw new Error(`Error getting product: ${error.message}`);
@@ -152,6 +157,7 @@ class ProductService extends IProductService {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
         category: product.category,
+        stock: product.stock,
       }));
     } catch (error) {
       throw new Error(`Error getting organization products: ${error.message}`);
@@ -174,6 +180,7 @@ class ProductService extends IProductService {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
         category: product.category,
+        stock: product.stock,
       }));
     } catch (error) {
       throw new Error(`Error getting available products: ${error.message}`);
@@ -200,6 +207,7 @@ class ProductService extends IProductService {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
         category: product.category,
+        stock: product.stock,
       }));
     } catch (error) {
       throw new Error(`Error searching products: ${error.message}`);
@@ -230,9 +238,43 @@ class ProductService extends IProductService {
         isAvailable: updatedProduct.isAvailable,
         updatedAt: updatedProduct.updatedAt,
         category: updatedProduct.category,
+        stock: updatedProduct.stock,
       };
     } catch (error) {
       throw new Error(`Error toggling product availability: ${error.message}`);
+    }
+  }
+
+  async updateProductStock(id, stock, organizationId) {
+    try {
+      // Verify if product exists and belongs to organization
+      const existingProduct = await this.productRepository.findById(id);
+      if (!existingProduct) {
+        throw new Error("Product not found");
+      }
+
+      if (existingProduct.organizationId !== organizationId) {
+        throw new Error("You can only update your own products");
+      }
+
+      // Validate stock
+      if (typeof stock !== "number" || stock < 0) {
+        throw new Error("Stock must be a number greater than or equal to zero");
+      }
+
+      // Update stock
+      const updatedProduct = await this.productRepository.update(id, {
+        stock: stock,
+      });
+
+      return {
+        id: updatedProduct.id,
+        name: updatedProduct.name,
+        stock: updatedProduct.stock,
+        updatedAt: updatedProduct.updatedAt,
+      };
+    } catch (error) {
+      throw new Error(`Error updating product stock: ${error.message}`);
     }
   }
 

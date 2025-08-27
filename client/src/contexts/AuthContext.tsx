@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -65,8 +65,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         const token = getAccessToken();
+        
         if (token) {
-          await refreshUser();
+          try {
+            const response = await getUserProfile();
+            
+            if (response.success && response.user) {
+              setUser(response.user);
+            } else {
+              // Profile response not successful, clear token
+              setAccessToken(null);
+              setUser(null);
+            }
+          } catch (error) {
+            console.error("Error getting user profile:", error);
+            // Token is likely invalid or expired, clear it
+            setAccessToken(null);
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error("Error initializing auth:", error);

@@ -11,6 +11,8 @@ import { MyProducts } from "./pages/MyProducts";
 import { CreateProduct } from "./pages/CreateProduct";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BecomeDonor } from "./pages/BecomeDonor";
+import { Profile } from "./pages/Profile";
+import { Settings } from "./pages/Settings";
 
 function App() {
   return (
@@ -26,8 +28,9 @@ function App() {
               <Route path="my-products" element={<MyProducts />} />
               <Route path="create-product" element={<CreateProduct />} />
               <Route path="become-donor" element={<BecomeDonor />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/create-product" element={<CreateProduct />} />
+              <Route path="login" element={<Login />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </Router>

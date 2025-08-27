@@ -41,6 +41,15 @@ class Validators {
   }
 
   /**
+   * Valida se um estoque é válido
+   * @param {number} stock - Estoque a ser validado
+   * @returns {boolean} True se válido
+   */
+  static isValidStock(stock) {
+    return typeof stock === "number" && stock >= 0;
+  }
+
+  /**
    * Valida se uma URL é válida
    * @param {string} url - URL a ser validada
    * @returns {boolean} True se válida
@@ -131,6 +140,10 @@ class Validators {
 
     if (!this.isValidPrice(productData.price)) {
       errors.push("Preço deve ser um número maior que zero");
+    }
+
+    if (productData.stock !== undefined && !this.isValidStock(productData.stock)) {
+      errors.push("Estoque deve ser um número maior ou igual a zero");
     }
 
     console.log(

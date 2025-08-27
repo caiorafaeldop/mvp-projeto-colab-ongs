@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/useToast";
 import { getProductById, getWhatsAppLink, Product } from "@/api/store";
-import { ArrowLeft, Heart, Share2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 export function ProductDetail() {
@@ -28,11 +28,11 @@ export function ProductDetail() {
           const apiProduct = response.data;
           setProduct({
             _id: apiProduct.id,
-            images: [apiProduct.imageUrl],
+            images: apiProduct.imageUrls || ["/img/placeholder-cause.jpg"],
             name: apiProduct.name,
             description: apiProduct.description,
             price: apiProduct.price,
-            stock: apiProduct.stock ?? 1,
+            stock: apiProduct.stock || 1,
             category: apiProduct.category || "Outros",
             isActive: apiProduct.isAvailable,
             organizationId: apiProduct.organizationId,

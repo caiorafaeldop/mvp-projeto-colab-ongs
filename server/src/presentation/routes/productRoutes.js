@@ -39,6 +39,12 @@ const createProductRoutes = (productService, authService) => {
     organization,
     productController.toggleProductAvailability
   );
+  router.patch(
+    "/products/:id/stock",
+    auth,
+    organization,
+    productController.updateProductStock
+  );
   router.get(
     "/my-products",
     auth,

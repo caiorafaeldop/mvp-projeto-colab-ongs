@@ -32,11 +32,11 @@ export function Store() {
 
   const categories = [
     { value: "all", label: "Todas as categorias" },
-    { value: "Calçados", label: "Calçados" },
-    { value: "Decoração", label: "Decoração" },
-    { value: "Roupas", label: "Roupas" },
-    { value: "Acessórios", label: "Acessórios" },
-    { value: "Outros", label: "Outros" }, // Adicionado para consistência com o fallback
+    { value: "calçados", label: "Calçados" },
+    { value: "decoração", label: "Decoração" },
+    { value: "roupas", label: "Roupas" },
+    { value: "acessórios", label: "Acessórios" },
+    { value: "outros", label: "Outros" },
   ];
 
   // Load products on mount
@@ -55,7 +55,7 @@ export function Store() {
                   ? item.imageUrls
                   : ["/placeholder-cause.jpg"],
               name: item.name,
-              category: item.category || "Outros", // fallback se não vier da API
+              category: item.category ? item.category.toLowerCase() : "outros", // normaliza para lowercase
               price: item.price,
             })
           );
@@ -80,39 +80,33 @@ export function Store() {
     loadProducts();
   }, [toast]);
 
+  // Função para normalizar texto (remove acentos e converte para minúscula)
+  const normalizeText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
   // Combined search and category filtering
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
+    const timeoutId = setTimeout(() => {
       let results: Product[] = products || [];
 
-      // Aplica busca
+      // Aplica busca client-side com matching parcial e insensível a caso/acentos
       if (searchTerm.trim()) {
         setIsSearching(true);
-        try {
-          const response = await searchProducts(searchTerm);
-          if (response.success) {
-            results = (response.data || []).map((item: any) => ({
-              _id: item.id,
-              images:
-                item.imageUrls?.length > 0
-                  ? item.imageUrls
-                  : ["/placeholder-cause.jpg"],
-              name: item.name,
-              category: item.category || "Outros",
-              price: item.price,
-            }));
-          } else {
-            results = [];
-          }
-        } catch (error) {
-          console.error("Erro na busca:", error);
-          results = [];
-        } finally {
-          setIsSearching(false);
-        }
+        const normalizedSearchTerm = normalizeText(searchTerm.trim());
+        
+        results = results.filter((product) => {
+          const normalizedProductName = normalizeText(product.name);
+          return normalizedProductName.includes(normalizedSearchTerm);
+        });
+        
+        setIsSearching(false);
       }
 
-      // Aplica filtro de categoria
+      // Aplica filtro de categoria nos resultados
       if (selectedCategory !== "all") {
         results = results.filter(
           (product) => product.category === selectedCategory
@@ -120,7 +114,7 @@ export function Store() {
       }
 
       setFilteredProducts(results);
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm, selectedCategory, products]);
@@ -236,7 +230,7 @@ export function Store() {
                 <CardContent className="p-4 flex-grow flex flex-col justify-between">
                   <div>
                     <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full">
-                      {product.category}
+                      {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </span>
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-white my-2 line-clamp-2">
                       {product.name}
