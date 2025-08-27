@@ -10,7 +10,8 @@ class Product {
     isAvailable,
     createdAt,
     updatedAt,
-    category
+    category,
+    stock
   ) {
     this.id = id;
     this.name = name;
@@ -23,6 +24,7 @@ class Product {
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
     this.category = category;
+    this.stock = stock || 1;
   }
 
   static create(
@@ -32,7 +34,8 @@ class Product {
     imageUrls,
     organizationId,
     organizationName,
-    category
+    category,
+    stock
   ) {
     return new Product(
       null,
@@ -45,17 +48,19 @@ class Product {
       true,
       new Date(), // Explicitly set createdAt
       new Date(), // Explicitly set updatedAt
-      category // Pass category to constructor
+      category, // Pass category to constructor
+      stock // Pass stock to constructor
     );
   }
 
-  update(name, description, price, imageUrls, category) {
-    // Add category parameter
+  update(name, description, price, imageUrls, category, stock) {
+    // Add category and stock parameters
     this.name = name;
     this.description = description;
     this.price = price;
     this.imageUrls = imageUrls;
     this.category = category; // Update category
+    this.stock = stock !== undefined ? stock : this.stock; // Update stock
     this.updatedAt = new Date();
   }
 

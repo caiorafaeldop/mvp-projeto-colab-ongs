@@ -187,6 +187,38 @@ class ProductController {
     }
   };
 
+  updateProductStock = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { stock } = req.body;
+      const organizationId = req.user.id;
+
+      if (typeof stock !== "number" || stock < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Stock must be a number greater than or equal to zero",
+        });
+      }
+
+      const product = await this.productService.updateProductStock(
+        id,
+        stock,
+        organizationId
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Product stock updated successfully",
+        data: product,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
+
   getWhatsAppLink = async (req, res) => {
     try {
       const { id } = req.params;

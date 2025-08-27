@@ -13,11 +13,14 @@ import {
   ToggleRight,
   Package,
   AlertCircle,
+  X,
+  Minus,
 } from "lucide-react";
 import {
   getMyProducts,
   deleteProduct,
   toggleProductAvailability,
+  updateProductStock,
   Product,
 } from "@/api/store";
 import { useToast } from "@/hooks/useToast";
@@ -124,6 +127,32 @@ export function MyProducts() {
           ? error.message
           : (error as { response?: { data?: { message?: string } } })?.response
               ?.data?.message || "Erro ao alterar disponibilidade";
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateStock = async (productId: string, newStock: number) => {
+    try {
+      const response = await updateProductStock(productId, newStock);
+      if (response.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Estoque atualizado com sucesso!",
+        });
+        loadProducts();
+      } else {
+        throw new Error("Erro ao atualizar estoque");
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message || "Erro ao atualizar estoque";
       toast({
         title: "Erro",
         description: errorMessage,
@@ -251,6 +280,14 @@ export function MyProducts() {
                   >
                     {product.isActive ? "Ativo" : "Inativo"}
                   </Badge>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteProduct(product._id)}
+                    className="absolute top-2 left-2 h-8 w-8 p-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg line-clamp-2">
@@ -260,9 +297,31 @@ export function MyProducts() {
                     <span className="text-2xl font-bold text-pink-600">
                       {formatPrice(product.price)}
                     </span>
-                    <span className="text-sm text-gray-500">
-                      Estoque: {product.stock}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">Estoque:</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateStock(product._id, Math.max(0, product.stock - 1))}
+                          className="h-6 w-6 p-0"
+                          disabled={product.stock <= 0}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="text-sm font-medium min-w-[2ch] text-center">
+                          {product.stock}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateStock(product._id, product.stock + 1)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">

@@ -4,11 +4,11 @@ import api from "./api";
 export interface Product {
   _id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
   category: string;
   images: string[];
-  stock?: number;
+  stock: number;
   isActive?: boolean;
   organizationId?: string;
   createdAt?: string;
@@ -38,9 +38,9 @@ export interface ApiProduct {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
+  imageUrls: string[];
   category?: string;
-  stock?: number;
+  stock: number;
   isAvailable?: boolean;
   organizationId?: string;
   organizationName?: string;
@@ -200,6 +200,26 @@ export const toggleProductAvailability = async (
       error?.response?.data?.message ||
         error.message ||
         "Erro ao alterar disponibilidade do produto"
+    );
+  }
+};
+
+// Description: Update product stock (requires authentication)
+// Endpoint: PATCH /api/products/:id/stock
+// Request: { stock: number }
+// Response: { success: boolean, data: { id: string, name: string, stock: number, updatedAt: string }, message: string }
+export const updateProductStock = async (
+  id: string,
+  stock: number
+): Promise<{ success: boolean; data: { id: string; name: string; stock: number; updatedAt: string }; message: string }> => {
+  try {
+    const response = await api.patch(`/api/products/${id}/stock`, { stock });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+        error.message ||
+        "Erro ao atualizar estoque do produto"
     );
   }
 };

@@ -14,6 +14,7 @@ class MongoProductRepository extends IProductRepository {
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
         category: product.category,
+        stock: product.stock || 1,
         createdAt: product.createdAt || new Date(), // Explicitly set
         updatedAt: product.updatedAt || new Date(), // Explicitly set
       };
@@ -109,7 +110,8 @@ class MongoProductRepository extends IProductRepository {
       productDoc.isAvailable,
       productDoc.createdAt,
       productDoc.updatedAt,
-      productDoc.category
+      productDoc.category,
+      productDoc.stock || 1
     );
   }
 }
