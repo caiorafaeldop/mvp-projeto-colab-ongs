@@ -240,9 +240,9 @@ export function CreateProduct() {
     <ProtectedRoute>
       <div className="container mx-auto py-8">
         <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate("/create-product")}>
+          <Button variant="ghost" onClick={() => navigate("/loja")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para Criar Produto
+            Voltar para o Bazar
           </Button>
         </div>
 
