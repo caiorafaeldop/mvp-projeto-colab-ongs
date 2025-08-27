@@ -32,7 +32,7 @@ export function Settings() {
   const [darkMode, setDarkMode] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
- // comment
+ // commentee
   const handleLogout = () => {
     logout();
     navigate("/");
