@@ -5,18 +5,24 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { getProductById, getWhatsAppLink, Product } from "@/api/store";
-import { ArrowLeft } from "lucide-react";
+import { getProductById, getWhatsAppLink, Product, deleteProduct, updateProductStock } from "@/api/store";
+import { ArrowLeft, Edit, Trash2, Package } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [newStock, setNewStock] = useState<number>(0);
+  const [isUpdatingStock, setIsUpdatingStock] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -26,7 +32,7 @@ export function ProductDetail() {
         const response = await getProductById(id);
         if (response.success && response.data) {
           const apiProduct = response.data;
-          setProduct({
+          const productData = {
             _id: apiProduct.id,
             images: apiProduct.imageUrls || ["/img/placeholder-cause.jpg"],
             name: apiProduct.name,
@@ -38,7 +44,9 @@ export function ProductDetail() {
             organizationId: apiProduct.organizationId,
             createdAt: apiProduct.createdAt,
             updatedAt: apiProduct.updatedAt,
-          });
+          };
+          setProduct(productData);
+          setNewStock(productData.stock);
         } else {
           throw new Error("Produto não encontrado.");
         }
@@ -63,7 +71,6 @@ export function ProductDetail() {
     if (!product) return;
 
     try {
-      // You can replace this with a real phone number or get it from user settings
       const phone = "5583988083711";
       const response = await getWhatsAppLink(product._id, phone);
 
@@ -80,6 +87,67 @@ export function ProductDetail() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleUpdateStock = async () => {
+    if (!product || !id) return;
+
+    try {
+      setIsUpdatingStock(true);
+      const response = await updateProductStock(id, newStock);
+      
+      if (response.success) {
+        setProduct({ ...product, stock: newStock });
+        toast({
+          title: "Sucesso!",
+          description: "Estoque atualizado com sucesso.",
+        });
+      } else {
+        throw new Error("Erro ao atualizar estoque");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description:
+          error instanceof Error ? error.message : "Erro ao atualizar estoque",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStock(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!product || !id) return;
+
+    if (!confirm("Tem certeza que deseja excluir este produto?")) {
+      return;
+    }
+
+    try {
+      const response = await deleteProduct(id);
+      
+      if (response.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Produto excluído com sucesso.",
+        });
+        navigate("/create-product");
+      } else {
+        throw new Error("Erro ao excluir produto");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description:
+          error instanceof Error ? error.message : "Erro ao excluir produto",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditProduct = () => {
+    navigate(`/create-product?edit=${id}`);
   };
 
   const formatPrice = (price: number) => {
@@ -170,17 +238,67 @@ export function ProductDetail() {
               </p>
               <div className="mt-auto">
                 <Separator className="my-6" />
-                <Button
-                  size="lg"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg py-7"
-                  disabled={product.stock === 0}
-                  onClick={handleWhatsAppClick}
-                >
-                  <FaWhatsapp className="w-6 h-6 mr-3" />
-                  {product.stock > 0
-                    ? "Tenho Interesse (WhatsApp)"
-                    : "Produto Esgotado"}
-                </Button>
+                
+                {/* Admin Controls */}
+                {isAuthenticated && user?.userType === "organization" ? (
+                  <div className="space-y-4">
+                    {/* Stock Update */}
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label htmlFor="stock">Quantidade em Estoque</Label>
+                        <Input
+                          id="stock"
+                          type="number"
+                          min="0"
+                          value={newStock}
+                          onChange={(e) => setNewStock(Number(e.target.value))}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleUpdateStock}
+                        disabled={isUpdatingStock || newStock === product.stock}
+                        className="bg-blue-500 hover:bg-blue-600"
+                      >
+                        <Package className="w-4 h-4 mr-2" />
+                        {isUpdatingStock ? "Atualizando..." : "Atualizar"}
+                      </Button>
+                    </div>
+                    
+                    {/* Admin Action Buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={handleEditProduct}
+                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar Produto
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleDeleteProduct}
+                        className="border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir Produto
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Regular User WhatsApp Button */
+                  <Button
+                    size="lg"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg py-7"
+                    disabled={product.stock === 0}
+                    onClick={handleWhatsAppClick}
+                  >
+                    <FaWhatsapp className="w-6 h-6 mr-3" />
+                    {product.stock > 0
+                      ? "Tenho Interesse (WhatsApp)"
+                      : "Produto Esgotado"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

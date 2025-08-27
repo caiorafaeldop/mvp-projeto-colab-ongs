@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,17 +25,22 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/components/ui/theme-provider";
 
 export function Settings() {
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
- // commentee
+
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleThemeToggle = (checked: boolean) => {
+    setTheme(checked ? "dark" : "light");
   };
 
   if (!isAuthenticated || !user) {
@@ -138,8 +143,8 @@ export function Settings() {
                 </p>
               </div>
               <Switch 
-                checked={darkMode} 
-                onCheckedChange={setDarkMode}
+                checked={theme === "dark"} 
+                onCheckedChange={handleThemeToggle}
               />
             </div>
             

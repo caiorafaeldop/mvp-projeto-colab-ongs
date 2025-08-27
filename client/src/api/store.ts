@@ -121,7 +121,15 @@ export const getWhatsAppLink = async (
     const response = await api.get(
       `/api/products/${productId}/whatsapp?phone=${encodeURIComponent(phone)}`
     );
-    return response.data;
+    // Backend shape: { success: boolean, data: { whatsappLink: string, ... } }
+    const { success, data } = response.data as {
+      success: boolean;
+      data?: { whatsappLink?: string };
+    };
+    return {
+      success,
+      whatsappLink: data?.whatsappLink ?? "",
+    };
   } catch (error: any) {
     throw new Error(
       error?.response?.data?.message ||
@@ -232,7 +240,7 @@ export const getMyProducts = async (): Promise<{
   products: Product[];
 }> => {
   try {
-    const response = await api.get("/api/my-products");
+    const response = await api.get("/api/create-product");
     return response.data;
   } catch (error: any) {
     throw new Error(

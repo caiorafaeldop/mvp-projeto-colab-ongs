@@ -20,11 +20,10 @@ class WhatsAppUtils {
       currency: "BRL",
     }).format(price);
 
-    // Cria a mensagem
+    // Cria a mensagem personalizada
     const message =
-      `Olá! Gostaria de saber mais sobre o produto "${productName}" da ${organizationName}.\n\n` +
-      `Preço: ${formattedPrice}\n\n` +
-      `Poderia me fornecer mais informações?`;
+      `Olá, tenho interesse no item ${productName} no valor de ${formattedPrice} ` +
+      `anunciado no site da Rede Feminina de Combate ao Câncer. Ainda está disponível?`;
 
     // Codifica a mensagem para URL
     const encodedMessage = encodeURIComponent(message);
