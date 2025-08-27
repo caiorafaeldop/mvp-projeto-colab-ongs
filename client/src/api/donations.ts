@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 // Description: Get donation cause information
 // Endpoint: GET /api/donations/cause
@@ -10,18 +10,21 @@ export const getDonationCause = () => {
     setTimeout(() => {
       resolve({
         cause: {
-          title: 'Casa de Apoio às Mulheres',
-          subtitle: 'Apoiando mulheres em tratamento contra o câncer com amor, cuidado e esperança',
-          description: 'Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer. Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento. Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.',
-          mainImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmOWE4ZDQiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmNDcyYjYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2cpIi8+PHRleHQgeD0iNTAlIiB5PSI0NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Q2FzYSBkZSBBcG9pbzwvdGV4dD48dGV4dCB4PSI1MCUiIHk9IjU1JSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOgcyBNdWxoZXJlczwvdGV4dD48L3N2Zz4=',
+          title: "Apoie a Rede Feminina de Combate Ao Câncer",
+          subtitle:
+            "Apoiando mulheres em tratamento contra o câncer com amor, cuidado e esperança",
+          description:
+            "Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer. Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento. Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.",
+          mainImage:
+            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmOWE4ZDQiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmNDcyYjYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2cpIi8+PHRleHQgeD0iNTAlIiB5PSI0NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIzNiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Q2FzYSBkZSBBcG9pbzwvdGV4dD48dGV4dCB4PSI1MCUiIHk9IjU1JSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOgcyBNdWxoZXJlczwvdGV4dD48L3N2Zz4=",
           goal: 25000,
           raised: 12500,
           stats: {
-            womenHelped: '150+',
-            donors: '89',
-            yearsActive: '5'
-          }
-        }
+            womenHelped: "150+",
+            donors: "89",
+            yearsActive: "5",
+          },
+        },
       });
     }, 600);
   });
@@ -31,21 +34,29 @@ export const getDonationCause = () => {
   // } catch (error) {
   //   throw new Error(error?.response?.data?.error || error.message);
   // }
-}
+};
 
 // Description: Create donor subscription
 // Endpoint: POST /api/donations/subscribe
 // Request: { name: string, email: string, phone: string, document: string, amount: number, frequency: string, currency: string }
 // Response: { success: boolean, subscriptionId: string, checkoutUrl: string, message: string }
-export const createDonorSubscription = (data: { name: string; email: string; phone: string; document: string; amount: number; frequency: string; currency: string }) => {
+export const createDonorSubscription = (data: {
+  name: string;
+  email: string;
+  phone: string;
+  document: string;
+  amount: number;
+  frequency: string;
+  currency: string;
+}) => {
   // Mocking the response
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         success: true,
-        subscriptionId: 'sub_' + Date.now(),
-        checkoutUrl: 'https://checkout.stripe.com/mock-url',
-        message: 'Assinatura criada com sucesso!'
+        subscriptionId: "sub_" + Date.now(),
+        checkoutUrl: "https://checkout.stripe.com/mock-url",
+        message: "Assinatura criada com sucesso!",
       });
     }, 1200);
   });
@@ -55,7 +66,7 @@ export const createDonorSubscription = (data: { name: string; email: string; pho
   // } catch (error) {
   //   throw new Error(error?.response?.data?.error || error.message);
   // }
-}
+};
 
 // Description: Get donor dashboard data
 // Endpoint: GET /api/donations/dashboard
@@ -68,27 +79,27 @@ export const getDonorDashboard = () => {
       resolve({
         dashboard: {
           donor: {
-            name: 'Maria Silva'
+            name: "Maria Silva",
           },
           stats: {
             totalDonated: 450,
             donationCount: 9,
-            monthsActive: 9
+            monthsActive: 9,
           },
           subscription: {
-            status: 'active',
+            status: "active",
             amount: 50,
-            frequency: 'monthly',
-            nextBilling: '2024-02-15T10:00:00Z'
+            frequency: "monthly",
+            nextBilling: "2024-02-15T10:00:00Z",
           },
           donations: [
-            { amount: 50, date: '2024-01-15T10:00:00Z', status: 'completed' },
-            { amount: 50, date: '2023-12-15T10:00:00Z', status: 'completed' },
-            { amount: 50, date: '2023-11-15T10:00:00Z', status: 'completed' },
-            { amount: 50, date: '2023-10-15T10:00:00Z', status: 'completed' },
-            { amount: 50, date: '2023-09-15T10:00:00Z', status: 'completed' }
-          ]
-        }
+            { amount: 50, date: "2024-01-15T10:00:00Z", status: "completed" },
+            { amount: 50, date: "2023-12-15T10:00:00Z", status: "completed" },
+            { amount: 50, date: "2023-11-15T10:00:00Z", status: "completed" },
+            { amount: 50, date: "2023-10-15T10:00:00Z", status: "completed" },
+            { amount: 50, date: "2023-09-15T10:00:00Z", status: "completed" },
+          ],
+        },
       });
     }, 800);
   });
@@ -98,7 +109,7 @@ export const getDonorDashboard = () => {
   // } catch (error) {
   //   throw new Error(error?.response?.data?.error || error.message);
   // }
-}
+};
 
 // Description: Update subscription (pause/resume)
 // Endpoint: PUT /api/donations/subscription
@@ -110,7 +121,7 @@ export const updateSubscription = (data: { action: string }) => {
     setTimeout(() => {
       resolve({
         success: true,
-        message: `Assinatura ${data.action === 'pause' ? 'pausada' : 'reativada'} com sucesso!`
+        message: `Assinatura ${data.action === "pause" ? "pausada" : "reativada"} com sucesso!`,
       });
     }, 800);
   });
@@ -120,7 +131,7 @@ export const updateSubscription = (data: { action: string }) => {
   // } catch (error) {
   //   throw new Error(error?.response?.data?.error || error.message);
   // }
-}
+};
 
 // Description: Cancel subscription
 // Endpoint: DELETE /api/donations/subscription
@@ -132,7 +143,7 @@ export const cancelSubscription = () => {
     setTimeout(() => {
       resolve({
         success: true,
-        message: 'Assinatura cancelada com sucesso!'
+        message: "Assinatura cancelada com sucesso!",
       });
     }, 800);
   });
@@ -142,4 +153,4 @@ export const cancelSubscription = () => {
   // } catch (error) {
   //   throw new Error(error?.response?.data?.error || error.message);
   // }
-}
+};

@@ -67,7 +67,7 @@ export function Header() {
           </NavLink>
           {isAuthenticated && isOrganization && (
             <NavLink
-              to="/my-products"
+              to="/create-product"
               className="text-muted-foreground transition-colors hover:text-foreground"
               style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
             >
@@ -109,9 +109,9 @@ export function Header() {
                 <DropdownMenuSeparator />
                 {isOrganization && (
                   <DropdownMenuItem asChild>
-                    <Link to="/my-products" className="cursor-pointer">
+                    <Link to="/create-product" className="cursor-pointer">
                       <Package className="mr-2 h-4 w-4" />
-                      <span>Meus Produtos</span>
+                      <span>Criar Produto</span>
                     </Link>
                   </DropdownMenuItem>
                 )}

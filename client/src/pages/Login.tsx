@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/useToast";
 import { loginUser, registerUser } from "@/api/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { setAccessToken } from "@/api/api"; // Import setAccessToken
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,19 +40,24 @@ export function Login() {
   const { toast } = useToast();
   const { login } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const response = await loginUser(loginData);
-      login(response.user);
+      setAccessToken(response.data.token); // Save token to localStorage
+      login(response.data.user, response.data.token); // Pass user and token
       toast({
         title: "Sucesso!",
         description: "Login realizado com sucesso!",
       });
-      // Redirect based on user type or to store
-      navigate("/loja");
+      // Redirect based on user type
+      if (response.data.user.userType === "organization") {
+        navigate("/create-product");
+      } else {
+        navigate("/loja");
+      }
     } catch (error) {
       toast({
         title: "Erro",
@@ -64,7 +70,7 @@ export function Login() {
     }
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     if (registerData.password !== registerData.confirmPassword) {
@@ -86,7 +92,8 @@ export function Login() {
         phone: registerData.phone,
         userType: registerData.userType,
       });
-      login(response.user);
+      setAccessToken(response.data.token); // Save token to localStorage
+      login(response.data.user, response.data.token); // Pass user and token
       toast({
         title: "Sucesso!",
         description: "Conta criada com sucesso!",

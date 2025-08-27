@@ -1,49 +1,58 @@
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Heart, Users, Target, Calendar, ArrowRight } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { useToast } from '@/hooks/useToast'
-import { getDonationCause } from '@/api/donations'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Heart, Users, Target, Calendar, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/useToast";
+import { getDonationCause } from "@/api/donations";
 
 export function Donations() {
-  const [cause, setCause] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const [cause, setCause] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadCause()
-  }, [])
+    loadCause();
+  }, []);
 
   const loadCause = async () => {
     try {
-      setIsLoading(true)
-      const response = await getDonationCause()
-      setCause(response.cause)
+      setIsLoading(true);
+      const response = await getDonationCause();
+      setCause(response.cause);
     } catch (error) {
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao carregar informações",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Erro ao carregar informações",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(amount)
-  }
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(amount);
+  };
 
   const calculateProgress = () => {
-    if (!cause) return 0
-    return Math.min((cause.raised / cause.goal) * 100, 100)
-  }
+    if (!cause) return 0;
+    return Math.min((cause.raised / cause.goal) * 100, 100);
+  };
 
   if (isLoading) {
     return (
@@ -54,13 +63,16 @@ export function Donations() {
             <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div
+                  key={i}
+                  className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                ></div>
               ))}
             </div>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -74,18 +86,19 @@ export function Donations() {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-            {cause?.title || 'Casa de Apoio às Mulheres'}
+            {cause?.title || "Rede Feminina de Combate Ao Câncer"}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            {cause?.subtitle || 'Apoiando mulheres em tratamento contra o câncer com amor, cuidado e esperança'}
+            {cause?.subtitle ||
+              "Apoiando mulheres em tratamento contra o câncer com amor, cuidado e esperança"}
           </p>
         </div>
 
         <Card className="overflow-hidden backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 shadow-xl">
           <div className="relative h-64 md:h-80">
             <img
-              src={cause?.mainImage || '/placeholder-cause.jpg'}
-              alt={cause?.title || 'Casa de Apoio'}
+              src={cause?.mainImage || "/placeholder-cause.jpg"}
+              alt={cause?.title || "Casa de Apoio"}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
@@ -99,7 +112,8 @@ export function Donations() {
           <CardContent className="p-6">
             <div className="prose dark:prose-invert max-w-none">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {cause?.description || `
+                {cause?.description ||
+                  `
                   Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer.
                   Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento.
                   Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.
@@ -116,7 +130,7 @@ export function Donations() {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.womenHelped || '150+'}
+                {cause?.stats?.womenHelped || "150+"}
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Mulheres ajudadas
@@ -130,7 +144,7 @@ export function Donations() {
                 <Heart className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.donors || '89'}
+                {cause?.stats?.donors || "89"}
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Doadores ativos
@@ -144,7 +158,7 @@ export function Donations() {
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.yearsActive || '5'}
+                {cause?.stats?.yearsActive || "5"}
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
                 Anos de atividade
@@ -166,7 +180,10 @@ export function Donations() {
           <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span>Arrecadado</span>
-              <span>{formatCurrency(cause?.raised || 12500)} de {formatCurrency(cause?.goal || 25000)}</span>
+              <span>
+                {formatCurrency(cause?.raised || 12500)} de{" "}
+                {formatCurrency(cause?.goal || 25000)}
+              </span>
             </div>
             <Progress value={calculateProgress()} className="h-3" />
             <div className="text-center">
@@ -179,7 +196,7 @@ export function Donations() {
 
         <div className="text-center">
           <Button
-            onClick={() => navigate('/become-donor')}
+            onClick={() => navigate("/become-donor")}
             size="lg"
             className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-8 py-4 text-lg"
           >
@@ -193,5 +210,5 @@ export function Donations() {
         </div>
       </div>
     </div>
-  )
+  );
 }

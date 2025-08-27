@@ -133,8 +133,48 @@ class Validators {
       errors.push("Preço deve ser um número maior que zero");
     }
 
-    if (!this.isValidUrl(productData.imageUrl)) {
-      errors.push("URL da imagem é inválida");
+    console.log(
+      "Validando imageUrls:",
+      JSON.stringify(productData.imageUrls, null, 2)
+    ); // Log do valor recebido
+
+    let imageUrlsArray = [];
+    if (!productData.imageUrls) {
+      console.log("Erro: imageUrls está ausente ou undefined");
+      errors.push("Pelo menos uma URL de imagem válida é obrigatória");
+    } else if (Array.isArray(productData.imageUrls)) {
+      console.log("imageUrls é um array:", productData.imageUrls);
+      imageUrlsArray = productData.imageUrls;
+    } else if (
+      typeof productData.imageUrls === "object" &&
+      productData.imageUrls !== null
+    ) {
+      console.log(
+        "imageUrls é um objeto, convertendo para array:",
+        productData.imageUrls
+      );
+      imageUrlsArray = Object.values(productData.imageUrls); // Converte objeto em array
+    } else {
+      console.log(
+        "Erro: imageUrls tem formato inválido:",
+        productData.imageUrls
+      );
+      errors.push("Pelo menos uma URL de imagem válida é obrigatória");
+    }
+
+    if (imageUrlsArray.length === 0) {
+      console.log("Erro: imageUrlsArray está vazio após conversão");
+      errors.push("Pelo menos uma URL de imagem válida é obrigatória");
+    } else if (!imageUrlsArray.every((url) => this.isValidUrl(url))) {
+      console.log(
+        "Erro: Alguma URL em imageUrlsArray é inválida:",
+        imageUrlsArray
+      );
+      errors.push("Pelo menos uma URL de imagem válida é obrigatória");
+    } else {
+      console.log("imageUrlsArray válido:", imageUrlsArray);
+      // Opcional: Atualizar productData.imageUrls para ser um array no resto do fluxo
+      productData.imageUrls = imageUrlsArray;
     }
 
     return {
@@ -174,4 +214,3 @@ class Validators {
 }
 
 module.exports = Validators;
-

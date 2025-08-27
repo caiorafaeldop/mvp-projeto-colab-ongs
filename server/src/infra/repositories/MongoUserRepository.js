@@ -31,11 +31,10 @@ class MongoUserRepository extends IUserRepository {
 
   async findByEmail(email) {
     try {
-      // Garante que o campo password venha do banco
-      const user = await UserModel.findOne({
+      // Retorna o documento Mongoose, não o objeto de domínio
+      return await UserModel.findOne({
         email: email.toLowerCase(),
       }).select("+password");
-      return user ? this._mapToEntity(user) : null;
     } catch (error) {
       throw new Error(`Error finding user by email: ${error.message}`);
     }

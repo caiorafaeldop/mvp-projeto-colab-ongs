@@ -17,10 +17,16 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    imageUrl: {
-      type: String,
+    imageUrls: {
+      type: [String],
       required: true,
-      trim: true,
+      validate: {
+        validator: (v) =>
+          Array.isArray(v) &&
+          v.length > 0 &&
+          v.every((url) => url.trim().length > 0),
+        message: "At least one non-empty image URL is required",
+      },
     },
     organizationId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -36,6 +42,10 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    category: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
@@ -48,4 +58,3 @@ productSchema.index({ organizationId: 1 });
 productSchema.index({ isAvailable: 1 });
 
 module.exports = mongoose.model("Product", productSchema);
-

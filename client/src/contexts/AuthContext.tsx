@@ -6,13 +6,13 @@ import React, {
   ReactNode,
 } from "react";
 import { User, getUserProfile, logoutUser } from "@/api/auth";
-import { getAccessToken } from "@/api/api";
+import { getAccessToken, setAccessToken } from "@/api/api"; // Importe setAccessToken
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User) => void;
+  login: (user: User, token: string) => void; // Adicione token como parâmetro
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -29,13 +29,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isAuthenticated = !!user;
 
-  const login = (userData: User) => {
+  const login = (userData: User, token: string) => {
     setUser(userData);
+    setAccessToken(token); // Salva o token no localStorage
   };
 
   const logout = () => {
-    logoutUser();
+    logoutUser(); // Chama API para logout (se necessário)
     setUser(null);
+    setAccessToken(null); // Limpa o token
   };
 
   const refreshUser = async () => {
@@ -46,13 +48,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (response.success) {
           setUser(response.user);
         } else {
-          // Só faz logout se a resposta indicar que o token é inválido
           logout();
         }
       }
     } catch (error: unknown) {
       console.error("Error refreshing user:", error);
-      // Só faz logout se for erro 401 (não autorizado)
       if (
         (error as { response?: { status?: number } })?.response?.status === 401
       ) {
@@ -70,7 +70,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        // Não faz logout automático na inicialização
       } finally {
         setIsLoading(false);
       }

@@ -24,9 +24,10 @@ class ProductService extends IProductService {
         productData.name,
         productData.description,
         productData.price,
-        productData.imageUrl,
+        productData.imageUrls,
         organizationId,
-        organization.name
+        organization.name,
+        productData.category
       );
 
       // Save product
@@ -37,11 +38,12 @@ class ProductService extends IProductService {
         name: savedProduct.name,
         description: savedProduct.description,
         price: savedProduct.price,
-        imageUrl: savedProduct.imageUrl,
+        imageUrls: savedProduct.imageUrls,
         organizationId: savedProduct.organizationId,
         organizationName: savedProduct.organizationName,
         isAvailable: savedProduct.isAvailable,
         createdAt: savedProduct.createdAt,
+        category: savedProduct.category,
       };
     } catch (error) {
       throw new Error(`Error creating product: ${error.message}`);
@@ -68,7 +70,8 @@ class ProductService extends IProductService {
         name: productData.name,
         description: productData.description,
         price: productData.price,
-        imageUrl: productData.imageUrl,
+        imageUrls: productData.imageUrls,
+        category: productData.category,
       });
 
       return {
@@ -76,11 +79,12 @@ class ProductService extends IProductService {
         name: updatedProduct.name,
         description: updatedProduct.description,
         price: updatedProduct.price,
-        imageUrl: updatedProduct.imageUrl,
+        imageUrls: updatedProduct.imageUrls,
         organizationId: updatedProduct.organizationId,
         organizationName: updatedProduct.organizationName,
         isAvailable: updatedProduct.isAvailable,
         updatedAt: updatedProduct.updatedAt,
+        category: updatedProduct.category,
       };
     } catch (error) {
       throw new Error(`Error updating product: ${error.message}`);
@@ -118,12 +122,13 @@ class ProductService extends IProductService {
         name: product.name,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls,
         organizationId: product.organizationId,
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
+        category: product.category,
       };
     } catch (error) {
       throw new Error(`Error getting product: ${error.message}`);
@@ -140,12 +145,13 @@ class ProductService extends IProductService {
         name: product.name,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls,
         organizationId: product.organizationId,
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
+        category: product.category,
       }));
     } catch (error) {
       throw new Error(`Error getting organization products: ${error.message}`);
@@ -161,12 +167,13 @@ class ProductService extends IProductService {
         name: product.name,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls,
         organizationId: product.organizationId,
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
+        category: product.category,
       }));
     } catch (error) {
       throw new Error(`Error getting available products: ${error.message}`);
@@ -186,12 +193,13 @@ class ProductService extends IProductService {
         name: product.name,
         description: product.description,
         price: product.price,
-        imageUrl: product.imageUrl,
+        imageUrls: product.imageUrls,
         organizationId: product.organizationId,
         organizationName: product.organizationName,
         isAvailable: product.isAvailable,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
+        category: product.category,
       }));
     } catch (error) {
       throw new Error(`Error searching products: ${error.message}`);
@@ -221,6 +229,7 @@ class ProductService extends IProductService {
         name: updatedProduct.name,
         isAvailable: updatedProduct.isAvailable,
         updatedAt: updatedProduct.updatedAt,
+        category: updatedProduct.category,
       };
     } catch (error) {
       throw new Error(`Error toggling product availability: ${error.message}`);
@@ -243,11 +252,15 @@ class ProductService extends IProductService {
       throw new Error("Product price must be greater than zero");
     }
 
-    if (!productData.imageUrl || productData.imageUrl.trim().length === 0) {
-      throw new Error("Product image URL is required");
+    if (
+      !productData.imageUrls ||
+      !Array.isArray(productData.imageUrls) ||
+      productData.imageUrls.length === 0 ||
+      !productData.imageUrls.every((url) => url.trim().length > 0)
+    ) {
+      throw new Error("At least one non-empty product image URL is required");
     }
   }
 }
 
 module.exports = ProductService;
-

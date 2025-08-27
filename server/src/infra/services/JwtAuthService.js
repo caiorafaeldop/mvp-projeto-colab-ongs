@@ -12,17 +12,18 @@ class JwtAuthService extends IAuthService {
 
   async register(userData) {
     try {
-      // Check if user already exists
+      console.log("[REGISTER] Dados recebidos:", userData);
       const existingUser = await this.userRepository.findByEmail(
         userData.email
       );
       if (existingUser) {
+        console.log("[REGISTER] Usuário já existe:", userData.email);
         throw new Error("User already exists with this email");
       }
 
-      // Create user based on type
       let user;
       if (userData.userType === "organization") {
+        console.log("[REGISTER] Criando usuário organizacional");
         user = User.createOrganizationUser(
           userData.name,
           userData.email,
@@ -30,6 +31,7 @@ class JwtAuthService extends IAuthService {
           userData.phone
         );
       } else {
+        console.log("[REGISTER] Criando usuário comum");
         user = User.createCommonUser(
           userData.name,
           userData.email,
@@ -37,15 +39,16 @@ class JwtAuthService extends IAuthService {
           userData.phone
         );
       }
+      console.log("[REGISTER] Usuário criado:", user);
 
-      // Hash password
       user.password = await this.hashPassword(user.password);
+      console.log("[REGISTER] Usuário após hash:", user);
 
-      // Save user
       const savedUser = await this.userRepository.save(user);
+      console.log("[REGISTER] Usuário salvo:", savedUser);
 
-      // Generate token
       const token = await this.generateToken(savedUser);
+      console.log("[REGISTER] Token gerado:", token);
 
       return {
         user: {
@@ -58,29 +61,36 @@ class JwtAuthService extends IAuthService {
         token,
       };
     } catch (error) {
+      console.error("[REGISTER] Erro no registro:", error.message);
       throw new Error(`Registration failed: ${error.message}`);
     }
   }
 
   async login(email, password) {
     try {
-      // Find user by email
+      console.log("[JWT LOGIN] Email recebido:", email);
+      console.log("[JWT LOGIN] Senha recebida:", password);
       const user = await this.userRepository.findByEmail(email);
+      console.log("[JWT LOGIN] Usuário encontrado:", user);
+
       if (!user) {
+        console.log("[JWT LOGIN] Nenhum usuário encontrado para o email.");
         throw new Error("Invalid credentials");
       }
 
-      // Verify password
+      console.log("[JWT LOGIN] Hash armazenado no usuário:", user.password);
+      console.log("[JWT LOGIN] Chamando comparePassword do JwtAuthService");
       const isValidPassword = await this.comparePassword(
         password,
         user.password
       );
-      if (!isValidPassword) {
-        throw new Error("Invalid credentials");
-      }
+      console.log(
+        "[JWT LOGIN] Resultado da comparação de senha:",
+        isValidPassword
+      );
 
-      // Generate token
       const token = await this.generateToken(user);
+      console.log("[JWT LOGIN] Token gerado com sucesso.");
 
       return {
         user: {
@@ -93,6 +103,7 @@ class JwtAuthService extends IAuthService {
         token,
       };
     } catch (error) {
+      console.log("[JWT LOGIN] Erro no login:", error);
       throw new Error(`Login failed: ${error.message}`);
     }
   }
@@ -141,8 +152,24 @@ class JwtAuthService extends IAuthService {
 
   async comparePassword(password, hashedPassword) {
     try {
-      return await bcrypt.compare(password, hashedPassword);
+      console.log("[JWT COMPARE] Senha recebida:", password);
+      console.log("[JWT COMPARE] Tipo da senha:", typeof password);
+      console.log("[JWT COMPARE] Comprimento da senha:", password.length);
+      console.log("[JWT COMPARE] Hash armazenado:", hashedPassword);
+      console.log("[JWT COMPARE] Tipo do hash:", typeof hashedPassword);
+      console.log("[JWT COMPARE] Comprimento do hash:", hashedPassword.length);
+
+      const isMatch = await bcrypt.compare(password, hashedPassword);
+      console.log("[JWT COMPARE] Resultado da comparação:", isMatch);
+
+      if (!isMatch) {
+        console.log("[JWT COMPARE] Senha inválida");
+        throw new Error("Invalid credentials");
+      }
+
+      return true; // Retorna explicitamente true se a comparação for bem-sucedida
     } catch (error) {
+      console.error("[JWT COMPARE] Erro na comparação:", error.message);
       throw new Error(`Password comparison failed: ${error.message}`);
     }
   }

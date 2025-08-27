@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "./api";
 
 export interface Product {
   _id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   category: string;
   images: string[];
-  stock: number;
+  stock?: number;
   isActive?: boolean;
   organizationId?: string;
   createdAt?: string;
@@ -32,10 +33,26 @@ export interface UpdateProductData {
   stock?: number;
 }
 
+export interface ApiProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category?: string;
+  stock?: number;
+  isAvailable?: boolean;
+  organizationId?: string;
+  organizationName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Description: Get all available products
 // Endpoint: GET /api/products
 // Response: { success: boolean, products: Product[] }
 export const getProducts = async (): Promise<{
+  data: never[];
   success: boolean;
   products: Product[];
 }> => {
@@ -56,7 +73,11 @@ export const getProducts = async (): Promise<{
 // Response: { success: boolean, products: Product[] }
 export const searchProducts = async (
   query: string
-): Promise<{ success: boolean; products: Product[] }> => {
+): Promise<{
+  data: never[];
+  success: boolean;
+  products: Product[];
+}> => {
   try {
     const response = await api.get(
       `/api/products/search?q=${encodeURIComponent(query)}`
@@ -73,10 +94,10 @@ export const searchProducts = async (
 
 // Description: Get product by ID
 // Endpoint: GET /api/products/:id
-// Response: { success: boolean, product: Product }
+// Response: { success: boolean, data: ApiProduct }
 export const getProductById = async (
   id: string
-): Promise<{ success: boolean; product: Product }> => {
+): Promise<{ success: boolean; data: ApiProduct }> => {
   try {
     const response = await api.get(`/api/products/${id}`);
     return response.data;
