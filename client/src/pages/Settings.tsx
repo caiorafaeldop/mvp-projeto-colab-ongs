@@ -59,7 +59,7 @@ export function Settings() {
     );
   }
 
-  const isAdmin = user.userType === "admin";
+  const isAdmin = user.userType === "organization";
 
   return (
     <div className="container mx-auto py-8">
