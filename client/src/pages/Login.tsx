@@ -47,7 +47,7 @@ export function Login() {
       });
       // Redirect based on user type
       if (response.data.user.userType === "organization") {
-        navigate("/create-product");
+        navigate("/");
       } else {
         navigate("/loja");
       }
@@ -249,7 +249,6 @@ export function Login() {
                       />
                     </div>
                   </div>
-
 
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Senha</Label>

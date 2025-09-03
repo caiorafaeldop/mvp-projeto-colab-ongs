@@ -307,10 +307,7 @@ export function CreateProduct() {
                     min="0"
                     value={formData.stock}
                     onChange={(e) =>
-                      handleInputChange(
-                        "stock",
-                        parseInt(e.target.value) || 0
-                      )
+                      handleInputChange("stock", parseInt(e.target.value) || 0)
                     }
                     placeholder="0"
                     required
@@ -390,7 +387,7 @@ export function CreateProduct() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/create-product")}
+                  onClick={() => navigate("/loja")}
                   className="flex-1"
                 >
                   Cancelar

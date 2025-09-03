@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
 
 // Função para testar a API
 async function testAPI() {
@@ -9,7 +9,7 @@ async function testAPI() {
   try {
     // 1. Teste de Health Check
     console.log("1. Testando Health Check...");
-    const healthResponse = await axios.get("http://localhost:3000/health");
+    const healthResponse = await axios.get(`${API_BASE_URL}/health`);
     console.log("✅ Health Check:", healthResponse.data);
     console.log("");
 
@@ -189,4 +189,3 @@ if (require.main === module) {
 }
 
 module.exports = testAPI;
-
