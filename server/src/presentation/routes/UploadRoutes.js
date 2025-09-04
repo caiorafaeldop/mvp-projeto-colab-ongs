@@ -31,7 +31,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     const result = await streamUpload(req);
     res.json({ success: true, url: result.secure_url });
   } catch (error) {
-    console.error(error); // Adicione esta linha para logar o erro no terminal
+    console.error(error);
     res.status(500).json({ success: false, message: error.message, error });
   }
 });
