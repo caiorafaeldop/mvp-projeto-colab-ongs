@@ -5,9 +5,8 @@ import axios, {
 } from "axios";
 import JSONbig from "json-bigint";
 
-// URL base do servidor backend
-// const API_BASE_URL = "http://localhost:3000";
-const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
+// URL base do servidor backend - usa variável de ambiente
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mvp-colab-ongs-backend.onrender.com";
 const localApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
