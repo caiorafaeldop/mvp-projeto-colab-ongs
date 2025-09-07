@@ -5,14 +5,14 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { User, getUserProfile, logoutUser } from "@/api/auth";
-import { getAccessToken, setAccessToken } from "@/api/api"; // Importe setAccessToken
+import { User, getUserProfile, logoutUser, refreshToken } from "@/api/auth";
+import { setAccessToken } from "@/api/api";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token: string) => void; // Adicione token como parâmetro
+  login: (user: User, token: string) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -30,63 +30,87 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   const login = (userData: User, token: string) => {
+    console.log("[AuthProvider] Login - Dados do usuário:", userData, "Token:", token);
     setUser(userData);
-    setAccessToken(token); // Salva o token no localStorage
+    setAccessToken(token);
+    console.log("[AuthProvider] Token salvo no login:", token);
   };
 
   const logout = () => {
-    logoutUser(); // Chama API para logout (se necessário)
+    console.log("[AuthProvider] Fazendo logout...");
+    logoutUser();
     setUser(null);
-    setAccessToken(null); // Limpa o token
+    setAccessToken(null);
+    console.log("[AuthProvider] Logout concluído");
   };
 
   const refreshUser = async () => {
     try {
-      const token = getAccessToken();
-      if (token) {
-        const response = await getUserProfile();
-        if (response.success) {
-          setUser(response.user);
-        } else {
-          logout();
+      console.log("[AuthProvider] Iniciando refreshUser...");
+      try {
+        const refreshData = await refreshToken();
+        console.log("[AuthProvider] Dados do refreshToken:", refreshData);
+        if (refreshData.accessToken) {
+          setAccessToken(refreshData.accessToken);
+          console.log("[AuthProvider] Novo accessToken salvo:", refreshData.accessToken);
         }
+      } catch (refreshError) {
+        console.error("[AuthProvider] Erro no refreshToken:", refreshError);
+        logout();
+        return;
       }
-    } catch (error: unknown) {
-      console.error("Error refreshing user:", error);
-      if (
-        (error as { response?: { status?: number } })?.response?.status === 401
-      ) {
+      
+      console.log("[AuthProvider] Buscando perfil do usuário...");
+      const response = await getUserProfile();
+      console.log("[AuthProvider] Resposta do getUserProfile:", response);
+      if (response.success) {
+        setUser(response.user);
+        console.log("[AuthProvider] Usuário atualizado:", response.user);
+      } else {
+        console.error("[AuthProvider] Falha ao buscar perfil, fazendo logout...");
         logout();
       }
+    } catch (error: unknown) {
+      console.error("[AuthProvider] Erro em refreshUser:", error);
+      logout();
     }
   };
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = getAccessToken();
+        console.log("[AuthProvider] Iniciando initializeAuth...");
+        try {
+          const refreshData = await refreshToken();
+          console.log("[AuthProvider] Dados do refreshToken em initializeAuth:", refreshData);
+          if (refreshData.accessToken) {
+            setAccessToken(refreshData.accessToken);
+            console.log("[AuthProvider] Novo accessToken salvo em initializeAuth:", refreshData.accessToken);
+          }
+          console.log("[AuthProvider] Buscando perfil do usuário em initializeAuth...");
+          const profileResponse = await getUserProfile();
+          console.log("[AuthProvider] Resposta do getUserProfile em initializeAuth:", profileResponse);
         
-        if (token) {
-          try {
-            const response = await getUserProfile();
-            
-            if (response.success && response.user) {
-              setUser(response.user);
-            } else {
-              // Profile response not successful, clear token
-              setAccessToken(null);
-              setUser(null);
-            }
-          } catch (error) {
-            console.error("Error getting user profile:", error);
-            // Token is likely invalid or expired, clear it
+          if (profileResponse.success && profileResponse.data && profileResponse.data.id) {
+            setUser(profileResponse.data);
+            console.log("[AuthProvider] Usuário definido em initializeAuth:", profileResponse.data);
+          } else {
+            console.log("[AuthProvider] Falha ao buscar perfil ou ID undefined, limpando tokens...");
+            console.log("[AuthProvider] Dados do perfil:", profileResponse.data);
             setAccessToken(null);
             setUser(null);
           }
+        } catch (error) {
+          console.error("[AuthProvider] Erro no refreshToken em initializeAuth:", error);
+          setAccessToken(null);
+          setUser(null);
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        console.error("[AuthProvider] Erro geral em initializeAuth:", error);
+        setAccessToken(null);
+        setUser(null);
       } finally {
+        console.log("[AuthProvider] Finalizando initializeAuth, isLoading = false");
         setIsLoading(false);
       }
     };
