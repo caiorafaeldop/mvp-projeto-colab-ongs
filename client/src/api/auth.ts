@@ -12,7 +12,7 @@ export interface LoginResponse {
   success: boolean;
   data: {
     user: User;
-    token: string;
+    accessToken: string;
   };
   message: string;
 }
@@ -21,7 +21,7 @@ export interface RegisterResponse {
   success: boolean;
   data: {
     user: User;
-    token: string;
+    accessToken: string;
   };
   message: string;
 }
@@ -37,9 +37,24 @@ export const loginUser = async (data: {
   password: string;
 }): Promise<LoginResponse> => {
   try {
+    console.log("[loginUser] Tentando login com:", data);
     const response = await api.post("/api/auth/login", data);
+    console.log("[loginUser] Resposta do login:", response.data);
+    
+    // Verificar se o accessToken existe na resposta
+    if (response.data.data && response.data.data.accessToken) {
+      console.log("[loginUser] AccessToken encontrado:", response.data.data.accessToken);
+      // Salvar o token imediatamente após o login
+      const { setAccessToken } = await import("./api");
+      setAccessToken(response.data.data.accessToken);
+      console.log("[loginUser] Token salvo após login:", response.data.data.accessToken);
+    } else {
+      console.error("[loginUser] AccessToken não encontrado na resposta:", response.data);
+    }
+    
     return response.data;
   } catch (error: any) {
+    console.error("[loginUser] Erro ao fazer login:", error.response?.data || error.message);
     throw new Error(
       error?.response?.data?.message || error.message || "Erro ao fazer login"
     );
@@ -55,9 +70,20 @@ export const registerUser = async (data: {
   userType: string;
 }): Promise<RegisterResponse> => {
   try {
+    console.log("[registerUser] Tentando registro com:", data);
     const response = await api.post("/api/auth/register", data);
+    console.log("[registerUser] Resposta do registro:", response.data);
+    
+    // Verificar se o accessToken existe na resposta
+    if (response.data.data && response.data.data.accessToken) {
+      console.log("[registerUser] AccessToken encontrado:", response.data.data.accessToken);
+    } else {
+      console.error("[registerUser] AccessToken não encontrado na resposta:", response.data);
+    }
+    
     return response.data;
   } catch (error: any) {
+    console.error("[registerUser] Erro ao criar conta:", error.response?.data || error.message);
     throw new Error(
       error?.response?.data?.message || error.message || "Erro ao criar conta"
     );
@@ -67,11 +93,31 @@ export const registerUser = async (data: {
 // Get user profile
 export const getUserProfile = async (): Promise<ProfileResponse> => {
   try {
+    console.log("[getUserProfile] Buscando perfil do usuário...");
     const response = await api.get("/api/auth/profile");
+    console.log("[getUserProfile] Resposta do perfil:", response.data);
     return response.data;
   } catch (error: any) {
+    console.error("[getUserProfile] Erro ao buscar perfil:", error.response?.data || error.message);
     throw new Error(
       error?.response?.data?.message || error.message || "Erro ao buscar perfil"
+    );
+  }
+};
+
+// Refresh token
+export const refreshToken = async (): Promise<{ accessToken: string }> => {
+  try {
+    console.log("[refreshToken] Tentando renovar token...");
+    const response = await api.post("/api/auth/refresh");
+    console.log("[refreshToken] Resposta do refresh:", response.data);
+    const newAccessToken = response.data.data.accessToken;
+    console.log("[refreshToken] Novo accessToken:", newAccessToken);
+    return { accessToken: newAccessToken };
+  } catch (error: any) {
+    console.error("[refreshToken] Erro ao renovar token:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao renovar token"
     );
   }
 };
@@ -79,8 +125,10 @@ export const getUserProfile = async (): Promise<ProfileResponse> => {
 // Logout
 export const logoutUser = async (): Promise<void> => {
   try {
+    console.log("[logoutUser] Fazendo logout...");
     await api.post("/api/auth/logout");
+    console.log("[logoutUser] Logout bem-sucedido");
   } catch (error: any) {
-    console.error("Erro ao fazer logout:", error);
+    console.error("[logoutUser] Erro ao fazer logout:", error.response?.data || error.message);
   }
 };
