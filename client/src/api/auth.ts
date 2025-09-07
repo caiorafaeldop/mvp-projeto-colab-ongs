@@ -1,3 +1,4 @@
+import axios from "axios";
 import api from "./api";
 
 export interface User {
@@ -28,7 +29,8 @@ export interface RegisterResponse {
 
 export interface ProfileResponse {
   success: boolean;
-  user: User;
+  message: string;
+  data: User;
 }
 
 // Login
@@ -109,7 +111,9 @@ export const getUserProfile = async (): Promise<ProfileResponse> => {
 export const refreshToken = async (): Promise<{ accessToken: string }> => {
   try {
     console.log("[refreshToken] Tentando renovar token...");
-    const response = await api.post("/api/auth/refresh");
+    const response = await axios.post('/api/auth/refresh', {}, {
+      withCredentials: true 
+    });
     console.log("[refreshToken] Resposta do refresh:", response.data);
     const newAccessToken = response.data.data.accessToken;
     console.log("[refreshToken] Novo accessToken:", newAccessToken);

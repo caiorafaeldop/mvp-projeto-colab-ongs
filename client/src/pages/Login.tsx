@@ -39,8 +39,8 @@ export function Login() {
 
     try {
       const response = await loginUser(loginData);
-      setAccessToken(response.data.token); // Save token to localStorage
-      login(response.data.user, response.data.token); // Pass user and token
+      setAccessToken(response.data.accessToken); // Save token to localStorage
+      login(response.data.user, response.data.accessToken); // Pass user and token
       toast({
         title: "Sucesso!",
         description: "Login realizado com sucesso!",
@@ -85,8 +85,8 @@ export function Login() {
         phone: registerData.phone,
         userType: "common",
       });
-      setAccessToken(response.data.token); // Save token to localStorage
-      login(response.data.user, response.data.token); // Pass user and token
+      setAccessToken(response.data.accessToken); // Save token to localStorage
+      login(response.data.user, response.data.accessToken); // Pass user and token
       toast({
         title: "Sucesso!",
         description: "Conta criada com sucesso!",

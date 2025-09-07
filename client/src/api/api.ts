@@ -23,28 +23,20 @@ const localApi = axios.create({
 let accessToken: string | null = null;
 
 // Função para definir o token de acesso
-export const setAccessToken = (token: string | null) => {
-  console.log("[setAccessToken] Salvando token:", token);
-  accessToken = token;
+export function setAccessToken(token: string | null) {
   if (token) {
     localStorage.setItem("accessToken", token);
-    console.log("[setAccessToken] Token salvo no localStorage:", localStorage.getItem("accessToken"));
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
     localStorage.removeItem("accessToken");
-    console.log("[setAccessToken] Token removido do localStorage");
+    delete axios.defaults.headers.common["Authorization"];
   }
-};
+}
 
-// Função para obter o token de acesso
-export const getAccessToken = (): string | null => {
-  if (!accessToken) {
-    accessToken = localStorage.getItem("accessToken");
-    console.log("[getAccessToken] Token recuperado do localStorage:", accessToken);
-  } else {
-    console.log("[getAccessToken] Token já em memória:", accessToken);
-  }
-  return accessToken;
-};
+// opcional: pegar token salvo no localStorage
+export function getAccessToken() {
+  return localStorage.getItem("accessToken");
+}
 
 // Interceptor para adicionar o token de autenticação automaticamente
 localApi.interceptors.request.use(
