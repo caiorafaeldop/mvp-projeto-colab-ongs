@@ -1,12 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, getUserProfile, logoutUser, refreshToken } from "@/api/auth";
-import { setAccessToken } from "@/api/api";
+import { setAccessToken, getAccessToken } from "@/api/api";
 
 interface AuthContextType {
   user: User | null;
@@ -30,47 +24,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   const login = (userData: User, token: string) => {
-    console.log("[AuthProvider] Login - Dados do usuário:", userData, "Token:", token);
     setUser(userData);
     setAccessToken(token);
-    console.log("[AuthProvider] Token salvo no login:", token);
   };
 
   const logout = () => {
-    console.log("[AuthProvider] Fazendo logout...");
-    logoutUser();
+    logoutUser(); // chama sua API de logout
     setUser(null);
     setAccessToken(null);
-    console.log("[AuthProvider] Logout concluído");
   };
 
   const refreshUser = async () => {
     try {
-      console.log("[AuthProvider] Iniciando refreshUser...");
-      try {
-        const refreshData = await refreshToken();
-        console.log("[AuthProvider] Dados do refreshToken:", refreshData);
-        if (refreshData.accessToken) {
-          setAccessToken(refreshData.accessToken);
-          console.log("[AuthProvider] Novo accessToken salvo:", refreshData.accessToken);
-        }
-      } catch (refreshError) {
-        console.error("[AuthProvider] Erro no refreshToken:", refreshError);
-        logout();
-        return;
-      }
-      
-      console.log("[AuthProvider] Buscando perfil do usuário...");
-      const response = await getUserProfile();
-      console.log("[AuthProvider] Resposta do getUserProfile:", response);
-      if (response.success) {
-        setUser(response.user);
-        console.log("[AuthProvider] Usuário atualizado:", response.user);
-      } else {
-        console.error("[AuthProvider] Falha ao buscar perfil, fazendo logout...");
-        logout();
-      }
-    } catch (error: unknown) {
+      const refreshData = await refreshToken();
+      if (!refreshData?.accessToken) throw new Error("Não foi possível renovar token");
+
+      setAccessToken(refreshData.accessToken);
+
+      const profileResponse = await getUserProfile();
+      if (!profileResponse.success) throw new Error("Não foi possível buscar perfil");
+
+      setUser(profileResponse.data);
+    } catch (error) {
       console.error("[AuthProvider] Erro em refreshUser:", error);
       logout();
     }
@@ -78,39 +53,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      setIsLoading(true);
       try {
-        console.log("[AuthProvider] Iniciando initializeAuth...");
-        try {
-          const refreshData = await refreshToken();
-          console.log("[AuthProvider] Dados do refreshToken em initializeAuth:", refreshData);
-          if (refreshData.accessToken) {
-            setAccessToken(refreshData.accessToken);
-            console.log("[AuthProvider] Novo accessToken salvo em initializeAuth:", refreshData.accessToken);
-          }
-          console.log("[AuthProvider] Buscando perfil do usuário em initializeAuth...");
+        const savedToken = getAccessToken();
+        if (savedToken) {
+          setAccessToken(savedToken); // aplica token no axios
           const profileResponse = await getUserProfile();
-          console.log("[AuthProvider] Resposta do getUserProfile em initializeAuth:", profileResponse);
-        
-          if (profileResponse.success && profileResponse.data && profileResponse.data.id) {
+          if (profileResponse.success && profileResponse.data) {
             setUser(profileResponse.data);
-            console.log("[AuthProvider] Usuário definido em initializeAuth:", profileResponse.data);
           } else {
-            console.log("[AuthProvider] Falha ao buscar perfil ou ID undefined, limpando tokens...");
-            console.log("[AuthProvider] Dados do perfil:", profileResponse.data);
-            setAccessToken(null);
-            setUser(null);
+            logout();
           }
-        } catch (error) {
-          console.error("[AuthProvider] Erro no refreshToken em initializeAuth:", error);
-          setAccessToken(null);
-          setUser(null);
         }
       } catch (error) {
-        console.error("[AuthProvider] Erro geral em initializeAuth:", error);
-        setAccessToken(null);
-        setUser(null);
+        console.error("[AuthProvider] Erro ao inicializar auth:", error);
+        logout();
       } finally {
-        console.log("[AuthProvider] Finalizando initializeAuth, isLoading = false");
         setIsLoading(false);
       }
     };
@@ -118,22 +76,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth();
   }, []);
 
-  const value: AuthContextType = {
-    user,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    refreshUser,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth deve ser usado dentro de AuthProvider");
   return context;
 }
