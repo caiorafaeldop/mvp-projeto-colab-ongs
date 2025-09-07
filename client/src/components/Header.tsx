@@ -24,7 +24,7 @@ export function Header() {
   const handleLogout = () => {
     logout();
   };
-
+  // comentario
   const getUserInitials = (name: string) => {
     return name
       .split(" ")
@@ -79,7 +79,7 @@ export function Header() {
         <div className="flex items-center gap-3">
           {isAuthenticated && user && (
             <span className="hidden md:inline-block text-sm font-medium text-foreground">
-              Olá, {user.name.split(' ')[0]}
+              Olá, {user.name.split(" ")[0]}
             </span>
           )}
           {isAuthenticated ? (
