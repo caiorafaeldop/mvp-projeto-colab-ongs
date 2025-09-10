@@ -25,11 +25,7 @@ export function Home() {
             Rede Feminina de Combate ao Câncer
           </h1>
           <p className="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
-            Somos uma plataforma dedicada a divulgar produtos e doações de
-            projetos sem fins lucrativos. Conectamos ONGs com pessoas que
-            desejam fazer a diferença, começando com a Casa de Apoio às Mulheres
-            com Câncer e expandindo para outras organizações que transformam
-            vidas.
+            Acolhemos pessoas com câncer em tratamento no Hospital Laureano (João Pessoa, PB), assim como seus familiares, oferecendo serviços de apoio assistencial, proteção, enfrentamento e fortalecimento, com o objetivo de promover a melhoria da qualidade de vida.
           </p>
         </div>
 
