@@ -22,7 +22,7 @@ export function Home() {
         </div>
         <div className="text-center space-y-6">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight">
-            Rede Feminina de Combate ao Câncer
+            Rede Feminina de Combate <br /> ao Câncer
           </h1>
           <p className="text-lg md:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
             Acolhemos pessoas com câncer em tratamento no Hospital Laureano (João Pessoa, PB), assim como seus familiares, oferecendo serviços de apoio assistencial, proteção, enfrentamento e fortalecimento, com o objetivo de promover a melhoria da qualidade de vida.
@@ -64,8 +64,7 @@ export function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 leading-relaxed">
-                100% do lucro é revertido para apoiar as atividades da Rede
-                Feminina.
+                100% do arrecadado é revertido para apoiar as atividades da RFCC.PB.
               </p>
             </CardContent>
           </Card>
@@ -97,8 +96,7 @@ export function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Sua doação e compra se transforma em apoio, esperança e cuidado
-                para muitas mulheres.
+                Sua doação e compra se transforma em apoio, esperança e cuidado para muitas pessoas.
               </p>
             </CardContent>
           </Card>
