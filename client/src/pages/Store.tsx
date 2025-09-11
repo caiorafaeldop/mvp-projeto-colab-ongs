@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
-import { getProducts, searchProducts, Product } from "@/api/store";
+import { getProducts, Product } from "@/api/store";
 import { useToast } from "@/hooks/useToast";
+import { useIsMobile } from "@/hooks/useMobile";
 import {
   Carousel,
   CarouselContent,
@@ -29,6 +30,7 @@ export function Store() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const categories = [
     { value: "all", label: "Todas as categorias" },
@@ -57,6 +59,8 @@ export function Store() {
               name: item.name,
               category: item.category ? item.category.toLowerCase() : "outros", // normaliza para lowercase
               price: item.price,
+              description: item.description || "",
+              stock: item.stock || 0,
             })
           );
           setProducts(transformedProducts);
@@ -128,44 +132,44 @@ export function Store() {
 
   const ProductSkeleton = () => (
     <Card className="animate-pulse">
-      <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg"></div>
-      <CardContent className="p-4">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+      <div className={`bg-gray-200 dark:bg-gray-700 rounded-t-lg ${isMobile ? 'h-40' : 'h-48'}`}></div>
+      <CardContent className={`${isMobile ? 'p-2' : 'p-4'}`}>
+        <div className={`bg-gray-200 dark:bg-gray-700 rounded mb-2 ${isMobile ? 'h-4' : 'h-6'}`}></div>
+        <div className={`bg-gray-200 dark:bg-gray-700 rounded w-1/2 ${isMobile ? 'h-3' : 'h-4'}`}></div>
       </CardContent>
     </Card>
   );
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight">
+    <div className="container mx-auto py-4 md:py-8 px-3 md:px-6">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className={`font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight ${isMobile ? 'text-2xl' : 'text-4xl md:text-6xl'}`}>
           Bazar Solidário
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
+        <p className={`text-gray-600 dark:text-gray-300 mt-2 ${isMobile ? 'text-sm' : 'text-lg'}`}>
           Produtos que apoiam uma grande causa!
         </p>
       </div>
 
-      <Card className="mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
+      <Card className="mb-6 md:mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
+        <CardContent className={`${isMobile ? 'p-3' : 'p-6'}`}>
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
               <Input
                 placeholder="Buscar pelo nome do produto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
+                className={`${isMobile ? 'pl-9 h-9 text-sm' : 'pl-10 h-10'}`}
               />
             </div>
-            <div className="md:w-64">
+            <div className={`${isMobile ? 'w-full' : 'md:w-64'}`}>
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="h-10">
-                  <Filter className="w-4 h-4 mr-2" />
+                <SelectTrigger className={`${isMobile ? 'h-9' : 'h-10'}`}>
+                  <Filter className={`mr-2 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                   <SelectValue placeholder="Filtrar por categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -182,61 +186,64 @@ export function Store() {
       </Card>
 
       {isLoading || isSearching ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
+        // Skeleton Grid - Responsivo
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+          {[...Array(isMobile ? 4 : 8)].map((_, i) => (
             <ProductSkeleton key={i} />
           ))}
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        // Products Grid - Responsivo para mobile
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
           {filteredProducts.map((product) => (
             <Card
+              key={product._id}
               className="overflow-hidden h-full flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300"
               style={{ zIndex: 1 }}
             >
-              <div className="relative h-60 overflow-hidden">
-                <Carousel
-                  opts={{
-                    loop: true,
-                  }}
-                  className="w-full h-full"
-                >
-                  <CarouselContent className="w-full h-full">
-                    {product.images.map((image, index) => (
-                      <CarouselItem key={index} className="w-full h-full">
-                        <img
-                          src={image || "/placeholder-cause.jpg"}
-                          alt={`${product.name} - Image ${index + 1}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              <Link to={`/produto/${product._id}`}>
+                <div className={`relative overflow-hidden ${isMobile ? 'h-40' : 'h-60'}`}>
+                  <Carousel
+                    opts={{
+                      loop: true,
+                    }}
+                    className="w-full h-full"
+                  >
+                    <CarouselContent className="w-full h-full">
+                      {product.images.map((image, index) => (
+                        <CarouselItem key={index} className="w-full h-full">
+                          <img
+                            src={image || "/placeholder-cause.jpg"}
+                            alt={`${product.name} - Image ${index + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    {product.images.length > 1 && !isMobile && (
+                      <>
+                        <CarouselPrevious
+                          className="left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
+                          style={{ pointerEvents: "auto" }}
                         />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  {product.images.length > 1 && (
-                    <>
-                      <CarouselPrevious
-                        className="left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
-                        style={{ pointerEvents: "auto" }}
-                      />
-                      <CarouselNext
-                        className="right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
-                        style={{ pointerEvents: "auto" }}
-                      />
-                    </>
-                  )}
-                </Carousel>
-              </div>
-              <Link to={`/produto/${product._id}`} key={product._id}>
-                <CardContent className="p-4 flex-grow flex flex-col justify-between">
+                        <CarouselNext
+                          className="right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
+                          style={{ pointerEvents: "auto" }}
+                        />
+                      </>
+                    )}
+                  </Carousel>
+                </div>
+                <CardContent className={`flex-grow flex flex-col justify-between ${isMobile ? 'p-2' : 'p-4'}`}>
                   <div>
-                    <span className="text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full">
+                    <span className={`text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full ${isMobile ? 'text-[10px]' : ''}`}>
                       {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </span>
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white my-2 line-clamp-2">
+                    <h3 className={`font-semibold text-gray-900 dark:text-white my-2 line-clamp-2 ${isMobile ? 'text-sm leading-tight' : 'text-lg'}`}>
                       {product.name}
                     </h3>
                   </div>
-                  <span className="text-xl font-bold text-pink-600">
+                  <span className={`font-bold text-pink-600 ${isMobile ? 'text-base' : 'text-xl'}`}>
                     {formatPrice(product.price)}
                   </span>
                 </CardContent>
