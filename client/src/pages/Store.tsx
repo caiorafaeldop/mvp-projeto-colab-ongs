@@ -201,7 +201,7 @@ export function Store() {
               className="overflow-hidden h-full flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300"
               style={{ zIndex: 1 }}
             >
-              <Link to={`/produto/${product._id}`}>
+              
                 <div className={`relative overflow-hidden ${isMobile ? 'h-40' : 'h-60'}`}>
                   <Carousel
                     opts={{
@@ -234,6 +234,7 @@ export function Store() {
                     )}
                   </Carousel>
                 </div>
+                <Link to={`/produto/${product._id}`}>
                 <CardContent className={`flex-grow flex flex-col justify-between ${isMobile ? 'p-2' : 'p-4'}`}>
                   <div>
                     <span className={`text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full ${isMobile ? 'text-[10px]' : ''}`}>

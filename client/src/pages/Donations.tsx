@@ -95,32 +95,55 @@ export function Donations() {
         </div>
 
         <Card className="overflow-hidden backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 shadow-xl">
-          <div className="relative h-64 md:h-80">
-            <img
-              src={cause?.mainImage || "/placeholder-cause.jpg"}
-              alt={cause?.title || "Casa de Apoio"}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-            <div className="absolute bottom-4 left-4 text-white">
-              <h2 className="text-2xl font-bold mb-2">Nossa Missão</h2>
-              <p className="text-sm opacity-90">
-                Oferecendo suporte integral durante o tratamento
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+            {/* Imagem à esquerda */}
+            <div className="relative h-64 lg:h-96">
+              <img
+                src={cause?.mainImage || "/img/redeFemininaCapa.jpg"}
+                alt={cause?.title || "Casa de Apoio"}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20"></div>
             </div>
+            
+            {/* Texto à direita */}
+            <CardContent className="p-6 lg:p-8 flex flex-col justify-center">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800 w-fit">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
+                    Nossa Missão
+                  </span>
+                </div>
+                
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                  Oferecendo suporte integral durante o tratamento
+                </h2>
+                
+                <div className="prose dark:prose-invert max-w-none">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base lg:text-lg">
+                    {cause?.description ||
+                      `Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer. Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento. Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.`}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-500" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {cause?.stats?.womenHelped || "150+"} mulheres ajudadas
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-purple-500" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {cause?.stats?.yearsActive || "5"} anos de atividade
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </div>
-          <CardContent className="p-6">
-            <div className="prose dark:prose-invert max-w-none">
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {cause?.description ||
-                  `
-                  Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer.
-                  Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento.
-                  Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.
-                `}
-              </p>
-            </div>
-          </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
