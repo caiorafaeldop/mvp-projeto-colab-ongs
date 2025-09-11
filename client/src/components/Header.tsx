@@ -39,7 +39,7 @@ export function Header() {
   const closeSheet = () => {
     setIsSheetOpen(false);
   };
-  // comentario
+
   const getUserInitials = (name: string) => {
     return name
       .split(" ")
@@ -95,6 +95,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {/* Mobile Menu Button */}
           {isMobile && (
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
