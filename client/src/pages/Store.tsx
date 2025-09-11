@@ -141,7 +141,7 @@ export function Store() {
   );
 
   return (
-    <div className="container mx-auto py-4 md:py-8 px-3 md:px-6">
+    <div className="container mx-auto py-2 md:py-4 px-3 md:px-6">
       <div className="text-center mb-6 md:mb-8">
         <h1 className={`font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight ${isMobile ? 'text-2xl' : 'text-4xl md:text-6xl'}`}>
           Bazar Solidário

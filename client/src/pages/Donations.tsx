@@ -1,235 +1,101 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Heart, Users, Target, Calendar, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/useToast";
-import { getDonationCause } from "@/api/donations";
-
 export function Donations() {
-  const [cause, setCause] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadCause();
-  }, []);
-
-  const loadCause = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getDonationCause();
-      setCause(response.cause);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Erro ao carregar informações",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
-  const calculateProgress = () => {
-    if (!cause) return 0;
-    return Math.min((cause.raised / cause.goal) * 100, 100);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-[calc(100vh-8rem)] p-4">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-8">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"
-                ></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-[calc(100vh-8rem)] p-4">
-      <div className="w-full max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800">
-            <Heart className="w-4 h-4 text-pink-500" />
-            <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
-              Faça a diferença
-            </span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
-            {cause?.title || "Rede Feminina de Combate Ao Câncer"}
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            {cause?.subtitle ||
-              "Apoiando mulheres em tratamento contra o câncer com amor, cuidado e esperança"}
-          </p>
-        </div>
-
-        <Card className="overflow-hidden backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* Imagem à esquerda */}
-            <div className="relative h-64 lg:h-96">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-2">
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Mobile Image - Shows only on mobile */}
+          <div className="lg:hidden w-full flex justify-center mb-6">
+            <div className="w-full max-w-md">
               <img
-                src={cause?.mainImage || "/img/redeFemininaCapa.jpg"}
-                alt={cause?.title || "Casa de Apoio"}
-                className="w-full h-full object-cover"
+                src="/img/For%C3%A7aeEsperan%C3%A7a.png"
+                alt="Força e Esperança"
+                className="w-full h-auto object-contain"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20"></div>
             </div>
-            
-            {/* Texto à direita */}
-            <CardContent className="p-6 lg:p-8 flex flex-col justify-center">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 dark:bg-pink-950/20 border border-pink-200 dark:border-pink-800 w-fit">
-                  <Heart className="w-4 h-4 text-pink-500" />
-                  <span className="text-sm font-medium text-pink-700 dark:text-pink-300">
-                    Nossa Missão
-                  </span>
-                </div>
-                
-                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-                  Oferecendo suporte integral durante o tratamento
-                </h2>
-                
-                <div className="prose dark:prose-invert max-w-none">
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base lg:text-lg">
-                    {cause?.description ||
-                      `Nossa casa de apoio oferece um ambiente acolhedor e seguro para mulheres que enfrentam o câncer. Proporcionamos hospedagem, alimentação, apoio psicológico e acompanhamento durante todo o tratamento. Cada doação nos ajuda a manter este espaço de esperança e cura funcionando.`}
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-4 pt-2">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-blue-500" />
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      {cause?.stats?.womenHelped || "150+"} mulheres ajudadas
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-purple-500" />
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      {cause?.stats?.yearsActive || "5"} anos de atividade
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
           </div>
-        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="text-center backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
+          {/* Content Section */}
+          <div className="lg:w-2/3 w-full">
+            <div className="mb-8">
+              <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">Como Doar</h2>
+              
+              {/* Monthly Donation Section */}
+              <div className="p-4 mb-4 bg-pink-50 border-2 border-pink-300 rounded-lg">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">Doação Mensal</h3>
+                <div className="flex flex-col md:flex-row items-center md:items-center mb-4">
+                  <div className="mb-4 md:mb-0 text-center md:mr-4">
+                    <img
+                      src="/img/catarse.png"
+                      alt="Catarse"
+                      className="w-32 h-16 object-contain rounded"
+                    />
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="mb-0">
+                      Acesse{" "}
+                      <a href="https://www.catarse.me/" target="_blank" rel="noopener noreferrer" className="text-pink-600 font-bold hover:underline">
+                        https://www.catarse.me/
+                      </a>
+                      , selecione o valor desejado para doar mensalmente e ajude a semear sorrisos e fortalecer nossa rede de solidariedade.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.womenHelped || "150+"}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Mulheres ajudadas
-              </p>
-            </CardContent>
-          </Card>
 
-          <Card className="text-center backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center mb-4">
-                <Heart className="w-6 h-6 text-white" />
+              {/* One-time Donation Section */}
+              <div className="mb-6">
+                <h4 className="text-xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">Doação Única</h4>
+                <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
+                  <p className="text-lg font-semibold text-pink-700 mb-2">Rede Feminina de Combate ao Câncer</p>
+                  <p className="text-base font-medium text-pink-600">CNPJ: 22.222.879/0001-59</p>
+                </div>
+                
+                {/* PIX */}
+                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
+                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
+                    <img src="/img/pix.png" alt="PIX" className="w-8 h-8 object-contain" />
+                  </div>
+                  <div>
+                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">PIX</p>
+                    <p className="text-gray-700">22.222.879/0001-59</p>
+                  </div>
+                </div>
+
+                {/* Caixa Econômica */}
+                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
+                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
+                    <img src="/img/caixa.svg" alt="Caixa Econômica" className="w-8 h-8 object-contain" />
+                  </div>
+                  <div>
+                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">Caixa Econômica</p>
+                    <p className="text-gray-700">Ag: 1010 | Op: 003 | C/C: 2222-7</p>
+                  </div>
+                </div>
+
+                {/* Banco do Brasil */}
+                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
+                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
+                    <img src="/img/bb.png" alt="Banco do Brasil" className="w-8 h-8 object-contain" />
+                  </div>
+                  <div>
+                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">Banco do Brasil</p>
+                    <p className="text-gray-700">Agência: 1234-3 | C/C: 150137-2</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.donors || "89"}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Doadores ativos
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mb-4">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {cause?.stats?.yearsActive || "5"}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300">
-                Anos de atividade
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-500" />
-              Meta de Arrecadação Mensal
-            </CardTitle>
-            <CardDescription>
-              Ajude-nos a manter nossos serviços funcionando
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span>Arrecadado</span>
-              <span>
-                {formatCurrency(cause?.raised || 12500)} de{" "}
-                {formatCurrency(cause?.goal || 25000)}
-              </span>
             </div>
-            <Progress value={calculateProgress()} className="h-3" />
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {Math.round(calculateProgress())}% da meta alcançada
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <div className="text-center">
-          <Button
-            onClick={() => navigate("/become-donor")}
-            size="lg"
-            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-8 py-4 text-lg"
-          >
-            <Heart className="w-5 h-5 mr-2" />
-            Tornar-se Doador
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-          <p className="text-sm text-gray-500 mt-2">
-            Sua doação recorrente faz toda a diferença
-          </p>
+          {/* Desktop Image - Shows only on desktop */}
+          <div className="hidden lg:block lg:w-1/3">
+            <div className="w-full">
+              <img
+                src="/img/For%C3%A7aeEsperan%C3%A7a.png"
+                alt="Força e Esperança"
+                className="w-full h-auto object-contain max-w-lg mx-auto"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
