@@ -116,7 +116,37 @@ export function Home() {
           </div>
         </div>
       </section>
+{/* Instituições Parceiras Section */}
+<section className="py-20 bg-gradient-to-br from-gray-50 to-pink-50">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">
+        Colaboradores da Nossa Missão
+      </h2>
+      <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+        Temos orgulho de contar com o apoio de instituições incríveis que caminham junto conosco!
+      </p>
+    </div>
 
+    <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+      <div className="text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center bg-gray-100 rounded-xl">
+          <img src="/img/sonhodoce.jpg" alt="Sonho Doce" className="w-28 h-28 object-contain" />
+        </div>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-3">Sonho Doce</h3>
+        <p className="text-gray-600 text-base">Apoiando nossa missão de transformar vidas através de ações solidárias.</p>
+      </div>
+
+      <div className="text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center bg-gray-100 rounded-xl">
+          <img src="/img/alpargatas.png" alt="Alpargatas" className="w-28 h-28 object-contain" />
+        </div>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-3">Alpargatas</h3>
+        <p className="text-gray-600 text-base">Juntos construindo um futuro melhor para nossa comunidade.</p>
+      </div>
+    </div>
+  </div>
+</section>
       {/* Services Section */}
       <section className="py-16 bg-gradient-to-br from-gray-50 to-pink-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -230,37 +260,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* Instituições Parceiras Section */}
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">
-              Instituições que Ajudam
-            </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Contamos com o apoio de instituições parceiras que nos ajudam.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
-                <img src="/img/sonhodoce.jpg" alt="Sonho Doce" className="w-16 h-16 object-contain" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sonho Doce</h3>
-              <p className="text-gray-600 text-sm">Apoiando nossa missão de transformar vidas através de ações solidárias.</p>
-            </div>
-
-            <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
-                <img src="/img/alpargatas.png" alt="Alpargatas" className="w-16 h-16 object-contain" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Alpargatas</h3>
-              <p className="text-gray-600 text-sm">Juntos construindo um futuro melhor para nossa comunidade.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      
       
       {/* Contact Section */}
       {/* <section className="py-16 bg-white">
