@@ -2,10 +2,11 @@ export function Donations() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-2">
       <div className="container mx-auto px-4 py-2">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Content Section */}
-          <div className="lg:w-2/3 w-full">
-            <div className="mb-8">
+        <div className="flex flex-col gap-8">
+          {/* Image and Donation Sections */}
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            {/* Donation Content */}
+            <div className="lg:w-2/3 w-full">
               <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">Como Doar</h2>
               
               {/* Monthly Donation Section */}
@@ -72,14 +73,29 @@ export function Donations() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Principais Doadores Section */}
-              <div className="mt-8 p-6 bg-white rounded-lg shadow-lg border border-gray-100">
-                <h4 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6 text-center">Principais Doadores</h4>
-                <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos maiores apoiadores que ajudaram a transformar vidas.</p>
+            {/* Desktop Image - Shows only on desktop */}
+            <div className="hidden lg:block lg:w-1/3">
+              <div className="w-full">
+                <img
+                  src="/img/For%C3%A7aeEsperan%C3%A7a.png"
+                  alt="Força e Esperança"
+                  className="w-full h-auto object-contain max-w-lg mx-auto"
+                />
+              </div>
+            </div>
+          </div>
 
-                {/* Pódio para Top 3 */}
-                <div className="mb-8">
+          {/* Donors Section - Full Width */}
+          <div className="w-full">
+            <div className="p-6 bg-white rounded-lg shadow-lg border border-gray-100">
+              <h4 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6 text-center">Principais Doadores</h4>
+              <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos maiores apoiadores que ajudaram a transformar vidas.</p>
+
+              <div className="flex flex-col lg:flex-row gap-8">
+                {/* Top Donors Podium */}
+                <div className="lg:w-1/2 w-full">
                   <div className="flex justify-center items-end space-x-4 mb-8">
                     {/* 2º lugar - Prata */}
                     <div className="flex flex-col items-center">
@@ -128,9 +144,9 @@ export function Donations() {
                   </div>
                 </div>
 
-                {/* Lista dos outros doadores */}
-                <div>
-                  <h5 className="text-lg font-semibold text-gray-800 mb-4 text-center">Outros Doadores</h5>
+                {/* Other Donors */}
+                <div className="lg:w-1/2 w-full">
+                  <h5 className="text-lg font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4 text-center">Agradecemos a todos os doadores que apoiam nossa causa</h5>
                   <ul className="space-y-3">
                     <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
                       <div className="flex items-center">
@@ -232,17 +248,6 @@ export function Donations() {
                   </ul>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Desktop Image - Shows only on desktop */}
-          <div className="hidden lg:block lg:w-1/3">
-            <div className="w-full">
-              <img
-                src="/img/For%C3%A7aeEsperan%C3%A7a.png"
-                alt="Força e Esperança"
-                className="w-full h-auto object-contain max-w-lg mx-auto"
-              />
             </div>
           </div>
         </div>
