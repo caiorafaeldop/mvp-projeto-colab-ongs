@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ArrowRight, Heart, ShoppingCart, Users, Target, Phone, MapPin, Clock } from "lucide-react";
+import { ArrowRight, Heart, ShoppingCart, Users, Phone, MapPin, Clock } from "lucide-react";
 
 export function Home() {
   return (
@@ -108,10 +108,10 @@ export function Home() {
             
             <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
               <div className="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center mb-6">
-                <Target className="w-8 h-8 text-white" />
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-4xl font-bold text-blue-600 mb-2">24h</h3>
-              <p className="text-gray-700 font-medium">Apoio Disponível</p>
+              <h3 className="text-4xl font-bold text-blue-600 mb-2">50+</h3>
+              <p className="text-gray-700 font-medium">Voluntários</p>
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ export function Home() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Horário</h3>
               <div className="text-gray-600 text-sm space-y-1">
                 <p>Segunda a quinta: 8h às 17h</p>
-                <p>Sexta: 7h às 12:30h</p>
+                <p>Sexta: 7h às 13:00h</p>
                 <p>Sábados e domingos: fechado</p>
               </div>
             </div>
@@ -245,7 +245,7 @@ export function Home() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
-                <img src="/public/img/sonhodoce.jpg" alt="Sonho Doce" className="w-16 h-16 object-contain" />
+                <img src="/img/sonhodoce.jpg" alt="Sonho Doce" className="w-16 h-16 object-contain" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Sonho Doce</h3>
               <p className="text-gray-600 text-sm">Apoiando nossa missão de transformar vidas através de ações solidárias.</p>
@@ -253,7 +253,7 @@ export function Home() {
 
             <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
-                <img src="/public/img/alpargatas.png" alt="Alpargatas" className="w-16 h-16 object-contain" />
+                <img src="/img/alpargatas.png" alt="Alpargatas" className="w-16 h-16 object-contain" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Alpargatas</h3>
               <p className="text-gray-600 text-sm">Juntos construindo um futuro melhor para nossa comunidade.</p>
