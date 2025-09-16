@@ -7,7 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ArrowRight, Heart, ShoppingCart, Users, Target, Phone, MapPin, Mail, Clock } from "lucide-react";
+import { ArrowRight, Heart, ShoppingCart, Users, Target, Phone, MapPin, Clock } from "lucide-react";
 
 export function Home() {
   return (
@@ -225,6 +225,38 @@ export function Home() {
                 <p>Sexta: 7h às 12:30h</p>
                 <p>Sábados e domingos: fechado</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Instituições Parceiras Section */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-pink-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">
+              Instituições que Ajudam
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Contamos com o apoio de instituições parceiras que nos ajudam.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
+                <img src="/public/img/sonhodoce.jpg" alt="Sonho Doce" className="w-16 h-16 object-contain" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sonho Doce</h3>
+              <p className="text-gray-600 text-sm">Apoiando nossa missão de transformar vidas através de ações solidárias.</p>
+            </div>
+
+            <div className="text-center p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gray-100 rounded-lg">
+                <img src="/public/img/alpargatas.png" alt="Alpargatas" className="w-16 h-16 object-contain" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Alpargatas</h3>
+              <p className="text-gray-600 text-sm">Juntos construindo um futuro melhor para nossa comunidade.</p>
             </div>
           </div>
         </div>
