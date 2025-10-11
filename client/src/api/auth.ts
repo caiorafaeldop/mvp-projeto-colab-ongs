@@ -57,15 +57,9 @@ export const loginUser = async (data: {
     return response.data;
   } catch (error: any) {
     console.error("[loginUser] Erro ao fazer login:", error.response?.data || error.message);
-    // Preserve rate-limit info if available
-    const err: any = new Error(error?.response?.data?.message || error.message || "Erro ao fazer login");
-    if (error.isRateLimit) {
-      err.isRateLimit = true;
-      err.retryAfter = error.retryAfter || (error.response?.data?.retryAfter ?? 0);
-    }
-    // attach original response for downstream inspection
-    err.response = error.response;
-    throw err;
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao fazer login"
+    );
   }
 };
 

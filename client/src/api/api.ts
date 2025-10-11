@@ -6,8 +6,8 @@ import axios, {
 import JSONbig from "json-bigint";
 
 // URL base do servidor backend 
-const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
-// const API_BASE_URL = "http://localhost:3000";
+// const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
+const API_BASE_URL = "http://localhost:3000";
 const localApi = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
@@ -68,27 +68,23 @@ localApi.interceptors.response.use(
     
     console.log("[Interceptor Response] Erro na requisição:", originalRequest.url, "Status:", error.response?.status);
 
-    // Rate limit (429) — extract retry info and propagate to caller
-    if (error.response?.status === 429) {
-      try {
-        const retryAfterHeader = (error.response.headers || {})["retry-after"];
-        const retryAfterBody = (error.response.data as any)?.retryAfter;
-        const retryAfter = parseInt(retryAfterHeader || retryAfterBody || "0", 10) || 0;
-        (error as any).isRateLimit = true;
-        (error as any).retryAfter = retryAfter;
-        console.warn("[Interceptor Response] 429 detected for", originalRequest.url, "retryAfter:", retryAfter);
-      } catch (e) {
-        // ignore parse errors
-      }
-      return Promise.reject(error);
-    }
-
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Evitar loop: não tentar refresh se a requisição que falhou já é o refresh
+      if (originalRequest.url?.includes('/api/auth/refresh')) {
+        console.log("[Interceptor Response] Refresh falhou, redirecionando para login");
+        setAccessToken(null);
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+      
       originalRequest._retry = true;
       
       try {
         console.log("[Interceptor Response] Tentando renovar token...");
-        const response = await localApi.post('/api/auth/refresh');
+        // Marcar a requisição de refresh para não entrar no interceptor novamente
+        const response = await localApi.post('/api/auth/refresh', {}, {
+          _retry: true
+        } as any);
         console.log("[Interceptor Response] Resposta do /refresh:", response.data);
         const newAccessToken = response.data.data.accessToken;
         console.log("[Interceptor Response] Novo accessToken:", newAccessToken);
@@ -157,19 +153,6 @@ const api = {
     const apiInstance = getApiInstance();
     return apiInstance.patch(url, data, config);
   },
-};
-
-// Função utilitária para verificar se o usuário está autenticado
-export const checkAuthStatus = async (): Promise<boolean> => {
-  try {
-    console.log("[checkAuthStatus] Verificando status de autenticação...");
-    await localApi.post('/api/auth/refresh');
-    console.log("[checkAuthStatus] Refresh bem-sucedido");
-    return true;
-  } catch (error) {
-    console.error("[checkAuthStatus] Erro ao verificar autenticação:", error);
-    return false;
-  }
 };
 
 export default api;

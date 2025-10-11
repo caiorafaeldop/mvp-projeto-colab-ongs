@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpar Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .success {
+            color: #10b981;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        .info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpar Storage</h1>
+        <p>Clique no botão abaixo para limpar todos os dados de rate limiting e cache do navegador.</p>
+        
+        <button onclick="clearStorage()">Limpar Tudo</button>
+        <button onclick="clearRateLimit()">Limpar Apenas Rate Limit</button>
+        
+        <div id="message"></div>
+        
+        <div class="info">
+            <p><strong>Itens no localStorage:</strong></p>
+            <div id="items"></div>
+        </div>
+    </div>
+
+    <script>
+        function showMessage(text, isSuccess = true) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = isSuccess ? 'success' : '';
+        }
+
+        function displayItems() {
+            const itemsDiv = document.getElementById('items');
+            const items = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                items.push(`${key}: ${localStorage.getItem(key)}`);
+            }
+            itemsDiv.innerHTML = items.length > 0 
+                ? items.map(item => `<div style="font-size: 12px; margin: 5px 0;">${item}</div>`).join('')
+                : '<div style="color: #999;">Nenhum item encontrado</div>';
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            showMessage('✅ Todos os dados foram limpos com sucesso!');
+            displayItems();
+        }
+
+        function clearRateLimit() {
+            localStorage.removeItem('loginRetryUntil');
+            showMessage('✅ Rate limit removido com sucesso!');
+            displayItems();
+        }
+
+        // Exibir itens ao carregar
+        displayItems();
+    </script>
+</body>
+</html>
