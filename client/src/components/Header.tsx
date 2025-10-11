@@ -17,13 +17,12 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const isMobile = useIsMobile();
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const getInitials = (name?: string) => {
+    const value = (name || "").trim();
+    if (!value) return "";
+    const parts = value.split(/\s+/).filter(Boolean);
+    const initials = parts.map((word) => word[0]).join("").toUpperCase().slice(0, 2);
+    return initials;
   };
 
   const isOrganization = user?.userType === "organization";
@@ -230,7 +229,7 @@ export function Header() {
             <>
               {isAuthenticated && user && (
                 <span className="hidden md:inline-block text-sm font-medium text-foreground">
-                  Olá, {user.name.split(" ")[0]}
+                  Olá, {user.name ? user.name.split(" ")[0] : user.email ? user.email.split("@")[0] : ""}
                 </span>
               )}
               {isAuthenticated ? (
@@ -242,8 +241,8 @@ export function Header() {
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                          {user ? (
-                            getInitials(user.name)
+                          {getInitials(user?.name) || (user?.email ? getInitials(user.email.split("@")[0]) : "") ? (
+                            getInitials(user?.name) || getInitials(user?.email?.split("@")[0])
                           ) : (
                             <User className="h-4 w-4" />
                           )}
