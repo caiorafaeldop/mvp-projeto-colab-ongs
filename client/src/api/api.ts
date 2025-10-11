@@ -67,6 +67,22 @@ localApi.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     console.log("[Interceptor Response] Erro na requisição:", originalRequest.url, "Status:", error.response?.status);
+
+    // Rate limit (429) — extract retry info and propagate to caller
+    if (error.response?.status === 429) {
+      try {
+        const retryAfterHeader = (error.response.headers || {})["retry-after"];
+        const retryAfterBody = (error.response.data as any)?.retryAfter;
+        const retryAfter = parseInt(retryAfterHeader || retryAfterBody || "0", 10) || 0;
+        (error as any).isRateLimit = true;
+        (error as any).retryAfter = retryAfter;
+        console.warn("[Interceptor Response] 429 detected for", originalRequest.url, "retryAfter:", retryAfter);
+      } catch (e) {
+        // ignore parse errors
+      }
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       

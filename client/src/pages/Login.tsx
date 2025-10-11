@@ -20,6 +20,8 @@ import { setAccessToken } from "@/api/api"; // Import setAccessToken
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [retryUntil, setRetryUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<number>(0);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     name: "",
@@ -35,6 +37,7 @@ export function Login() {
 
   const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+    if (isLoading || retryUntil) return; // prevent double submit or while rate-limited
     setIsLoading(true);
 
     try {
@@ -52,16 +55,41 @@ export function Login() {
         navigate("/loja");
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description:
-          error instanceof Error ? error.message : "Erro ao fazer login",
-        variant: "destructive",
-      });
+      // Handle rate limit errors propagated from auth.loginUser
+      if ((error as any)?.isRateLimit) {
+        const seconds = (error as any).retryAfter || 0;
+        setRetryUntil(Date.now() + seconds * 1000);
+        toast({
+          title: "Muitas requisições",
+          description: `Tente novamente em ${seconds} segundos.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description:
+            error instanceof Error ? error.message : "Erro ao fazer login",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Countdown effect for retryUntil
+  useState(() => {
+    if (!retryUntil) return;
+    const id = setInterval(() => {
+      const sec = Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000));
+      setCountdown(sec);
+      if (sec <= 0) {
+        setRetryUntil(null);
+        clearInterval(id);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [retryUntil]);
 
   const handleRegister = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -178,9 +206,9 @@ export function Login() {
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                    disabled={isLoading}
+                    disabled={isLoading || !!retryUntil}
                   >
-                    {isLoading ? "Entrando..." : "Entrar"}
+                    {retryUntil ? `Tente novamente em ${countdown}s` : isLoading ? "Entrando..." : "Entrar"}
                   </Button>
                 </form>
               </TabsContent>
