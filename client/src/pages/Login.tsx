@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,6 +34,31 @@ export function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
+  const RETRY_KEY = "loginRetryUntil";
+
+  // initialize retryUntil from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(RETRY_KEY);
+    if (stored) {
+      const num = parseInt(stored, 10);
+      if (!isNaN(num) && num > Date.now()) {
+        setRetryUntil(num);
+      } else {
+        localStorage.removeItem(RETRY_KEY);
+      }
+    }
+  }, []);
+
+  const setPersistedRetry = (seconds: number) => {
+    const until = Date.now() + seconds * 1000;
+    setRetryUntil(until);
+    localStorage.setItem(RETRY_KEY, String(until));
+  };
+
+  const clearPersistedRetry = () => {
+    setRetryUntil(null);
+    localStorage.removeItem(RETRY_KEY);
+  };
 
   const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -58,7 +83,7 @@ export function Login() {
       // Handle rate limit errors propagated from auth.loginUser
       if ((error as any)?.isRateLimit) {
         const seconds = (error as any).retryAfter || 0;
-        setRetryUntil(Date.now() + seconds * 1000);
+        setPersistedRetry(seconds);
         toast({
           title: "Muitas requisições",
           description: `Tente novamente em ${seconds} segundos.`,
@@ -78,13 +103,15 @@ export function Login() {
   };
 
   // Countdown effect for retryUntil
-  useState(() => {
+  useEffect(() => {
     if (!retryUntil) return;
+    // set initial countdown immediately
+    setCountdown(Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000)));
     const id = setInterval(() => {
       const sec = Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000));
       setCountdown(sec);
       if (sec <= 0) {
-        setRetryUntil(null);
+        clearPersistedRetry();
         clearInterval(id);
       }
     }, 1000);
