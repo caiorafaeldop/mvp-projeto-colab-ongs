@@ -1,0 +1,432 @@
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { AdminApi, Supporter, TopDonor } from "@/api/admin";
+import { Navigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function AdminPanel() {
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = useMemo(() => user?.userType === "admin", [user]);
+
+  const [supporters, setSupporters] = useState<Supporter[]>([]);
+  const [currentTopDonors, setCurrentTopDonors] = useState<TopDonor[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Supporter form state
+  const [supName, setSupName] = useState("");
+  const [supImageUrl, setSupImageUrl] = useState("");
+  const [supWebsite, setSupWebsite] = useState("");
+  const [supOrder, setSupOrder] = useState(0);
+  const [supVisible, setSupVisible] = useState(true);
+
+  // Top Donor simple form (only name and amount per request)
+  const [tdName, setTdName] = useState("");
+  const [tdAmount, setTdAmount] = useState<number | "">("");
+
+  // Supporter Dialog state (create/edit)
+  const [supDialogOpen, setSupDialogOpen] = useState(false);
+  const [editingSupporter, setEditingSupporter] = useState<Supporter | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [orderDirty, setOrderDirty] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [supRefreshing, setSupRefreshing] = useState(false);
+  // Donor period selection
+  const now = new Date();
+  const [selMonth, setSelMonth] = useState<number>(now.getMonth() + 1);
+  const [selYear, setSelYear] = useState<number>(now.getFullYear());
+  const [donorsRefreshing, setDonorsRefreshing] = useState(false);
+  const monthNames = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
+  // Load supporters on mount/auth
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const s = await AdminApi.listSupporters();
+        setSupporters(s);
+      } catch (e) {
+        console.error("AdminPanel load supporters error", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isAuthenticated, isAdmin]);
+
+  // Load donors when period changes
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    (async () => {
+      try {
+        const t = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+        setCurrentTopDonors(t);
+      } catch (e) {
+        console.error("AdminPanel load donors error", e);
+      }
+    })();
+  }, [isAuthenticated, isAdmin, selMonth, selYear]);
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+
+  const openCreateSupporter = () => {
+    setEditingSupporter(null);
+    setSupName(""); setSupImageUrl(""); setSupWebsite(""); setSupOrder(0); setSupVisible(true);
+    setSupDialogOpen(true);
+  };
+
+  const openEditSupporter = (s: Supporter) => {
+    setEditingSupporter(s);
+    setSupName(s.name || "");
+    setSupImageUrl(s.imageUrl || "");
+    setSupWebsite(s.website || "");
+    setSupOrder(s.order ?? 0);
+    setSupVisible(s.visible ?? true);
+    setSupDialogOpen(true);
+  };
+
+  const saveSupporter = async () => {
+    if (!supName.trim()) return;
+    const payload = {
+      name: supName.trim(),
+      imageUrl: supImageUrl.trim() || undefined,
+      website: supWebsite.trim() || undefined,
+      order: Number(supOrder) || 0,
+      visible: !!supVisible,
+    } as Partial<Supporter>;
+    if (editingSupporter?.id) {
+      const updated = await AdminApi.updateSupporter(editingSupporter.id, payload);
+      setSupporters((prev) => prev.map(x => x.id === updated.id ? updated : x).sort((a,b)=>(a.order||0)-(b.order||0)));
+    } else {
+      const saved = await AdminApi.createSupporter(payload);
+      setSupporters((prev) => [...prev, saved].sort((a,b)=>(a.order||0)-(b.order||0)));
+    }
+    setSupDialogOpen(false);
+  };
+
+  const toggleSupporterVisible = async (s: Supporter) => {
+    const updated = await AdminApi.updateSupporter(s.id, { visible: !s.visible });
+    setSupporters((prev) => prev.map(x => x.id===s.id ? updated : x));
+  };
+
+  const deleteSupporter = async (s: Supporter) => {
+    await AdminApi.deleteSupporter(s.id);
+    setSupporters((prev) => prev.filter(x => x.id !== s.id));
+  };
+
+  // Drag and drop reorder helpers
+  function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed as T);
+    return result;
+  }
+  const onDragStartSup = (idx: number) => setDragIndex(idx);
+  const onDragOverSup = (e: React.DragEvent) => e.preventDefault();
+  const onDropSup = (idx: number) => {
+    if (dragIndex === null) return;
+    setSupporters(prev => {
+      const next = reorder(prev, dragIndex, idx);
+      return next;
+    });
+    setOrderDirty(true);
+    setDragIndex(null);
+  };
+
+  const refreshSupporters = async () => {
+    setSupRefreshing(true);
+    try {
+      const s = await AdminApi.listSupporters();
+      setSupporters(s);
+    } catch (e) {
+      console.error("refreshSupporters error", e);
+    } finally {
+      setSupRefreshing(false);
+    }
+  };
+  const persistOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const updates = supporters.map((s, i) => ({ id: s.id, order: i + 1 }));
+      const changes = updates.filter(u => (supporters.find(s=>s.id===u.id)?.order ?? 0) !== u.order);
+      await Promise.all(changes.map(u => AdminApi.updateSupporter(u.id, { order: u.order })));
+      setSupporters(prev => prev.map(s => ({ ...s, order: updates.find(u=>u.id===s.id)!.order })));
+      setOrderDirty(false);
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  // donor add logic moved inline with selected period
+
+  const deleteTopDonor = async (t: TopDonor) => {
+    await AdminApi.deleteTopDonor(t.id);
+    const now = new Date();
+    const refreshed = await AdminApi.listTopDonorsPublicByPeriod(now.getFullYear(), now.getMonth() + 1, 10);
+    setCurrentTopDonors(refreshed);
+  };
+
+  // removed donor alias UI per request
+
+  return (
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Painel do Administrador</h1>
+        {loading && <div className="text-sm text-muted-foreground">Carregando...</div>}
+      </div>
+
+      <Tabs defaultValue="apoiadores" className="w-full">
+        <TabsList>
+          <TabsTrigger value="apoiadores">Apoiadores</TabsTrigger>
+          <TabsTrigger value="doadores">Doadores</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="apoiadores" className="mt-4 space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{supporters.length}</Badge>
+              <span className="text-sm text-muted-foreground">apoiadores cadastrados</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={refreshSupporters} disabled={supRefreshing}>{supRefreshing ? "Atualizando..." : "Atualizar"}</Button>
+              <Button variant="outline" size="sm" onClick={persistOrder} disabled={!orderDirty || savingOrder}>{savingOrder ? "Salvando..." : "Salvar ordem"}</Button>
+              <Dialog open={supDialogOpen} onOpenChange={setSupDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreateSupporter}>Adicionar Apoiador</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingSupporter ? "Editar Apoiador" : "Novo Apoiador"}</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Nome</Label>
+                    <Input value={supName} onChange={e=>setSupName(e.target.value)} placeholder="Empresa ou pessoa" />
+                  </div>
+                  <div>
+                    <Label>Imagem (URL)</Label>
+                    <Input value={supImageUrl} onChange={e=>setSupImageUrl(e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <Label>Website</Label>
+                    <Input value={supWebsite} onChange={e=>setSupWebsite(e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <Label>Ordem</Label>
+                    <Input type="number" value={supOrder} onChange={e=>setSupOrder(parseInt(e.target.value||"0",10))} />
+                  </div>
+                  <div className="flex items-center gap-2 md:col-span-2">
+                    <Switch id="visible" checked={supVisible} onCheckedChange={setSupVisible} />
+                    <Label htmlFor="visible">Visível</Label>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Pré-visualização</Label>
+                    <div className="w-full h-40 bg-gray-50 rounded flex items-center justify-center overflow-hidden">
+                      {supImageUrl ? (
+                        <img src={supImageUrl} alt="Pré-visualização" className="max-h-40 object-contain" />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">Sem imagem</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setSupDialogOpen(false)} variant="outline">Cancelar</Button>
+                  <Button onClick={saveSupporter}>{editingSupporter ? "Salvar alterações" : "Adicionar"}</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            </div>
+          </div>
+
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-6 w-1/2" />
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Skeleton className="w-full h-32" />
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-9 w-16" />
+                        <Skeleton className="h-9 w-16" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {supporters
+              .slice()
+              .sort((a,b)=> (a.order||0)-(b.order||0))
+              .map((s, idx) => (
+              <Card key={s.id} className="overflow-hidden" draggable onDragStart={() => onDragStartSup(idx)} onDragOver={onDragOverSup} onDrop={() => onDropSup(idx)}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="truncate">{s.name}</CardTitle>
+                    <Badge variant={s.visible ? "default" : "secondary"}>{s.visible ? "Visível" : "Oculto"}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="w-full h-32 bg-gray-50 rounded flex items-center justify-center overflow-hidden">
+                    {s.imageUrl ? (
+                      <img src={s.imageUrl} alt={s.name} className="max-h-32 object-contain" />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">Sem imagem</div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="truncate w-2/3">
+                      {s.website ? (
+                        <a href={s.website} target="_blank" rel="noreferrer" className="text-pink-600 hover:underline truncate inline-block max-w-full">{s.website}</a>
+                      ) : (
+                        <span className="text-muted-foreground">Sem site</span>
+                      )}
+                    </div>
+                    <Badge variant="outline">ordem {s.order ?? 0}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={s.visible} onCheckedChange={() => toggleSupporterVisible(s)} />
+                      <span className="text-sm">{s.visible ? "Mostrar" : "Ocultar"}</span>
+                    </div>
+                    <div className="space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => openEditSupporter(s)}>Editar</Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteSupporter(s)}>Excluir</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="doadores" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Adicionar doador</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select value={String(selMonth)} onValueChange={(v)=>setSelMonth(parseInt(v,10))}>
+                    <SelectTrigger className="w-[160px]"><SelectValue placeholder="Mês" /></SelectTrigger>
+                    <SelectContent>
+                      {monthNames.map((name, idx) => (
+                        <SelectItem key={idx} value={String(idx+1)}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={String(selYear)} onValueChange={(v)=>setSelYear(parseInt(v,10))}>
+                    <SelectTrigger className="w-[120px]"><SelectValue placeholder="Ano" /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 6 }).map((_,i)=>{
+                        const y = now.getFullYear() - 2 + i;
+                        return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+              <div className="md:col-span-2">
+                <Label>Nome do doador</Label>
+                <Input value={tdName} onChange={e=>setTdName(e.target.value)} placeholder="Ex.: Ana Souza" />
+              </div>
+              <div>
+                <Label>Valor doado</Label>
+                <Input type="number" step="0.01" value={tdAmount} onChange={e=>setTdAmount(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ex.: 200.00" />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={async ()=>{
+                  if (!tdName.trim() || !tdAmount || Number(tdAmount) <= 0) return;
+                  const payload = {
+                    donorName: tdName.trim(),
+                    donatedAmount: Number(tdAmount),
+                    referenceMonth: selMonth,
+                    referenceYear: selYear,
+                    donationDate: new Date().toISOString(),
+                  };
+                  await AdminApi.createTopDonor(payload);
+                  const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+                  setCurrentTopDonors(refreshed);
+                  setTdName(""); setTdAmount("");
+                }}>Adicionar</Button>
+                <Button variant="outline" disabled={donorsRefreshing} onClick={async ()=>{
+                  setDonorsRefreshing(true);
+                  try {
+                    const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+                    setCurrentTopDonors(refreshed);
+                  } finally {
+                    setDonorsRefreshing(false);
+                  }
+                }}>{donorsRefreshing ? "Atualizando..." : "Atualizar"}</Button>
+              </div>
+              <div className="md:col-span-4 text-sm text-muted-foreground">O ranking é calculado automaticamente após criar/alterar/deletar.</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Top doadores ({monthNames[selMonth-1]} / {selYear})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Posição</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="w-[140px]">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentTopDonors
+                    .slice()
+                    .sort((a,b)=> (a.topPosition ?? 999) - (b.topPosition ?? 999))
+                    .map(t => {
+                      const medal = t.topPosition === 1 ? '🥇' : t.topPosition === 2 ? '🥈' : t.topPosition === 3 ? '🥉' : '';
+                      return (
+                        <TableRow key={t.id}>
+                          <TableCell>{medal} {t.topPosition ?? '-'}</TableCell>
+                          <TableCell>{t.donorName}</TableCell>
+                          <TableCell>R$ {t.donatedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
+                          <TableCell className="space-x-2">
+                            <Button variant="destructive" size="sm" onClick={() => deleteTopDonor(t)}>Excluir</Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

@@ -1,4 +1,49 @@
+import { useEffect, useMemo, useState } from "react";
+import { getPublicTopDonors, type TopDonor } from "@/api/topDonors";
+
+function monthYearOf(date: Date) {
+  return { month: date.getMonth() + 1, year: date.getFullYear() };
+}
+
+function initials(name: string) {
+  const parts = (name || "").trim().split(/\s+/);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export function Donations() {
+  const { month, year } = useMemo(() => monthYearOf(new Date()), []);
+  const [donors, setDonors] = useState<TopDonor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await getPublicTopDonors(year, month, 10);
+        if (mounted) setDonors(list);
+      } catch (e) {
+        console.warn("Falha ao carregar top doadores públicos", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [month, year]);
+
+  const podium = useMemo(() => {
+    const sorted = [...donors].sort((a, b) => (a.topPosition ?? 999) - (b.topPosition ?? 999));
+    return {
+      first: sorted[0],
+      second: sorted[1],
+      third: sorted[2],
+      others: sorted.slice(3),
+    };
+  }, [donors]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-2">
       <div className="container mx-auto px-4 py-2">
@@ -93,161 +138,99 @@ export function Donations() {
               <h4 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6 text-center">Principais Doadores</h4>
               <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos maiores apoiadores que ajudaram a transformar vidas.</p>
 
-              <div className="flex flex-col lg:flex-row gap-8">
-                {/* Top Donors Podium */}
-                <div className="lg:w-1/2 w-full">
-                  <div className="flex justify-center items-end space-x-4 mb-8">
-                    {/* 2º lugar - Prata */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-gray-300 mb-2">M</div>
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">🥈</div>
-                      </div>
-                      <div className="bg-gradient-to-t from-gray-200 to-gray-100 rounded-t-lg px-4 py-6 w-24 text-center shadow-md">
-                        <p className="font-bold text-gray-800 text-sm">2º</p>
-                      </div>
-                      <div className="text-center mt-2">
-                        <p className="font-semibold text-gray-900">Movimento Solidariedade</p>
-                        <p className="text-xs text-gray-600">Doação única</p>
-                      </div>
-                    </div>
+              {loading ? (
+                <div className="text-center text-gray-500">Carregando doadores...</div>
+              ) : donors.length === 0 ? (
+                <div className="text-center text-gray-500">Sem registros para {month.toString().padStart(2, "0")}/{year}.</div>
+              ) : (
+                <div className="flex flex-col lg:flex-row gap-8">
+                  {/* Top Donors Podium */}
+                  <div className="lg:w-1/2 w-full">
+                    <div className="flex justify-center items-end space-x-4 mb-8">
+                      {/* 2º lugar - Prata */}
+                      {podium.second && (
+                        <div className="flex flex-col items-center">
+                          <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-gray-300 mb-2">
+                              {initials(podium.second.donorName)}
+                            </div>
+                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">🥈</div>
+                          </div>
+                          <div className="bg-gradient-to-t from-gray-200 to-gray-100 rounded-t-lg px-4 py-6 w-24 text-center shadow-md">
+                            <p className="font-bold text-gray-800 text-sm">2º</p>
+                          </div>
+                          <div className="text-center mt-2">
+                            <p className="font-semibold text-gray-900">{podium.second.donorName}</p>
+                            <p className="text-xs text-gray-600">R$ {podium.second.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* 1º lugar - Ouro */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center text-white font-bold text-2xl shadow-xl border-4 border-yellow-400 mb-2">A</div>
-                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">🥇</div>
-                      </div>
-                      <div className="bg-gradient-to-t from-yellow-300 to-yellow-200 rounded-t-lg px-6 py-8 w-28 text-center shadow-lg">
-                        <p className="font-bold text-yellow-800 text-lg">1º</p>
-                      </div>
-                      <div className="text-center mt-2">
-                        <p className="font-semibold text-gray-900">Ana Souza</p>
-                        <p className="text-xs text-gray-600">Doações recorrentes — 12 meses</p>
-                      </div>
-                    </div>
+                      {/* 1º lugar - Ouro */}
+                      {podium.first && (
+                        <div className="flex flex-col items-center">
+                          <div className="relative">
+                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center text-white font-bold text-2xl shadow-xl border-4 border-yellow-400 mb-2">
+                              {initials(podium.first.donorName)}
+                            </div>
+                            <div className="absolute -top-2 -right-2 w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">🥇</div>
+                          </div>
+                          <div className="bg-gradient-to-t from-yellow-300 to-yellow-200 rounded-t-lg px-6 py-8 w-28 text-center shadow-lg">
+                            <p className="font-bold text-yellow-800 text-lg">1º</p>
+                          </div>
+                          <div className="text-center mt-2">
+                            <p className="font-semibold text-gray-900">{podium.first.donorName}</p>
+                            <p className="text-xs text-gray-600">R$ {podium.first.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* 3º lugar - Bronze */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-orange-400 mb-2">P</div>
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">🥉</div>
-                      </div>
-                      <div className="bg-gradient-to-t from-orange-200 to-orange-100 rounded-t-lg px-4 py-4 w-24 text-center shadow-md">
-                        <p className="font-bold text-orange-800 text-sm">3º</p>
-                      </div>
-                      <div className="text-center mt-2">
-                        <p className="font-semibold text-gray-900">Paulo Ribeiro</p>
-                        <p className="text-xs text-gray-600">Doações recorrentes — 6 meses</p>
-                      </div>
+                      {/* 3º lugar - Bronze */}
+                      {podium.third && (
+                        <div className="flex flex-col items-center">
+                          <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg border-4 border-orange-400 mb-2">
+                              {initials(podium.third.donorName)}
+                            </div>
+                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">🥉</div>
+                          </div>
+                          <div className="bg-gradient-to-t from-orange-200 to-orange-100 rounded-t-lg px-4 py-4 w-24 text-center shadow-md">
+                            <p className="font-bold text-orange-800 text-sm">3º</p>
+                          </div>
+                          <div className="text-center mt-2">
+                            <p className="font-semibold text-gray-900">{podium.third.donorName}</p>
+                            <p className="text-xs text-gray-600">R$ {podium.third.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Other Donors */}
+                  <div className="lg:w-1/2 w-full">
+                    <h5 className="text-lg font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4 text-center">Agradecemos a todos os doadores que apoiam nossa causa</h5>
+                    <ul className="space-y-3">
+                      {podium.others.map((d, idx) => (
+                        <li key={d.id || `${d.donorName}-${idx}`} className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 rounded-full bg-pink-300 flex items-center justify-center mr-3 text-white font-bold">
+                              {initials(d.donorName)}
+                            </div>
+                            <div>
+                              <p className="font-semibold">{d.donorName}</p>
+                              <p className="text-sm text-gray-600">R$ {d.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-pink-700">{(d.topPosition ?? idx + 4)}º</p>
+                            <p className="text-xs text-gray-500">Posição</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-
-                {/* Other Donors */}
-                <div className="lg:w-1/2 w-full">
-                  <h5 className="text-lg font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4 text-center">Agradecemos a todos os doadores que apoiam nossa causa</h5>
-                  <ul className="space-y-3">
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-green-300 flex items-center justify-center mr-3 text-white font-bold">J</div>
-                        <div>
-                          <p className="font-semibold">João Silva</p>
-                          <p className="text-sm text-gray-600">Doação única</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">4º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-blue-300 flex items-center justify-center mr-3 text-white font-bold">M</div>
-                        <div>
-                          <p className="font-semibold">Maria Oliveira</p>
-                          <p className="text-sm text-gray-600">Doações recorrentes — 8 meses</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">5º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-yellow-300 flex items-center justify-center mr-3 text-white font-bold">C</div>
-                        <div>
-                          <p className="font-semibold">Carlos Mendes</p>
-                          <p className="text-sm text-gray-600">Doação única</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">6º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-red-300 flex items-center justify-center mr-3 text-white font-bold">L</div>
-                        <div>
-                          <p className="font-semibold">Lucia Ferreira</p>
-                          <p className="text-sm text-gray-600">Doações recorrentes — 10 meses</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">7º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-teal-300 flex items-center justify-center mr-3 text-white font-bold">R</div>
-                        <div>
-                          <p className="font-semibold">Roberto Alves</p>
-                          <p className="text-sm text-gray-600">Doação única</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">8º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center mr-3 text-white font-bold">S</div>
-                        <div>
-                          <p className="font-semibold">Sofia Costa</p>
-                          <p className="text-sm text-gray-600">Doações recorrentes — 4 meses</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">9º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-
-                    <li className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-100">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-cyan-300 flex items-center justify-center mr-3 text-white font-bold">E</div>
-                        <div>
-                          <p className="font-semibold">Eduardo Lima</p>
-                          <p className="text-sm text-gray-600">Doação única</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-pink-700">10º</p>
-                        <p className="text-xs text-gray-500">Posição</p>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

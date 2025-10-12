@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,13 +11,9 @@ import {
   Settings as SettingsIcon, 
   User, 
   Lock, 
-  Bell, 
   Palette, 
   Globe, 
   Shield, 
-  Package, 
-  CreditCard,
-  MessageSquare,
   HelpCircle,
   FileText,
   LogOut,
@@ -31,8 +27,8 @@ export function Settings() {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
+  // const [emailNotifications, setEmailNotifications] = useState(true);
+  // const [pushNotifications, setPushNotifications] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -64,7 +60,9 @@ export function Settings() {
     );
   }
 
-  const isAdmin = user.userType === "organization";
+  const isAdmin = user.userType === "admin";
+
+  // Admin: ações ficam numa página dedicada. Aqui somente um atalho.
 
   return (
     <div className="container mx-auto py-8">
@@ -176,28 +174,13 @@ export function Settings() {
                 Configurações Administrativas
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" className="justify-start">
-                  <Package className="w-4 h-4 mr-2" />
-                  Configurações do Bazar
-                </Button>
-                
-                <Button variant="outline" className="justify-start">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Gerenciar Categorias
-                </Button>
-                
-                <Button variant="outline" className="justify-start">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Configurações de Pagamento
-                </Button>
-                
-                <Button variant="outline" className="justify-start">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Integração WhatsApp
-                </Button>
-              </div>
+            <CardContent className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Como administrador, você pode gerenciar os Colaboradores e os Doadores em uma página dedicada.
+              </p>
+              <Button onClick={() => navigate("/admin")} className="w-full sm:w-auto">
+                Gerenciamento
+              </Button>
             </CardContent>
           </Card>
         )}

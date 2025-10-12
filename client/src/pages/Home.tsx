@@ -8,8 +8,30 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { ArrowRight, Heart, ShoppingCart, Users, Phone, MapPin, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getPublicSupporters, type Supporter } from "@/api/supporters";
 
 export function Home() {
+  const [supporters, setSupporters] = useState<Supporter[]>([]);
+  const [loadingSupporters, setLoadingSupporters] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await getPublicSupporters();
+        if (mounted) setSupporters(list);
+      } catch (e) {
+        console.warn("Falha ao carregar apoiadores públicos", e);
+      } finally {
+        if (mounted) setLoadingSupporters(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
       {/* Hero Section */}
@@ -128,23 +150,46 @@ export function Home() {
       </p>
     </div>
 
-    <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-      <div className="text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300">
-        <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center bg-gray-100 rounded-xl">
-          <img src="/img/sonhodoce.jpg" alt="Sonho Doce" className="w-28 h-28 object-contain" />
-        </div>
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-3">Sonho Doce</h3>
-        <p className="text-gray-600 text-base">Apoiando nossa missão de transformar vidas através de ações solidárias.</p>
+    {loadingSupporters ? (
+      <div className="text-center text-gray-500">Carregando apoiadores...</div>
+    ) : supporters.length === 0 ? (
+      <div className="text-center text-gray-500">Em breve divulgaremos nossos apoiadores aqui.</div>
+    ) : (
+      <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        {supporters
+          .filter((s) => s.visible !== false)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((s) => (
+            <div key={s.id || s.name} className="text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center bg-gray-100 rounded-xl overflow-hidden">
+                {s.imageUrl ? (
+                  <img src={s.imageUrl} alt={s.name || "Apoiador"} className="w-28 h-28 object-contain" />
+                ) : (
+                  <div className="w-28 h-28 flex items-center justify-center text-gray-400 text-sm">Sem imagem</div>
+                )}
+              </div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-3">
+                {s.name || "Apoiador"}
+              </h3>
+              {s.description && (
+                <p className="text-gray-600 text-base">{s.description}</p>
+              )}
+              {s.website && (
+                <p className="mt-3">
+                  <a
+                    href={s.website}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-pink-600 hover:underline"
+                  >
+                    Visitar site
+                  </a>
+                </p>
+              )}
+            </div>
+          ))}
       </div>
-
-      <div className="text-center p-8 rounded-2xl bg-white shadow-xl hover:shadow-2xl transition-all duration-300">
-        <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center bg-gray-100 rounded-xl">
-          <img src="/img/alpargatas.png" alt="Alpargatas" className="w-28 h-28 object-contain" />
-        </div>
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-3">Alpargatas</h3>
-        <p className="text-gray-600 text-base">Juntos construindo um futuro melhor para nossa comunidade.</p>
-      </div>
-    </div>
+    )}
   </div>
 </section>
       {/* Services Section */}

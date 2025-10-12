@@ -55,6 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     const currentToken = token;
 
+    // 1) Otimização UX: preenche user imediatamente com claims do JWT (fallback),
+    //    depois tenta confirmar com /profile. Mantém a sessão visível no F5.
+    const claims = decodeJwt(currentToken);
+    if (claims) {
+      const fallbackUser = {
+        id: claims.id || claims.sub || null,
+        email: claims.email || null,
+        name: claims.name || null,
+        userType: claims.userType || claims.role || null,
+        _claims: true,
+      };
+      setUser((prev: any) => prev || fallbackUser);
+    }
+
     (async () => {
       try {
         const res = await api.get("/api/auth/profile");
@@ -73,8 +87,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setUser(profile);
       } catch (err) {
-        // invalid token -> clear storage/state
-        if (!cancelled) {
+        // Somente limpar se for 401 (token inválido/expirado). Outros erros (rede, 5xx) mantém sessão.
+        const status = (err && typeof err === 'object' && 'response' in err && (err as any).response?.status) || undefined;
+        if (!cancelled && status === 401) {
           setUser(null);
           setToken(null);
           try { localStorage.removeItem(STORAGE_KEY); } catch {}
@@ -121,6 +136,7 @@ export function useAuth() {
     token: ctx.token,
     login: ctx.login,
     logout: ctx.logout,
-    isAuthenticated: !!ctx.user,
+    // Considera autenticado se há token; user pode ser claims até carregar /profile
+    isAuthenticated: !!ctx.token,
   };
 }

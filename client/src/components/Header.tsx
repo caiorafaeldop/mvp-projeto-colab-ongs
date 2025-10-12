@@ -110,6 +110,7 @@ export function Header() {
             >
               Bazar Solidário
             </NavLink>
+            {/* Admin link removed from header navigation */}
             <Button
               asChild
               className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-full font-medium transition-all duration-200"
@@ -170,6 +171,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                {/* Admin link removed from mobile menu */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <a href="https://www.instagram.com/redefemininajpa/" target="_blank" rel="noopener noreferrer" className="flex items-center">
@@ -276,6 +278,7 @@ export function Header() {
                         <span>Perfil</span>
                       </Link>
                     </DropdownMenuItem>
+                    {/* Admin link removed from user dropdown */}
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="cursor-pointer">
                         <Settings className="mr-2 h-4 w-4" />

@@ -20,8 +20,6 @@ const localApi = axios.create({
   transformResponse: [(data) => JSONbig.parse(data)],
 });
 
-let accessToken: string | null = null;
-
 // Função para definir o token de acesso
 export function setAccessToken(token: string | null) {
   if (token) {
@@ -79,10 +77,9 @@ localApi.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 401: não faz refresh automático; limpa token e deixa AuthContext/redirecionamento cuidar
+    // 401: não limpar token aqui. Deixe os fluxos de tela (AuthContext/profile) decidirem.
     if (error.response?.status === 401) {
-      console.log("[Interceptor Response] 401: limpando token (sem refresh automático)");
-      setAccessToken(null);
+      (error as any).isAuthError = true;
     }
 
     return Promise.reject(error);

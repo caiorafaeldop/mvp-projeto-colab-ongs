@@ -13,6 +13,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { BecomeDonor } from "./pages/BecomeDonor";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
+import AdminPanel from "./pages/AdminPanel";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="login" element={<Login />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="admin" element={<AdminPanel />} />
             </Route>
           </Routes>
         </Router>
