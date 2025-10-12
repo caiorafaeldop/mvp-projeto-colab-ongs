@@ -10,7 +10,7 @@ import JSONbig from "json-bigint";
 const API_BASE_URL = "http://localhost:3000";
 const localApi = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
   },
@@ -65,46 +65,26 @@ localApi.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
     console.log("[Interceptor Response] Erro na requisição:", originalRequest.url, "Status:", error.response?.status);
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Evitar loop: não tentar refresh se a requisição que falhou já é o refresh
-      if (originalRequest.url?.includes('/api/auth/refresh')) {
-        console.log("[Interceptor Response] Refresh falhou, redirecionando para login");
-        setAccessToken(null);
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-      
-      originalRequest._retry = true;
-      
+    // 429: propaga informação para UI lidar com countdown
+    if (error.response?.status === 429) {
       try {
-        console.log("[Interceptor Response] Tentando renovar token...");
-        // Marcar a requisição de refresh para não entrar no interceptor novamente
-        const response = await localApi.post('/api/auth/refresh', {}, {
-          _retry: true
-        } as any);
-        console.log("[Interceptor Response] Resposta do /refresh:", response.data);
-        const newAccessToken = response.data.data.accessToken;
-        console.log("[Interceptor Response] Novo accessToken:", newAccessToken);
-        setAccessToken(newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        console.log("[Interceptor Response] Repetindo requisição para", originalRequest.url, "com novo token");
-        return localApi(originalRequest);
-      } catch (refreshError) {
-        console.error("[Interceptor Response] Erro ao renovar token:", refreshError);
-        setAccessToken(null);
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+        const retryAfterHeader = (error.response.headers || {})["retry-after"] as string | undefined;
+        const retryAfterBody = (error.response.data as any)?.retryAfter;
+        const retryAfter = parseInt((retryAfterHeader || retryAfterBody || "0") as string, 10) || 0;
+        (error as any).isRateLimit = true;
+        (error as any).retryAfter = retryAfter;
+      } catch {}
+      return Promise.reject(error);
     }
-    
+
+    // 401: não faz refresh automático; limpa token e deixa AuthContext/redirecionamento cuidar
     if (error.response?.status === 401) {
-      console.log("[Interceptor Response] Token inválido ou expirado:", error.response.data);
+      console.log("[Interceptor Response] 401: limpando token (sem refresh automático)");
       setAccessToken(null);
     }
-    
+
     return Promise.reject(error);
   }
 );

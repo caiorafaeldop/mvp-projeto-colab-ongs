@@ -1,90 +1,126 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { User, getUserProfile, logoutUser, refreshToken } from "@/api/auth";
-import { setAccessToken, getAccessToken } from "@/api/api";
+import React, { createContext, useCallback, useEffect, useState, useContext } from "react";
+import api, { setAccessToken as setApiAccessToken } from "@/api/api";
+import { logoutUser } from "@/api/auth";
 
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (user: User, token: string) => void;
+type AuthContextType = {
+  user: any;
+  token: string | null;
+  login: (user: any, token: string) => void;
   logout: () => void;
-  refreshUser: () => Promise<void>;
-}
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+const STORAGE_KEY = "accessToken";
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const isAuthenticated = !!user;
-
-  const login = (userData: User, token: string) => {
-    setUser(userData);
-    setAccessToken(token);
-  };
-
-  const logout = () => {
-    logoutUser(); // chama sua API de logout
-    setUser(null);
-    setAccessToken(null);
-  };
-
-  const refreshUser = async () => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [token, setToken] = useState<string | null>(() => {
     try {
-      const refreshData = await refreshToken();
-      if (!refreshData?.accessToken) throw new Error("Não foi possível renovar token");
+      return localStorage.getItem(STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const [user, setUser] = useState<any>(null);
 
-      setAccessToken(refreshData.accessToken);
-
-      const profileResponse = await getUserProfile();
-      if (!profileResponse.success) throw new Error("Não foi possível buscar perfil");
-
-      setUser(profileResponse.data);
-    } catch (error) {
-      console.error("[AuthProvider] Erro em refreshUser:", error);
-      logout();
+  // Helper: decode JWT payload safely
+  const decodeJwt = (jwt?: string | null): any | null => {
+    if (!jwt) return null;
+    const parts = jwt.split(".");
+    if (parts.length !== 3) return null;
+    try {
+      const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(json);
+    } catch {
+      return null;
     }
   };
 
+  // Ensure axios/header is set whenever token state changes
   useEffect(() => {
-    const initializeAuth = async () => {
-      setIsLoading(true);
+    if (token) {
+      setApiAccessToken(token);
+    } else {
+      setApiAccessToken(null as any);
+    }
+  }, [token]);
+
+  // Fetch profile for the current token; ignore outdated responses
+  useEffect(() => {
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    let cancelled = false;
+    const currentToken = token;
+
+    (async () => {
       try {
-        const savedToken = getAccessToken();
-        if (savedToken) {
-          setAccessToken(savedToken); // aplica token no axios
-          const profileResponse = await getUserProfile();
-          if (profileResponse.success && profileResponse.data) {
-            setUser(profileResponse.data);
-          } else {
-            logout();
+        const res = await api.get("/api/auth/profile");
+        // if token changed since request started, ignore this response
+        if (cancelled || currentToken !== token) return;
+        const profile = res?.data?.data ?? null;
+        // Guard: if backend returned a profile that doesn't match token claims, don't overwrite
+        const claims = decodeJwt(currentToken);
+        const claimEmail = claims?.email || claims?.sub || null;
+        if (profile && claimEmail) {
+          const sameIdentity = profile?.email === claimEmail || profile?.id === claimEmail;
+          if (!sameIdentity) {
+            console.warn("[Auth] Ignorando perfil que não corresponde ao token", { claimEmail, profileEmail: profile?.email, profileId: profile?.id });
+            return;
           }
         }
-      } catch (error) {
-        console.error("[AuthProvider] Erro ao inicializar auth:", error);
-        logout();
-      } finally {
-        setIsLoading(false);
+        setUser(profile);
+      } catch (err) {
+        // invalid token -> clear storage/state
+        if (!cancelled) {
+          setUser(null);
+          setToken(null);
+          try { localStorage.removeItem(STORAGE_KEY); } catch {}
+          setApiAccessToken(null as any);
+        }
       }
-    };
+    })();
 
-    initializeAuth();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const login = useCallback((newUser: any, newToken: string) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, newToken);
+    } catch {}
+    setToken(newToken);
+    setApiAccessToken(newToken);
+    setUser(newUser);
+  }, []);
+
+  const logout = useCallback(() => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    setToken(null);
+    setUser(null);
+    setApiAccessToken(null as any);
+    // fire-and-forget server logout
+    logoutUser().catch(() => {});
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth deve ser usado dentro de AuthProvider");
-  return context;
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return {
+    user: ctx.user,
+    token: ctx.token,
+    login: ctx.login,
+    logout: ctx.logout,
+    isAuthenticated: !!ctx.user,
+  };
 }
