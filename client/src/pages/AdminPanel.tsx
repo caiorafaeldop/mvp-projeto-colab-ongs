@@ -13,14 +13,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/useToast";
+import api from "@/api/api";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
-  const isAdmin = useMemo(() => user?.userType === "admin", [user]);
+  const isAdmin = useMemo(() => user?.userType === "organization", [user]);
+  const { toast } = useToast();
 
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [currentTopDonors, setCurrentTopDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Supporter form state
   const [supName, setSupName] = useState("");
@@ -81,6 +85,49 @@ export default function AdminPanel() {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+
+      const response = await api.post("/api/upload", uploadData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        setSupImageUrl(response.data.url);
+        toast({
+          title: "Sucesso",
+          description: "Imagem enviada com sucesso!",
+        });
+      } else {
+        throw new Error("Erro ao enviar imagem");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao enviar imagem",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const openCreateSupporter = () => {
     setEditingSupporter(null);
@@ -217,8 +264,17 @@ export default function AdminPanel() {
                     <Input value={supName} onChange={e=>setSupName(e.target.value)} placeholder="Empresa ou pessoa" />
                   </div>
                   <div>
-                    <Label>Imagem (URL)</Label>
-                    <Input value={supImageUrl} onChange={e=>setSupImageUrl(e.target.value)} placeholder="https://..." />
+                    <Label>Imagem do Apoiador</Label>
+                    <Input 
+                      type="file" 
+                      accept="image/png, image/jpeg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                      disabled={uploadingImage}
+                    />
+                    {uploadingImage && <p className="text-sm text-muted-foreground mt-1">Enviando imagem...</p>}
                   </div>
                   <div>
                     <Label>Website</Label>
