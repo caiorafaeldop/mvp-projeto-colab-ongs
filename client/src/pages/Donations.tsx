@@ -136,7 +136,7 @@ export function Donations() {
           <div className="w-full">
             <div className="p-6 bg-white rounded-lg shadow-lg border border-gray-100">
               <h4 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6 text-center">Principais Doadores</h4>
-              <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos maiores apoiadores que ajudaram a transformar vidas.</p>
+              <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos doadores que ajudaram a transformar vidas.</p>
 
               {loading ? (
                 <div className="text-center text-gray-500">Carregando doadores...</div>

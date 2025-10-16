@@ -25,6 +25,7 @@ export type TopDonor = {
   id: string;
   donorName: string;
   donatedAmount: number;
+  donationType?: 'single' | 'recurring' | 'total';
   donationDate?: string;
   referenceMonth?: number;
   referenceYear?: number;
@@ -78,7 +79,7 @@ export const AdminApi = {
     const res = await api.get(`/api/public/top-donors/top/${year}/${month}/${limit}`);
     return unwrap<TopDonor[]>(res);
   },
-  createTopDonor: async (payload: { donorName: string; donatedAmount: number; referenceMonth: number; referenceYear: number; donationDate?: string; }): Promise<TopDonor> => {
+  createTopDonor: async (payload: { donorName: string; donatedAmount: number; referenceMonth: number; referenceYear: number; donationDate?: string; donationType?: 'single' | 'recurring' | 'total'; }): Promise<TopDonor> => {
     const res = await api.post(`/api/top-donors`, payload);
     return unwrap<TopDonor>(res);
   },
