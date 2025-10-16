@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,10 +9,13 @@ import { Upload, X, DollarSign, MapPin, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/useToast'
 import { createProduct } from '@/api/store'
+type ImageItem = { id: number; file: File; preview: string }
+import { FormSkeleton } from '@/components/skeletons/FormSkeleton'
 
 export function CreateListing() {
   const [isLoading, setIsLoading] = useState(false)
-  const [images, setImages] = useState([])
+  const [initializing, setInitializing] = useState(true)
+  const [images, setImages] = useState<ImageItem[]>([])
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,6 +26,10 @@ export function CreateListing() {
   })
   const navigate = useNavigate()
   const { toast } = useToast()
+  useEffect(() => {
+    const t = setTimeout(() => setInitializing(false), 200)
+    return () => clearTimeout(t)
+  }, [])
 
   const categories = [
     { value: 'electronics', label: 'Eletrônicos' },
@@ -40,8 +47,10 @@ export function CreateListing() {
     { value: 'fair', label: 'Estado regular' }
   ]
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files
+    if (!fileList || fileList.length === 0) return
+    const files = Array.from(fileList)
     if (images.length + files.length > 5) {
       toast({
         title: "Limite excedido",
@@ -51,24 +60,30 @@ export function CreateListing() {
       return
     }
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const reader = new FileReader()
-      reader.onload = (e) => {
-        setImages(prev => [...prev, {
-          id: Date.now() + Math.random(),
-          file,
-          preview: e.target.result
-        }])
+      reader.onload = (ev) => {
+        const result = ev.target?.result
+        if (typeof result === 'string') {
+          setImages((prev) => [
+            ...prev,
+            {
+              id: Date.now() + Math.random(),
+              file,
+              preview: result,
+            },
+          ])
+        }
       }
       reader.readAsDataURL(file)
     })
   }
 
-  const removeImage = (id) => {
-    setImages(prev => prev.filter(img => img.id !== id))
+  const removeImage = (id: number) => {
+    setImages((prev) => prev.filter((img) => img.id !== id))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!formData.title || !formData.description || !formData.price || !formData.category) {
@@ -93,12 +108,15 @@ export function CreateListing() {
 
     try {
       const productData = {
-        ...formData,
+        name: formData.title,
+        description: formData.description,
         price: parseFloat(formData.price),
-        images: images.map(img => img.preview)
+        category: formData.category,
+        images: images.map((img) => img.preview),
+        stock: 1,
       }
 
-      const response = await createProduct(productData)
+      await createProduct(productData)
       toast({
         title: "Sucesso!",
         description: "Anúncio criado com sucesso!",
@@ -117,6 +135,9 @@ export function CreateListing() {
 
   return (
     <div className="min-h-[calc(100vh-8rem)] p-4">
+      {initializing ? (
+        <FormSkeleton fields={10} />
+      ) : (
       <div className="w-full max-w-2xl mx-auto">
         <Card className="backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 shadow-xl">
           <CardHeader>
@@ -292,6 +313,7 @@ export function CreateListing() {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   )
 }

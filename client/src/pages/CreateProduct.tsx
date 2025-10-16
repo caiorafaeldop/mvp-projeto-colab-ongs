@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { ArrowLeft, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import api from "@/api/api";
+import { FormSkeleton } from "@/components/skeletons/FormSkeleton";
 
 interface ProductFormData {
   name: string;
@@ -29,6 +30,7 @@ interface ProductFormData {
 
 export function CreateProduct() {
   const [isLoading, setIsLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     description: "",
@@ -40,6 +42,11 @@ export function CreateProduct() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth(); // Corrigido: useAuth correto
+  // Pequeno delay para exibir skeleton ao montar a tela
+  useEffect(() => {
+    const t = setTimeout(() => setInitializing(false), 200);
+    return () => clearTimeout(t);
+  }, []);
 
   const categories = [
     { value: "calçados", label: "Calçados" },
@@ -238,6 +245,9 @@ export function CreateProduct() {
 
   return (
     <ProtectedRoute>
+      {initializing ? (
+        <FormSkeleton fields={10} />
+      ) : (
       <div className="container mx-auto py-8">
         <div className="mb-6">
           <Button variant="ghost" onClick={() => navigate("/loja")}>
@@ -400,6 +410,7 @@ export function CreateProduct() {
           </CardContent>
         </Card>
       </div>
+      )}
     </ProtectedRoute>
   );
 }
