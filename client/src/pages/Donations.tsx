@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPublicTopDonors, type TopDonor } from "@/api/topDonors";
+import { DonationsSkeleton } from "@/components/skeletons/DonationsSkeleton";
 
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
@@ -43,6 +44,10 @@ export function Donations() {
       others: sorted.slice(3),
     };
   }, [donors]);
+
+  if (loading) {
+    return <DonationsSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-2">
@@ -138,9 +143,7 @@ export function Donations() {
               <h4 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6 text-center">Principais Doadores</h4>
               <p className="text-sm text-gray-600 mb-8 text-center">Agradecemos aos doadores que ajudaram a transformar vidas.</p>
 
-              {loading ? (
-                <div className="text-center text-gray-500">Carregando doadores...</div>
-              ) : donors.length === 0 ? (
+              {donors.length === 0 ? (
                 <div className="text-center text-gray-500">Sem registros para {month.toString().padStart(2, "0")}/{year}.</div>
               ) : (
                 <div className="flex flex-col lg:flex-row gap-8">

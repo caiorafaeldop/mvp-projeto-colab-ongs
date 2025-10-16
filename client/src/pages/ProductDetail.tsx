@@ -12,6 +12,7 @@ import { getProductById, getWhatsAppLink, Product, deleteProduct, updateProductS
 import { ArrowLeft, Edit, Trash2, Package } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProductDetailSkeleton } from "@/components/skeletons/ProductDetailSkeleton";
 
 export function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -158,7 +159,7 @@ export function ProductDetail() {
   };
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return <ProductDetailSkeleton />;
   }
   if (!product) {
     return <div>Produto não encontrado</div>;

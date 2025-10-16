@@ -26,6 +26,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { MyProductsSkeleton } from "@/components/skeletons/MyProductsSkeleton";
 
 export function MyProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -169,14 +170,7 @@ export function MyProducts() {
   };
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando produtos...</p>
-        </div>
-      </div>
-    );
+    return <MyProductsSkeleton />;
   }
 
   // Verifica se o usuário é uma organização
