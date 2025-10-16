@@ -35,7 +35,8 @@ export default function AdminPanel() {
 
   // Top Donor simple form (only name and amount per request)
   const [tdName, setTdName] = useState("");
-  const [tdAmount, setTdAmount] = useState<number | "">("");
+  const [tdAmountText, setTdAmountText] = useState("");
+  const [addingDonor, setAddingDonor] = useState(false);
 
   // Supporter Dialog state (create/edit)
   const [supDialogOpen, setSupDialogOpen] = useState(false);
@@ -219,11 +220,67 @@ export default function AdminPanel() {
 
   // donor add logic moved inline with selected period
 
+  function parseDecimalBR(input: string): number {
+    // remove thousands separator and normalize decimal comma to dot
+    const normalized = input.replace(/\./g, "").replace(",", ".");
+    return Number(normalized);
+  }
+
+  function formatCurrencyBR(input: string): string {
+    // Keep only digits
+    const digits = input.replace(/\D/g, "");
+    if (!digits) return "";
+    const intPart = digits.slice(0, -2) || "0";
+    const decPart = digits.slice(-2).padStart(2, "0");
+    // Remove leading zeros but keep a single zero if number is 0
+    const intNoLeading = intPart.replace(/^0+(?!$)/, "");
+    const intWithSeparators = intNoLeading.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `${intWithSeparators},${decPart}`;
+  }
+
+  const handleAddTopDonor = async () => {
+    const name = tdName.trim();
+    const amount = parseDecimalBR(tdAmountText.trim());
+    if (!name) {
+      toast({ title: "Atenção", description: "Informe o nome do doador.", variant: "destructive" });
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast({ title: "Atenção", description: "Informe um valor válido maior que zero.", variant: "destructive" });
+      return;
+    }
+    setAddingDonor(true);
+    try {
+      const payload = {
+        donorName: name,
+        donatedAmount: amount,
+        donationType: 'total' as const,
+        referenceMonth: selMonth,
+        referenceYear: selYear,
+        donationDate: new Date().toISOString(),
+      };
+      await AdminApi.createTopDonor(payload);
+      const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+      setCurrentTopDonors(refreshed);
+      setTdName("");
+      setTdAmountText("");
+      toast({ title: "Sucesso", description: "Doador adicionado." });
+    } catch (e) {
+      toast({ title: "Erro", description: "Falha ao adicionar doador.", variant: "destructive" });
+    } finally {
+      setAddingDonor(false);
+    }
+  };
+
   const deleteTopDonor = async (t: TopDonor) => {
-    await AdminApi.deleteTopDonor(t.id);
-    const now = new Date();
-    const refreshed = await AdminApi.listTopDonorsPublicByPeriod(now.getFullYear(), now.getMonth() + 1, 10);
-    setCurrentTopDonors(refreshed);
+    try {
+      await AdminApi.deleteTopDonor(t.id);
+      const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+      setCurrentTopDonors(refreshed);
+      toast({ title: "Removido", description: "Doador removido com sucesso." });
+    } catch (e) {
+      toast({ title: "Erro", description: "Falha ao remover doador.", variant: "destructive" });
+    }
   };
 
   // removed donor alias UI per request
@@ -415,23 +472,31 @@ export default function AdminPanel() {
               </div>
               <div>
                 <Label>Valor doado</Label>
-                <Input type="number" step="0.01" value={tdAmount} onChange={e=>setTdAmount(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ex.: 200.00" />
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9.,]*"
+                  value={tdAmountText}
+                  onChange={(e)=>{
+                    const formatted = formatCurrencyBR(e.target.value);
+                    setTdAmountText(formatted);
+                  }}
+                  onKeyDown={(e)=>{
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (!addingDonor) handleAddTopDonor();
+                    }
+                  }}
+                  placeholder="Digite o valor (R$ 1.234,56)"
+                />
               </div>
               <div className="flex gap-2">
-                <Button onClick={async ()=>{
-                  if (!tdName.trim() || !tdAmount || Number(tdAmount) <= 0) return;
-                  const payload = {
-                    donorName: tdName.trim(),
-                    donatedAmount: Number(tdAmount),
-                    referenceMonth: selMonth,
-                    referenceYear: selYear,
-                    donationDate: new Date().toISOString(),
-                  };
-                  await AdminApi.createTopDonor(payload);
-                  const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
-                  setCurrentTopDonors(refreshed);
-                  setTdName(""); setTdAmount("");
-                }}>Adicionar</Button>
+                <Button
+                  disabled={addingDonor}
+                  onClick={handleAddTopDonor}
+                >
+                  {addingDonor ? "Adicionando..." : "Adicionar"}
+                </Button>
                 <Button variant="outline" disabled={donorsRefreshing} onClick={async ()=>{
                   setDonorsRefreshing(true);
                   try {
