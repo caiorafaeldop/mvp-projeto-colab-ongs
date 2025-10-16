@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPublicTopDonors, type TopDonor } from "@/api/topDonors";
 import { DonationsSkeleton } from "@/components/skeletons/DonationsSkeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/useToast";
+import { Heart, CreditCard, Repeat, ExternalLink, Loader2 } from "lucide-react";
+import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
@@ -17,6 +25,19 @@ export function Donations() {
   const { month, year } = useMemo(() => monthYearOf(new Date()), []);
   const [donors, setDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(true);
+  // Donation form state (aligned with landing page)
+  const [donationType, setDonationType] = useState<"single" | "recurring">("single");
+  const [amount, setAmount] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
+  const [donorName, setDonorName] = useState("");
+  const [donorEmail, setDonorEmail] = useState("");
+  const [donorPhone, setDonorPhone] = useState("");
+  const [donorDocument, setDonorDocument] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const { toast } = useToast();
+  const predefinedAmounts = [10, 25, 50, 100, 200];
 
   useEffect(() => {
     let mounted = true;
@@ -53,76 +74,164 @@ export function Donations() {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 pt-2">
       <div className="container mx-auto px-4 py-2">
         <div className="flex flex-col gap-8">
-          {/* Image and Donation Sections */}
+          {/* Donation Form + Image */}
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Donation Content */}
+            {/* Donation Form */}
             <div className="lg:w-2/3 w-full">
-              <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">Como Doar</h2>
-              
-              {/* Monthly Donation Section */}
-              <div className="p-4 mb-4 bg-pink-50 border-2 border-pink-300 rounded-lg">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">Doação Mensal</h3>
-                <div className="flex flex-col md:flex-row items-center md:items-center mb-4">
-                  <div className="mb-4 md:mb-0 text-center md:mr-4">
-                    <img
-                      src="/img/catarse.png"
-                      alt="Catarse"
-                      className="w-32 h-16 object-contain rounded"
-                    />
-                  </div>
-                  <div className="text-center md:text-left">
-                    <p className="mb-0">
-                      Acesse{" "}
-                      <a href="https://www.catarse.me/" target="_blank" rel="noopener noreferrer" className="text-pink-600 font-bold hover:underline">
-                        https://www.catarse.me/
-                      </a>
-                      , selecione o valor desejado para doar mensalmente e ajude a semear sorrisos e fortalecer nossa rede de solidariedade.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-6">Faça sua Doação</h2>
 
-              {/* One-time Donation Section */}
-              <div className="mb-6">
-                <h4 className="text-xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-4">Doação Única</h4>
-                <div className="mb-6 p-4 bg-pink-50 rounded-lg border border-pink-200">
-                  <p className="text-lg font-semibold text-pink-700 mb-2">Rede Feminina de Combate ao Câncer</p>
-                  <p className="text-base font-medium text-pink-600">CNPJ: 22.222.879/0001-59</p>
-                </div>
-                
-                {/* PIX */}
-                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
-                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
-                    <img src="/img/pix.png" alt="PIX" className="w-8 h-8 object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">PIX</p>
-                    <p className="text-gray-700">22.222.879/0001-59</p>
-                  </div>
-                </div>
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-pink-500" />
+                    Tipo de Doação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={donationType} onValueChange={(v) => setDonationType(v as "single" | "recurring")}>
+                    <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <RadioGroupItem value="single" id="single" />
+                      <label htmlFor="single" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" />
+                          <span className="font-semibold">Doação Única</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Faça uma doação pontual via Mercado Pago</p>
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                      <RadioGroupItem value="recurring" id="recurring" />
+                      <label htmlFor="recurring" className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <Repeat className="w-4 h-4" />
+                          <span className="font-semibold">Doação Recorrente (Assinatura)</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Apoie mensalmente de forma automática</p>
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </CardContent>
+              </Card>
 
-                {/* Caixa Econômica */}
-                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
-                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
-                    <img src="/img/caixa.svg" alt="Caixa Econômica" className="w-8 h-8 object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">Caixa Econômica</p>
-                    <p className="text-gray-700">Ag: 1010 | Op: 003 | C/C: 2222-7</p>
-                  </div>
-                </div>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const val = parseFloat(customAmount || amount || "0");
+                if (!donorEmail) {
+                  toast({ title: "Email obrigatório", description: "Informe seu email para continuar.", variant: "destructive" });
+                  return;
+                }
+                if (isNaN(val) || val < 1) {
+                  toast({ title: "Valor inválido", description: "Mínimo R$ 1,00.", variant: "destructive" });
+                  return;
+                }
+                setIsSubmitting(true);
+                setPaymentUrl("");
+                try {
+                  const payload = {
+                    amount: val,
+                    donorName: donorName || undefined,
+                    donorEmail,
+                    donorPhone: donorPhone || undefined,
+                    donorDocument: donorDocument || undefined,
+                    message: message || undefined,
+                  };
+                  let response: any;
+                  if (donationType === "single") response = await createSingleDonation(payload);
+                  else response = await createRecurringDonation(payload);
+                  if (response?.success) {
+                    const url = response.data?.paymentUrl || response.data?.subscriptionUrl;
+                    if (url) {
+                      setPaymentUrl(url);
+                      toast({ title: "Link de pagamento gerado!", description: "Clique no botão abaixo para finalizar sua doação no Mercado Pago." });
+                    } else {
+                      throw new Error("URL de pagamento não retornada");
+                    }
+                  } else {
+                    throw new Error(response?.message || "Erro ao processar doação");
+                  }
+                } catch (err: any) {
+                  toast({ title: "Erro ao processar doação", description: err?.message || "Tente novamente.", variant: "destructive" });
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}>
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Valor da Doação</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      {predefinedAmounts.map((v) => (
+                        <Button key={v} type="button" variant={amount === String(v) ? "default" : "outline"} onClick={() => { setAmount(String(v)); setCustomAmount(""); }} className="h-16">
+                          R$ {v}
+                        </Button>
+                      ))}
+                    </div>
+                    <div>
+                      <label htmlFor="customAmount" className="text-sm font-medium">Ou insira outro valor</label>
+                      <Input id="customAmount" type="number" min="1" step="0.01" placeholder="R$ 0,00" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); setAmount(""); }} />
+                    </div>
+                    {donationType === "recurring" && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-700"><strong>Doação Recorrente Mensal:</strong> Você será cobrado automaticamente todo mês no valor selecionado.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                {/* Banco do Brasil */}
-                <div className="flex items-center mb-3 p-2 bg-white rounded-lg shadow-sm">
-                  <div className="w-10 h-10 rounded flex items-center justify-center mr-3">
-                    <img src="/img/bb.png" alt="Banco do Brasil" className="w-8 h-8 object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-1">Banco do Brasil</p>
-                    <p className="text-gray-700">Agência: 1234-3 | C/C: 150137-2</p>
-                  </div>
-                </div>
-              </div>
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle>Seus Dados</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="donorName" className="text-sm font-medium">Nome (opcional)</label>
+                        <Input id="donorName" value={donorName} onChange={(e) => setDonorName(e.target.value)} placeholder="Seu nome" />
+                      </div>
+                      <div>
+                        <label htmlFor="donorEmail" className="text-sm font-medium">Email *</label>
+                        <Input id="donorEmail" type="email" required value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} placeholder="seu@email.com" />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="donorPhone" className="text-sm font-medium">Telefone (opcional)</label>
+                        <Input id="donorPhone" value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                      </div>
+                      <div>
+                        <label htmlFor="donorDocument" className="text-sm font-medium">CPF (opcional)</label>
+                        <Input id="donorDocument" value={donorDocument} onChange={(e) => setDonorDocument(e.target.value)} placeholder="000.000.000-00" />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="message" className="text-sm font-medium">Mensagem (opcional)</label>
+                      <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Deixe uma mensagem de apoio..." rows={3} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {!paymentUrl ? (
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold text-lg py-6">
+                    {isSubmitting ? (<><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processando...</>) : (<><Heart className="w-5 h-5 mr-2" />{donationType === "single" ? "Gerar Link de Pagamento" : "Criar Assinatura"}</>)}
+                  </Button>
+                ) : (
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="pt-6">
+                      <div className="text-center space-y-4">
+                        <div className="text-green-600">
+                          <Heart className="w-12 h-12 mx-auto mb-2" />
+                          <h3 className="text-xl font-bold">Link de Pagamento Gerado!</h3>
+                          <p className="text-sm mt-2">Clique no botão abaixo para finalizar sua doação no Mercado Pago</p>
+                        </div>
+                        <Button type="button" onClick={() => window.open(paymentUrl, "_blank")} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg py-6">
+                          <ExternalLink className="w-5 h-5 mr-2" />Abrir Mercado Pago
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </form>
             </div>
 
             {/* Desktop Image - Shows only on desktop */}
