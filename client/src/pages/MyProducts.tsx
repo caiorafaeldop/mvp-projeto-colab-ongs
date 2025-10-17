@@ -262,12 +262,15 @@ export function MyProducts() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
               <Card key={product._id} className="overflow-hidden">
-                <div className="relative">
-                  <img
-                    src={product.images[0] || "/img/placeholder-cause.jpg"}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
+                <div className="relative bg-white">
+                  <div className="w-full h-48 flex items-center justify-center bg-gray-50">
+                    <img
+                      src={product.images[0] || "/img/placeholder-cause.jpg"}
+                      alt={product.name}
+                      className="w-full h-full object-contain object-center"
+                      loading="lazy"
+                    />
+                  </div>
                   <Badge
                     variant={product.isActive ? "default" : "secondary"}
                     className="absolute top-2 right-2"

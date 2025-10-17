@@ -239,79 +239,85 @@ export function Store() {
           {filteredProducts.map((product) => {
             const gradient = getCategoryGradient(product.category);
             return (
-            <div key={product._id} className="group relative">
+            <Link key={product._id} to={`/produto/${product._id}`} className="group relative block">
+              {/* Glow effect externo */}
               <div className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300`}></div>
-              <Card
-                className="relative overflow-hidden h-full flex flex-col cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-0"
-                style={{ zIndex: 1 }}
-              >
-                <div className="relative m-2 sm:m-3 w-full" style={{ paddingBottom: '100%' }}>
-                  <div className={`absolute -inset-1 bg-gradient-to-r ${gradient} rounded-2xl opacity-30`}></div>
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl border-2 border-transparent">
-                    {isAdmin && (
-                      <Button
-                        size="icon"
-                        className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20 h-7 w-7 sm:h-9 sm:w-9 bg-white/90 hover:bg-white text-purple-600 shadow-lg"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleEditProduct(product._id);
-                        }}
-                      >
-                        <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Button>
-                    )}
-                    <Carousel
-                      opts={{
-                        loop: true,
-                      }}
-                      className="w-full h-full"
-                    >
-                      <CarouselContent className="w-full h-full">
-                        {product.images.map((image, index) => (
-                          <CarouselItem key={index} className="w-full h-full">
-                            <div className="w-full h-full">
-                              <img
-                                src={image}
-                                alt={`${product.name} ${index + 1}`}
-                                className="w-full h-full object-cover rounded-2xl"
-                              />
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      {product.images.length > 1 && !isMobile && (
-                        <>
-                          <CarouselPrevious className="left-2" />
-                          <CarouselNext className="right-2" />
-                        </>
+              
+              {/* Card principal */}
+              <Card className="relative h-full flex flex-col bg-white cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-gray-200 rounded-2xl overflow-hidden">
+                {/* Container da imagem com aspect ratio */}
+                <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 aspect-square">
+                  <div className="absolute inset-0 p-2 sm:p-3">
+                    <div className={`relative w-full h-full rounded-xl overflow-hidden bg-white shadow-inner border border-gray-100 flex items-center justify-center`}>
+                      {isAdmin && (
+                        <Button
+                          size="icon"
+                          className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20 h-7 w-7 sm:h-9 sm:w-9 bg-white/95 hover:bg-white text-purple-600 shadow-lg border border-purple-200"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleEditProduct(product._id);
+                          }}
+                        >
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
                       )}
-                    </Carousel>
+                      <Carousel
+                        opts={{
+                          loop: true,
+                        }}
+                        className="w-full h-full"
+                      >
+                        <CarouselContent className="w-full h-full">
+                          {product.images.map((image, index) => (
+                            <CarouselItem key={index} className="w-full h-full">
+                              <div className="w-full h-full flex items-center justify-center bg-white p-2 sm:p-3">
+                                <img
+                                  src={image}
+                                  alt={`${product.name} ${index + 1}`}
+                                  className="block w-full h-full object-contain object-center"
+                                  loading="lazy"
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        {product.images.length > 1 && !isMobile && (
+                          <>
+                            <CarouselPrevious className="left-1 h-6 w-6 sm:h-8 sm:w-8" />
+                            <CarouselNext className="right-1 h-6 w-6 sm:h-8 sm:w-8" />
+                          </>
+                        )}
+                      </Carousel>
+                    </div>
                   </div>
                 </div>
-                <Link to={`/produto/${product._id}`}>
-                <CardContent className="flex-grow flex flex-col justify-between p-2 sm:p-3 md:p-4">
-                  <div>
-                    <div className="relative inline-block mb-1 sm:mb-2">
-                      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-10 rounded-lg`}></div>
-                      <div className={`relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-transparent bg-gradient-to-r ${gradient} bg-clip-border`}>
-                        <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-md m-[2px]"></div>
-                        <span className="relative font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent text-[10px] sm:text-xs">
-                          {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                        </span>
-                      </div>
+
+                {/* Conteúdo do card */}
+                <CardContent className="flex-grow flex flex-col justify-between p-2 sm:p-3 md:p-4 bg-white">
+                  <div className="space-y-1 sm:space-y-2">
+                    {/* Badge de categoria */}
+                    <div className="inline-block">
+                      <span className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-semibold bg-gradient-to-r ${gradient} text-white shadow-sm`}>
+                        {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                      </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white my-1 sm:my-2 line-clamp-2 text-xs sm:text-sm md:text-lg leading-tight">
+                    
+                    {/* Nome do produto */}
+                    <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2 text-xs sm:text-sm md:text-base leading-tight min-h-[2.5rem] sm:min-h-[3rem]">
                       {product.name}
                     </h3>
                   </div>
-                  <span className="font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent text-sm sm:text-base md:text-xl">
-                    {formatPrice(product.price)}
-                  </span>
+                  
+                  {/* Preço */}
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <span className={`block font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent text-sm sm:text-base md:text-lg`}>
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
                 </CardContent>
-              </Link>
-            </Card>
-            </div>
+              </Card>
+            </Link>
             );
           })}
         </div>

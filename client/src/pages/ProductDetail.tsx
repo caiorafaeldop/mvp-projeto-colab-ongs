@@ -218,12 +218,15 @@ export function ProductDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
         {/* Coluna Esquerda - Imagens */}
         <div className="space-y-4">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-pink-100">
-            <img
-              src={product.images[currentImageIndex] || "/img/placeholder-cause.jpg"}
-              alt={product.name}
-              className="w-full h-[500px] object-cover"
-            />
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-pink-100 bg-white">
+            <div className="w-full h-[500px] flex items-center justify-center bg-gray-50">
+              <img
+                src={product.images[currentImageIndex] || "/img/placeholder-cause.jpg"}
+                alt={product.name}
+                className="w-full h-full object-contain object-center"
+                loading="eager"
+              />
+            </div>
           </div>
           {product.images.length > 1 && (
             <div className="grid grid-cols-5 gap-3">
@@ -231,17 +234,20 @@ export function ProductDetail() {
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`rounded-xl overflow-hidden border-3 transition-all transform hover:scale-105 ${
+                  className={`rounded-xl overflow-hidden border-3 transition-all transform hover:scale-105 bg-white ${
                     index === currentImageIndex
                       ? "border-pink-500 ring-2 ring-pink-300 scale-105"
                       : "border-gray-200 opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-20 object-cover"
-                  />
+                  <div className="w-full h-20 flex items-center justify-center bg-gray-50">
+                    <img
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-contain object-center"
+                      loading="lazy"
+                    />
+                  </div>
                 </button>
               ))}
             </div>
