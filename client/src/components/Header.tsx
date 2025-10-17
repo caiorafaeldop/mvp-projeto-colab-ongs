@@ -119,15 +119,6 @@ export function Header() {
                 Faça uma doação
               </Link>
             </Button>
-            {isAuthenticated && isOrganization && (
-              <NavLink
-                to="/create-product"
-                className="text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-3 py-2 rounded-lg hover:bg-pink-50"
-                style={({ isActive }) => (isActive ? { color: "#DB2777", backgroundColor: "#FDF2F8", fontWeight: "600" } : undefined)}
-              >
-                Meus Produtos
-              </NavLink>
-            )}
           </nav>
           {/* Mobile Menu Button */}
           {isMobile && (
@@ -138,7 +129,7 @@ export function Header() {
                   <span className="sr-only">Abrir menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56" modal={false}>
                 <DropdownMenuItem asChild>
                   <Link to="/sobre" className="flex items-center">
                     <Heart className="h-4 w-4 mr-2" />
@@ -157,14 +148,6 @@ export function Header() {
                     Faça uma doação
                   </Link>
                 </DropdownMenuItem>
-                {isAuthenticated && isOrganization && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/create-product" className="flex items-center">
-                      <Package className="h-4 w-4 mr-2" />
-                      Meus Produtos
-                    </Link>
-                  </DropdownMenuItem>
-                )}
                 {/* Admin link removed from mobile menu */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -246,7 +229,7 @@ export function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuContent className="w-56" align="end" modal={false} sideOffset={5}>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
@@ -258,27 +241,26 @@ export function Header() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {isOrganization && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/create-product" className="cursor-pointer">
-                          <Package className="mr-2 h-4 w-4" />
-                          <span>Criar Produto</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer">
                         <User className="mr-2 h-4 w-4" />
                         <span>Perfil</span>
                       </Link>
                     </DropdownMenuItem>
-                    {/* Admin link removed from user dropdown */}
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="cursor-pointer">
                         <Settings className="mr-2 h-4 w-4" />
                         <span>Configurações</span>
                       </Link>
                     </DropdownMenuItem>
+                    {isOrganization && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="cursor-pointer">
+                          <Package className="mr-2 h-4 w-4" />
+                          <span>Painel Administrador</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={logout}

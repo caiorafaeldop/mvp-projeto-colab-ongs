@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProductModal } from "@/components/ProductModal";
 import {
   Select,
   SelectContent,
@@ -10,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Plus, Edit } from "lucide-react";
 import { getProducts, Product } from "@/api/store";
 import { useToast } from "@/hooks/useToast";
 import { useIsMobile } from "@/hooks/useMobile";
@@ -29,60 +32,89 @@ export function Store() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
-  const { toast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const { toast} = useToast();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const isAdmin = user?.userType === "organization";
 
   const categories = [
-    { value: "all", label: "Todas as categorias" },
-    { value: "calçados", label: "Calçados" },
-    { value: "decoração", label: "Decoração" },
-    { value: "roupas", label: "Roupas" },
-    { value: "acessórios", label: "Acessórios" },
-    { value: "outros", label: "Outros" },
+    { value: "all", label: "Todas as categorias", gradient: "from-gray-500 to-gray-600" },
+    { value: "calçados", label: "Calçados", gradient: "from-blue-500 to-cyan-500" },
+    { value: "decoração", label: "Decoração", gradient: "from-purple-500 to-pink-500" },
+    { value: "roupas", label: "Roupas", gradient: "from-pink-500 to-rose-500" },
+    { value: "acessórios", label: "Acessórios", gradient: "from-amber-500 to-orange-500" },
+    { value: "outros", label: "Outros", gradient: "from-green-500 to-emerald-500" },
   ];
 
+  const getCategoryGradient = (category: string) => {
+    const cat = categories.find(c => c.value === category.toLowerCase());
+    return cat?.gradient || "from-gray-500 to-gray-600";
+  };
+
   // Load products on mount
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getProducts();
-        if (response.success) {
-          // Transforma os dados para o formato esperado pelo frontend
-          const transformedProducts = (response.data || []).map(
-            (item: any) => ({
-              _id: item.id,
-              images:
-                item.imageUrls?.length > 0
-                  ? item.imageUrls
-                  : ["/placeholder-cause.jpg"],
-              name: item.name,
-              category: item.category ? item.category.toLowerCase() : "outros", // normaliza para lowercase
-              price: item.price,
-              description: item.description || "",
-              stock: item.stock || 0,
-            })
-          );
-          setProducts(transformedProducts);
-          setFilteredProducts(transformedProducts);
-        } else {
-          throw new Error("Erro ao carregar produtos");
-        }
-      } catch (error) {
-        toast({
-          title: "Erro ao carregar produtos",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Não foi possível buscar os produtos. Tente novamente mais tarde.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+  const loadProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getProducts();
+      if (response.success) {
+        // Transforma os dados para o formato esperado pelo frontend
+        const transformedProducts = (response.data || []).map(
+          (item: any) => ({
+            _id: item.id,
+            images:
+              item.imageUrls?.length > 0
+                ? item.imageUrls
+                : ["/placeholder-cause.jpg"],
+            name: item.name,
+            category: item.category ? item.category.toLowerCase() : "outros", // normaliza para lowercase
+            price: item.price,
+            description: item.description || "",
+            stock: item.stock || 0,
+          })
+        );
+        setProducts(transformedProducts);
+        setFilteredProducts(transformedProducts);
+      } else {
+        throw new Error("Erro ao carregar produtos");
       }
-    };
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar produtos",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível buscar os produtos. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadProducts();
   }, [toast]);
+
+  const handleCreateProduct = () => {
+    setEditingProductId(null);
+    setModalOpen(true);
+  };
+
+  const handleEditProduct = (productId: string) => {
+    setEditingProductId(productId);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingProductId(null);
+  };
+
+  const handleModalSuccess = () => {
+    loadProducts(); // Recarrega produtos após criar/editar
+  };
 
   // Função para normalizar texto (remove acentos e converte para minúscula)
   const normalizeText = (text: string): string => {
@@ -153,17 +185,17 @@ export function Store() {
 
       <Card className="mb-6 md:mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
         <CardContent className={`${isMobile ? 'p-3' : 'p-6'}`}>
-          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-center">
+            <div className={`relative flex-1`}>
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
               <Input
-                placeholder="Buscar pelo nome do produto..."
+                placeholder="Buscar produto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`${isMobile ? 'pl-9 h-9 text-sm' : 'pl-10 h-10'}`}
               />
             </div>
-            <div className={`${isMobile ? 'w-full' : 'md:w-64'}`}>
+            <div className={`${isMobile ? 'w-full' : 'md:w-64 flex-shrink-0'}`}>
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
@@ -181,6 +213,16 @@ export function Store() {
                 </SelectContent>
               </Select>
             </div>
+            {isAdmin && (
+              <Button 
+                onClick={handleCreateProduct}
+                className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg"
+                size={isMobile ? 'sm' : 'default'}
+              >
+                <Plus className={`${isMobile ? 'w-4 h-4 mr-1' : 'w-5 h-5 mr-2'}`} />
+                Criar Produto
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -195,62 +237,84 @@ export function Store() {
       ) : filteredProducts.length > 0 ? (
         // Products Grid - Responsivo para mobile
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-          {filteredProducts.map((product) => (
-            <Card
-              key={product._id}
-              className="overflow-hidden h-full flex flex-col group cursor-pointer hover:shadow-xl transition-shadow duration-300"
-              style={{ zIndex: 1 }}
-            >
-              
-                <div className={`relative overflow-hidden ${isMobile ? 'h-40' : 'h-60'}`}>
-                  <Carousel
-                    opts={{
-                      loop: true,
-                    }}
-                    className="w-full h-full"
-                  >
-                    <CarouselContent className="w-full h-full">
-                      {product.images.map((image, index) => (
-                        <CarouselItem key={index} className="w-full h-full">
-                          <img
-                            src={image || "/placeholder-cause.jpg"}
-                            alt={`${product.name} - Image ${index + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    {product.images.length > 1 && !isMobile && (
-                      <>
-                        <CarouselPrevious
-                          className="left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
-                          style={{ pointerEvents: "auto" }}
-                        />
-                        <CarouselNext
-                          className="right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800"
-                          style={{ pointerEvents: "auto" }}
-                        />
-                      </>
+          {filteredProducts.map((product) => {
+            const gradient = getCategoryGradient(product.category);
+            return (
+            <div key={product._id} className="group relative">
+              <div className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300`}></div>
+              <Card
+                className="relative overflow-hidden h-full flex flex-col cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-0"
+                style={{ zIndex: 1 }}
+              >
+                <div className="relative m-3 w-full" style={{ paddingBottom: '100%' }}>
+                  <div className={`absolute -inset-1 bg-gradient-to-r ${gradient} rounded-2xl opacity-30`}></div>
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl border-2 border-transparent">
+                    {isAdmin && (
+                      <Button
+                        size="icon"
+                        className="absolute top-2 right-2 z-20 bg-white/90 hover:bg-white text-purple-600 shadow-lg"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleEditProduct(product._id);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     )}
-                  </Carousel>
+                    <Carousel
+                      opts={{
+                        loop: true,
+                      }}
+                      className="w-full h-full"
+                    >
+                      <CarouselContent className="w-full h-full">
+                        {product.images.map((image, index) => (
+                          <CarouselItem key={index} className="w-full h-full">
+                            <div className="w-full h-full">
+                              <img
+                                src={image}
+                                alt={`${product.name} ${index + 1}`}
+                                className="w-full h-full object-cover rounded-2xl"
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      {product.images.length > 1 && !isMobile && (
+                        <>
+                          <CarouselPrevious className="left-2" />
+                          <CarouselNext className="right-2" />
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
                 </div>
                 <Link to={`/produto/${product._id}`}>
                 <CardContent className={`flex-grow flex flex-col justify-between ${isMobile ? 'p-2' : 'p-4'}`}>
                   <div>
-                    <span className={`text-xs bg-pink-100 text-pink-800 px-2 py-1 rounded-full ${isMobile ? 'text-[10px]' : ''}`}>
-                      {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                    </span>
+                    <div className="relative inline-block mb-2">
+                      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-10 rounded-lg`}></div>
+                      <div className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-transparent bg-gradient-to-r ${gradient} bg-clip-border`}>
+                        <div className={`absolute inset-0 bg-white dark:bg-gray-900 rounded-md m-[2px]`}></div>
+                        <span className={`relative font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
+                          {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                        </span>
+                      </div>
+                    </div>
                     <h3 className={`font-semibold text-gray-900 dark:text-white my-2 line-clamp-2 ${isMobile ? 'text-sm leading-tight' : 'text-lg'}`}>
                       {product.name}
                     </h3>
                   </div>
-                  <span className={`font-bold text-pink-600 ${isMobile ? 'text-base' : 'text-xl'}`}>
+                  <span className={`font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent ${isMobile ? 'text-base' : 'text-xl'}`}>
                     {formatPrice(product.price)}
                   </span>
                 </CardContent>
               </Link>
             </Card>
-          ))}
+            </div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-16">
@@ -263,6 +327,14 @@ export function Store() {
           </p>
         </div>
       )}
+
+      {/* Modal de Criar/Editar Produto */}
+      <ProductModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        productId={editingProductId}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 }

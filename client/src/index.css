@@ -68,6 +68,13 @@
   body {
     @apply bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 text-foreground;
     min-height: 100vh;
+    overflow-x: hidden; /* Previne scroll horizontal */
+  }
+  
+  /* Previne shift quando dropdown/modal abre */
+  body[data-scroll-locked] {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
   }
 }
 

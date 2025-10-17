@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { getProductById, getWhatsAppLink, Product, deleteProduct, updateProductStock } from "@/api/store";
-import { ArrowLeft, Edit, Trash2, Package } from "lucide-react";
+import { getProductById, getWhatsAppLink, Product, deleteProduct, updateProductStock, getProducts } from "@/api/store";
+import { ArrowLeft, Edit, Trash2, Package, ShoppingBag } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductDetailSkeleton } from "@/components/skeletons/ProductDetailSkeleton";
+import { ProductModal } from "@/components/ProductModal";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 export function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -20,51 +21,74 @@ export function ProductDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [newStock, setNewStock] = useState<number>(0);
   const [isUpdatingStock, setIsUpdatingStock] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = user?.userType === "organization";
+
+  const loadProduct = async () => {
+    if (!id) return;
+    try {
+      setIsLoading(true);
+      const response = await getProductById(id);
+      if (response.success && response.data) {
+        const apiProduct = response.data;
+        const productData = {
+          _id: apiProduct.id,
+          images: apiProduct.imageUrls || ["/img/placeholder-cause.jpg"],
+          name: apiProduct.name,
+          description: apiProduct.description,
+          price: apiProduct.price,
+          stock: apiProduct.stock || 1,
+          category: apiProduct.category || "Outros",
+          isActive: apiProduct.isAvailable,
+          organizationId: apiProduct.organizationId,
+          createdAt: apiProduct.createdAt,
+          updatedAt: apiProduct.updatedAt,
+        };
+        setProduct(productData);
+        setNewStock(productData.stock);
+
+        // Carregar produtos relacionados
+        const productsResponse = await getProducts();
+        if (productsResponse.success) {
+          const allProducts = productsResponse.data || [];
+          const related = allProducts
+            .filter((p: any) => p.id !== id)
+            .slice(0, 6)
+            .map((item: any) => ({
+              _id: item.id,
+              images: item.imageUrls?.length > 0 ? item.imageUrls : ["/placeholder-cause.jpg"],
+              name: item.name,
+              category: item.category,
+              price: item.price,
+              description: item.description || "",
+              stock: item.stock || 0,
+            }));
+          setRelatedProducts(related);
+        }
+      } else {
+        throw new Error("Produto não encontrado.");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível carregar o produto.",
+        variant: "destructive",
+      });
+      navigate("/loja");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadProduct = async () => {
-      if (!id) return;
-      try {
-        setIsLoading(true);
-        const response = await getProductById(id);
-        if (response.success && response.data) {
-          const apiProduct = response.data;
-          const productData = {
-            _id: apiProduct.id,
-            images: apiProduct.imageUrls || ["/img/placeholder-cause.jpg"],
-            name: apiProduct.name,
-            description: apiProduct.description,
-            price: apiProduct.price,
-            stock: apiProduct.stock || 1,
-            category: apiProduct.category || "Outros",
-            isActive: apiProduct.isAvailable,
-            organizationId: apiProduct.organizationId,
-            createdAt: apiProduct.createdAt,
-            updatedAt: apiProduct.updatedAt,
-          };
-          setProduct(productData);
-          setNewStock(productData.stock);
-        } else {
-          throw new Error("Produto não encontrado.");
-        }
-      } catch (error) {
-        toast({
-          title: "Erro",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Não foi possível carregar o produto.",
-          variant: "destructive",
-        });
-        navigate("/loja");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadProduct();
   }, [id, navigate, toast]);
 
@@ -118,22 +142,21 @@ export function ProductDetail() {
     }
   };
 
-  const handleDeleteProduct = async () => {
+  const handleDelete = async () => {
     if (!product || !id) return;
 
-    if (!confirm("Tem certeza que deseja excluir este produto?")) {
+    if (!window.confirm("Tem certeza que deseja excluir este produto?")) {
       return;
     }
 
     try {
       const response = await deleteProduct(id);
-      
       if (response.success) {
         toast({
-          title: "Sucesso!",
-          description: "Produto excluído com sucesso.",
+          title: "Sucesso",
+          description: "Produto excluído com sucesso!",
         });
-        navigate("/create-product");
+        navigate("/loja");
       } else {
         throw new Error("Erro ao excluir produto");
       }
@@ -147,8 +170,16 @@ export function ProductDetail() {
     }
   };
 
-  const handleEditProduct = () => {
-    navigate(`/create-product?edit=${id}`);
+  const handleEditClick = () => {
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
+  const handleModalSuccess = () => {
+    loadProduct(); // Recarrega o produto após edição
   };
 
   const formatPrice = (price: number) => {
@@ -161,150 +192,216 @@ export function ProductDetail() {
   if (isLoading) {
     return <ProductDetailSkeleton />;
   }
+
   if (!product) {
-    return <div>Produto não encontrado</div>;
+    return (
+      <div className="container mx-auto py-8">
+        <p>Produto não encontrado.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4">
+      {/* Botão Voltar */}
       <div className="mb-6">
-        <Button variant="ghost" asChild>
-          <Link to="/loja">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar para a Loja
-          </Link>
+        <Button 
+          onClick={() => navigate("/loja")}
+          className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg"
+        >
+          <ShoppingBag className="w-4 h-4 mr-2" />
+          Voltar para o Bazar
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        {/* ====================================================================== */}
-        {/* ===== ESTE É O BLOCO QUE PRECISA SER GARANTIDO NO SEU CÓDIGO ===== */}
-        {/* Coluna de Imagens */}
+      {/* Grid Principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        {/* Coluna Esquerda - Imagens */}
         <div className="space-y-4">
-          <div className="border rounded-lg overflow-hidden shadow-lg">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-pink-100">
             <img
-              src={
-                product.images[currentImageIndex] ||
-                "/img/placeholder-cause.jpg"
-              }
+              src={product.images[currentImageIndex] || "/img/placeholder-cause.jpg"}
               alt={product.name}
-              className="w-full h-[450px] object-cover"
+              className="w-full h-[500px] object-cover"
             />
           </div>
           {product.images.length > 1 && (
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-5 gap-3">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`rounded-xl overflow-hidden border-3 transition-all transform hover:scale-105 ${
                     index === currentImageIndex
-                      ? "border-pink-500 scale-105"
-                      : "border-transparent opacity-70 hover:opacity-100"
+                      ? "border-pink-500 ring-2 ring-pink-300 scale-105"
+                      : "border-gray-200 opacity-60 hover:opacity-100"
                   }`}
                 >
                   <img
                     src={image}
                     alt={`${product.name} ${index + 1}`}
-                    className="w-full h-24 object-cover"
+                    className="w-full h-20 object-cover"
                   />
                 </button>
               ))}
             </div>
           )}
         </div>
-        {/* ====================================================================== */}
 
-        {/* Coluna de Informações e Compra */}
-        <div className="flex flex-col">
-          <Card className="flex-grow flex flex-col">
-            <CardHeader>
-              <CardTitle className="text-3xl lg:text-4xl font-bold pt-4">
-                {product.name}
-              </CardTitle>
-              <div className="flex justify-between items-center pt-4">
-                <div className="text-4xl font-bold text-pink-600">
-                  {formatPrice(product.price)}
+        {/* Coluna Direita - Informações */}
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 rounded-3xl blur opacity-20"></div>
+          <Card className="relative border-0 shadow-2xl">
+            <CardContent className="p-8 space-y-6">
+              {/* Título e Preço */}
+              <div>
+                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  {product.name}
+                </h1>
+                <div className="flex items-center justify-between">
+                  <span className="text-5xl font-bold text-pink-600">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    product.stock > 0 
+                      ? "bg-green-100 text-green-700" 
+                      : "bg-red-100 text-red-700"
+                  }`}>
+                    {product.stock > 0 ? `${product.stock} em estoque` : "Esgotado"}
+                  </span>
                 </div>
-                <span className="text-sm font-medium text-green-600">
-                  {product.stock > 0
-                    ? `${product.stock} em estoque`
-                    : "Fora de estoque"}
+              </div>
+
+              {/* Categoria */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100">
+                <span className="text-sm font-semibold text-purple-700">
+                  📦 {product.category}
                 </span>
               </div>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
-                {product.description}
-              </p>
-              <div className="mt-auto">
-                <Separator className="my-6" />
-                
-                {/* Admin Controls */}
-                {isAuthenticated && user?.userType === "organization" ? (
-                  <div className="space-y-4">
-                    {/* Stock Update */}
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <Label htmlFor="stock">Quantidade em Estoque</Label>
-                        <Input
-                          id="stock"
-                          type="number"
-                          min="0"
-                          value={newStock}
-                          onChange={(e) => setNewStock(Number(e.target.value))}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleUpdateStock}
-                        disabled={isUpdatingStock || newStock === product.stock}
-                        className="bg-blue-500 hover:bg-blue-600"
-                      >
-                        <Package className="w-4 h-4 mr-2" />
-                        {isUpdatingStock ? "Atualizando..." : "Atualizar"}
-                      </Button>
-                    </div>
-                    
-                    {/* Admin Action Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={handleEditProduct}
-                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Editar Produto
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={handleDeleteProduct}
-                        className="border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Excluir Produto
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Regular User WhatsApp Button */
-                  <Button
-                    size="lg"
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold text-lg py-7"
-                    disabled={product.stock === 0}
-                    onClick={handleWhatsAppClick}
-                  >
-                    <FaWhatsapp className="w-6 h-6 mr-3" />
-                    {product.stock > 0
-                      ? "Tenho Interesse (WhatsApp)"
-                      : "Produto Esgotado"}
-                  </Button>
-                )}
+
+              {/* Descrição */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Descrição</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {product.description}
+                </p>
               </div>
+
+              {/* Controles Admin ou Botão WhatsApp */}
+              {isAdmin ? (
+                <div className="space-y-4 pt-4 border-t-2 border-pink-100">
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    Controles de Administrador
+                  </h3>
+                  
+                  {/* Campo de Estoque */}
+                  <div>
+                    <Label htmlFor="stock" className="font-semibold text-gray-700">
+                      Quantidade em Estoque
+                    </Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      min="0"
+                      value={newStock}
+                      onChange={(e) => setNewStock(Number(e.target.value))}
+                      className="border-2 border-pink-200 focus:border-pink-500 mt-2"
+                    />
+                  </div>
+                  
+                  {/* Botões de Ação */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="icon"
+                      onClick={handleDelete}
+                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      onClick={handleEditClick}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Produto
+                    </Button>
+                    
+                    <Button
+                      onClick={handleUpdateStock}
+                      disabled={isUpdatingStock || newStock === product.stock}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      {isUpdatingStock ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-lg py-6 shadow-lg"
+                  disabled={product.stock === 0}
+                  onClick={handleWhatsAppClick}
+                >
+                  <FaWhatsapp className="w-6 h-6 mr-3" />
+                  {product.stock > 0 ? "Tenho Interesse (WhatsApp)" : "Produto Esgotado"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Carrossel de Produtos Relacionados */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16 max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+            Outros Produtos
+          </h2>
+          
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-4">
+              {relatedProducts.map((relatedProduct) => (
+                <CarouselItem key={relatedProduct._id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <Link to={`/produto/${relatedProduct._id}`}>
+                    <Card className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+                      <div className="relative h-48 overflow-hidden rounded-t-lg">
+                        <img 
+                          src={relatedProduct.images[0] || "/placeholder-cause.jpg"}
+                          alt={relatedProduct.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-lg line-clamp-1 mb-2">{relatedProduct.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xl font-bold text-pink-600">
+                            {formatPrice(relatedProduct.price)}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {relatedProduct.category}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-4" />
+            <CarouselNext className="-right-4" />
+          </Carousel>
+        </div>
+      )}
+
+      {/* Modal de Edição */}
+      <ProductModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        productId={id || null}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 }
