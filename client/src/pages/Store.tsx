@@ -173,35 +173,35 @@ export function Store() {
   );
 
   return (
-    <div className="container mx-auto py-2 md:py-4 px-3 md:px-6">
-      <div className="text-center mb-6 md:mb-8">
-        <h1 className={`font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight ${isMobile ? 'text-2xl' : 'text-4xl md:text-6xl'}`}>
+    <div className="container mx-auto py-2 md:py-4 px-2 sm:px-3 md:px-6">
+      <div className="text-center mb-4 md:mb-8 px-2">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent !leading-tight">
           Bazar Solidário
         </h1>
-        <p className={`text-gray-600 dark:text-gray-300 mt-2 ${isMobile ? 'text-sm' : 'text-lg'}`}>
+        <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300 mt-2">
           Produtos que apoiam uma grande causa!
         </p>
       </div>
 
-      <Card className="mb-6 md:mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
-        <CardContent className={`${isMobile ? 'p-3' : 'p-6'}`}>
+      <Card className="mb-4 md:mb-8 backdrop-blur-sm bg-white/70 dark:bg-gray-900/70">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-center">
-            <div className={`relative flex-1`}>
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <Input
                 placeholder="Buscar produto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`${isMobile ? 'pl-9 h-9 text-sm' : 'pl-10 h-10'}`}
+                className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm sm:text-base"
               />
             </div>
-            <div className={`${isMobile ? 'w-full' : 'md:w-64 flex-shrink-0'}`}>
+            <div className="w-full md:w-64 flex-shrink-0">
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className={`${isMobile ? 'h-9' : 'h-10'}`}>
-                  <Filter className={`mr-2 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                <SelectTrigger className="h-9 sm:h-10">
+                  <Filter className="mr-2 w-3 h-3 sm:w-4 sm:h-4" />
                   <SelectValue placeholder="Filtrar por categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -216,10 +216,9 @@ export function Store() {
             {isAdmin && (
               <Button 
                 onClick={handleCreateProduct}
-                className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg"
-                size={isMobile ? 'sm' : 'default'}
+                className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg h-9 sm:h-10 text-sm sm:text-base"
               >
-                <Plus className={`${isMobile ? 'w-4 h-4 mr-1' : 'w-5 h-5 mr-2'}`} />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                 Criar Produto
               </Button>
             )}
@@ -229,14 +228,14 @@ export function Store() {
 
       {isLoading || isSearching ? (
         // Skeleton Grid - Responsivo
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-6">
           {[...Array(isMobile ? 4 : 8)].map((_, i) => (
             <ProductSkeleton key={i} />
           ))}
         </div>
       ) : filteredProducts.length > 0 ? (
         // Products Grid - Responsivo para mobile
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-6">
           {filteredProducts.map((product) => {
             const gradient = getCategoryGradient(product.category);
             return (
@@ -246,20 +245,20 @@ export function Store() {
                 className="relative overflow-hidden h-full flex flex-col cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-0"
                 style={{ zIndex: 1 }}
               >
-                <div className="relative m-3 w-full" style={{ paddingBottom: '100%' }}>
+                <div className="relative m-2 sm:m-3 w-full" style={{ paddingBottom: '100%' }}>
                   <div className={`absolute -inset-1 bg-gradient-to-r ${gradient} rounded-2xl opacity-30`}></div>
                   <div className="absolute inset-0 overflow-hidden rounded-2xl border-2 border-transparent">
                     {isAdmin && (
                       <Button
                         size="icon"
-                        className="absolute top-2 right-2 z-20 bg-white/90 hover:bg-white text-purple-600 shadow-lg"
+                        className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20 h-7 w-7 sm:h-9 sm:w-9 bg-white/90 hover:bg-white text-purple-600 shadow-lg"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleEditProduct(product._id);
                         }}
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     )}
                     <Carousel
@@ -291,22 +290,22 @@ export function Store() {
                   </div>
                 </div>
                 <Link to={`/produto/${product._id}`}>
-                <CardContent className={`flex-grow flex flex-col justify-between ${isMobile ? 'p-2' : 'p-4'}`}>
+                <CardContent className="flex-grow flex flex-col justify-between p-2 sm:p-3 md:p-4">
                   <div>
-                    <div className="relative inline-block mb-2">
+                    <div className="relative inline-block mb-1 sm:mb-2">
                       <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-10 rounded-lg`}></div>
-                      <div className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-transparent bg-gradient-to-r ${gradient} bg-clip-border`}>
-                        <div className={`absolute inset-0 bg-white dark:bg-gray-900 rounded-md m-[2px]`}></div>
-                        <span className={`relative font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
+                      <div className={`relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border-2 border-transparent bg-gradient-to-r ${gradient} bg-clip-border`}>
+                        <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-md m-[2px]"></div>
+                        <span className="relative font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent text-[10px] sm:text-xs">
                           {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                         </span>
                       </div>
                     </div>
-                    <h3 className={`font-semibold text-gray-900 dark:text-white my-2 line-clamp-2 ${isMobile ? 'text-sm leading-tight' : 'text-lg'}`}>
+                    <h3 className="font-semibold text-gray-900 dark:text-white my-1 sm:my-2 line-clamp-2 text-xs sm:text-sm md:text-lg leading-tight">
                       {product.name}
                     </h3>
                   </div>
-                  <span className={`font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent ${isMobile ? 'text-base' : 'text-xl'}`}>
+                  <span className="font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent text-sm sm:text-base md:text-xl">
                     {formatPrice(product.price)}
                   </span>
                 </CardContent>
