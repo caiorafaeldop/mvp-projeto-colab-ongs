@@ -3,8 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { type CarouselApi, Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Quote, HelpCircle, FileText } from "lucide-react";
+import { Testimonial, TestimonialApi } from "@/api/testimonial";
+import { FAQ, FAQApi } from "@/api/faq";
+import { PrestacaoConta, PrestacaoContasApi } from "@/api/prestacaoContas";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Sobre() {
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = !!isAuthenticated && user?.userType === "organization";
   // Simple rotating gallery (autoplay) – color placeholders (no photos yet)
   const gallerySlides = [
     { bg: "from-pink-200 to-pink-400" },
@@ -25,14 +34,40 @@ export function Sobre() {
     return () => clearInterval(id);
   }, [carouselApi]);
   
-  // Dados serão integrados depois pelo painel/admin e APIs. Mantemos estruturas vazias e placeholders visuais.
-  const depoimentos: Array<{ nome: string; papel: string; texto: string }> = [];
-  const faqs: Array<{ q: string; a: string }> = [];
-  type PrestacaoItem = { categoria: string; valor: number; cor?: string };
-  const prestacaoResumo: PrestacaoItem[] = [];
+  // Estados carregados via API
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [depoimentos, setDepoimentos] = useState<Testimonial[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [prestacaoResumo, setPrestacaoResumo] = useState<PrestacaoConta[]>([]);
+
   const anoPrestacao = new Date().getFullYear();
-  const totalPrestacao = prestacaoResumo.reduce((acc, i) => acc + i.valor, 0);
+  const totalPrestacao = prestacaoResumo.reduce((acc, i) => acc + (i.valor || 0), 0);
   const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+
+  useEffect(() => {
+    const loadAll = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const [tst, fq, pc] = await Promise.all([
+          TestimonialApi.list(true),
+          FAQApi.list(true),
+          // Endpoint público não filtra por ano; carregamos tudo (ou ajuste para organizationId/startDate)
+          PrestacaoContasApi.list(),
+        ]);
+        setDepoimentos((tst || []).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)));
+        setFaqs((fq || []).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)));
+        setPrestacaoResumo(pc || []);
+      } catch (e: any) {
+        setError(e?.message || "Falha ao carregar dados.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAll();
+  }, []);
 
   return (
     <div className="space-y-20">
@@ -88,7 +123,16 @@ export function Sobre() {
 
       {/* Depoimentos - modernizado */}
       <section className="space-y-8">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 relative">
+          {isAdmin && (
+            <div className="absolute right-0 top-0">
+              <Link to="/admin?tab=depoimentos">
+                <Button size="sm" variant="outline" className="gap-2">
+                  <Quote className="w-4 h-4" /> Adicionar depoimento
+                </Button>
+              </Link>
+            </div>
+          )}
           <div className="flex items-center justify-center gap-3">
             <div className="h-1 w-12 bg-gradient-to-r from-transparent to-purple-400 rounded-full"></div>
             <Quote className="w-7 h-7 text-purple-600" />
@@ -97,12 +141,36 @@ export function Sobre() {
             </h2>
             <div className="h-1 w-12 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></div>
           </div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-          </p>
+          {error ? (
+            <p className="text-red-600 max-w-2xl mx-auto">{error}</p>
+          ) : (
+            <p className="text-gray-600 max-w-2xl mx-auto">Depoimentos de pessoas impactadas pela causa.</p>
+          )}
         </div>
         
         <div className="relative">
-          {depoimentos.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-6">
+              {[0,1,2].map((i) => (
+                <Card key={i} className="h-full border-purple-100">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-11/12" />
+                      <Skeleton className="h-3 w-4/5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : depoimentos.length > 0 ? (
             <Carousel className="px-10">
               <CarouselContent>
                 {depoimentos.map((d, idx) => (
@@ -113,7 +181,9 @@ export function Sobre() {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <CardTitle className="text-lg font-bold text-gray-900">{d.nome}</CardTitle>
-                              <CardDescription className="text-purple-600 font-medium">{d.papel}</CardDescription>
+                              {d.cargo ? (
+                                <CardDescription className="text-purple-600 font-medium">{d.cargo}</CardDescription>
+                              ) : null}
                             </div>
                             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                               <Quote className="h-5 w-5 text-white" />
@@ -121,7 +191,7 @@ export function Sobre() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-700 leading-relaxed italic">"{d.texto}"</p>
+                          <p className="text-gray-700 leading-relaxed italic">"{d.depoimento}"</p>
                         </CardContent>
                       </Card>
                     </div>
@@ -143,7 +213,16 @@ export function Sobre() {
 
       {/* Dúvidas Frequentes (FAQ) - modernizado */}
       <section className="space-y-8">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 relative">
+          {isAdmin && (
+            <div className="absolute right-0 top-0">
+              <Link to="/admin?tab=faqs">
+                <Button size="sm" variant="outline" className="gap-2">
+                  <HelpCircle className="w-4 h-4" /> Adicionar dúvida
+                </Button>
+              </Link>
+            </div>
+          )}
           <div className="flex items-center justify-center gap-3">
             <div className="h-1 w-12 bg-gradient-to-r from-transparent to-indigo-400 rounded-full"></div>
             <HelpCircle className="w-7 h-7 text-indigo-600" />
@@ -152,22 +231,41 @@ export function Sobre() {
             </h2>
             <div className="h-1 w-12 bg-gradient-to-r from-indigo-400 to-transparent rounded-full"></div>
           </div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-          </p>
+          {error ? (
+            <p className="text-red-600 max-w-2xl mx-auto">{error}</p>
+          ) : (
+            <p className="text-gray-600 max-w-2xl mx-auto">Perguntas e respostas mais comuns.</p>
+          )}
         </div>
         
         <div className="max-w-4xl mx-auto">
-          {faqs.length > 0 ? (
+          {isLoading ? (
+            <Card className="border-indigo-100">
+              <CardContent className="p-0">
+                <div className="divide-y divide-indigo-50">
+                  {[0,1,2].map((i) => (
+                    <div key={i} className="px-6 py-5 space-y-3">
+                      <Skeleton className="h-4 w-3/4" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-5/6" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : faqs.length > 0 ? (
             <Card className="border-indigo-100 shadow-lg overflow-hidden">
               <CardContent className="p-0">
                 <Accordion type="single" collapsible className="w-full">
-                  {faqs.map((f, idx) => (
-                    <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-indigo-50 last:border-0">
+                  {faqs.map((f) => (
+                    <AccordionItem key={f.id} value={`item-${f.id}`} className="border-b border-indigo-50 last:border-0">
                       <AccordionTrigger className="px-6 py-5 text-left hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-transparent transition-all duration-200 text-lg font-semibold">
-                        {f.q}
+                        {f.pergunta}
                       </AccordionTrigger>
                       <AccordionContent className="px-6 pb-5 text-gray-700 bg-gradient-to-br from-indigo-50/30 to-transparent">
-                        {f.a}
+                        {f.resposta}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
@@ -186,7 +284,16 @@ export function Sobre() {
 
       {/* Prestação de Contas - ULTRA modernizado e visual */}
       <section className="space-y-8">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 relative">
+          {isAdmin && (
+            <div className="absolute right-0 top-0">
+              <Link to="/admin">
+                <Button size="sm" variant="outline" className="gap-2">
+                  <FileText className="w-4 h-4" /> Adicionar lançamento
+                </Button>
+              </Link>
+            </div>
+          )}
           <div className="flex items-center justify-center gap-3">
             <div className="h-1 w-12 bg-gradient-to-r from-transparent to-pink-400 rounded-full"></div>
             <FileText className="w-7 h-7 text-pink-600" />
@@ -195,8 +302,11 @@ export function Sobre() {
             </h2>
             <div className="h-1 w-12 bg-gradient-to-r from-pink-400 to-transparent rounded-full"></div>
           </div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-          </p>
+          {error ? (
+            <p className="text-red-600 max-w-2xl mx-auto">{error}</p>
+          ) : (
+            <p className="text-gray-600 max-w-2xl mx-auto">Lançamentos financeiros e resumo anual.</p>
+          )}
         </div>
 
         {/* Card principal com visual moderno */}
@@ -217,13 +327,36 @@ export function Sobre() {
             
             <CardContent className="p-8 space-y-6">
               {/* Grid de categorias com visual impressionante */}
-              {prestacaoResumo.length > 0 ? (
+              {isLoading ? (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {[0,1].map((i) => (
+                    <Card key={i} className="border-0 shadow-lg overflow-hidden">
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-3 w-28" />
+                            <Skeleton className="h-6 w-40" />
+                          </div>
+                          <Skeleton className="h-14 w-14 rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-5 w-10" />
+                          </div>
+                          <Skeleton className="h-3 w-full rounded-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : prestacaoResumo.length > 0 ? (
                 <div className="grid md:grid-cols-2 gap-6">
                   {prestacaoResumo.map((r) => {
                     const pct = totalPrestacao > 0 ? Math.round((r.valor / totalPrestacao) * 100) : 0;
-                    const cor = r.cor || "from-pink-500 to-pink-600";
+                    const cor = "from-pink-500 to-pink-600";
                     return (
-                      <div key={r.categoria} className="group relative">
+                      <div key={`${r.id}-${r.categoria}`} className="group relative">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-rose-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
                         <Card className="relative border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
                           <div className={`absolute top-0 right-0 h-32 w-32 bg-gradient-to-br ${cor} opacity-10 rounded-bl-full`}></div>
