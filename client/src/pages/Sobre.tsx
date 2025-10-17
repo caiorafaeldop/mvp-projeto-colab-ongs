@@ -159,7 +159,7 @@ export function Sobre() {
                         <Skeleton className="h-3 sm:h-4 w-32 sm:w-40" />
                         <Skeleton className="h-2 sm:h-3 w-20 sm:w-24" />
                       </div>
-                      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
+                      <Skeleton className="h-12 w-12 sm:h-14 sm:w-14 rounded-full" />
                     </div>
                     <div className="space-y-2">
                       <Skeleton className="h-2 sm:h-3 w-full" />
@@ -185,8 +185,25 @@ export function Sobre() {
                                 <CardDescription className="text-purple-600 font-medium text-xs sm:text-sm">{d.cargo}</CardDescription>
                               ) : null}
                             </div>
-                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                              <Quote className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden ring-2 ring-purple-200">
+                              {d.fotoUrl ? (
+                                <img 
+                                  src={d.fotoUrl} 
+                                  alt={d.nome}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    // Fallback para ícone se a imagem falhar
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = '<svg class="h-6 w-6 sm:h-7 sm:w-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 12a1 1 0 011-1h6a1 1 0 110 2H9a1 1 0 01-1-1zm0-4a1 1 0 011-1h6a1 1 0 110 2H9a1 1 0 01-1-1zm8 8a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z"/></svg>';
+                                    }
+                                  }}
+                                />
+                              ) : (
+                                <Quote className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                              )}
                             </div>
                           </div>
                         </CardHeader>
