@@ -62,6 +62,9 @@
   * {
     @apply border-border;
   }
+  html {
+    overflow-y: scroll; /* Força scrollbar sempre visível para evitar shift */
+  }
   body {
     @apply bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 text-foreground;
     min-height: 100vh;

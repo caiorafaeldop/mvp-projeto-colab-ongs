@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/ui/theme-provider";
 import { Toaster } from "./components/ui/toaster";
 import { Layout } from "./components/Layout";
@@ -35,6 +35,8 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
               <Route path="admin" element={<AdminPanel />} />
+              <Route path="admin/faqs" element={<Navigate to="/admin?tab=faqs" replace />} />
+              <Route path="admin/testimonials" element={<Navigate to="/admin?tab=depoimentos" replace />} />
             </Route>
           </Routes>
         </Router>

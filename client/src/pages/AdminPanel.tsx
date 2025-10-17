@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminApi, Supporter, TopDonor } from "@/api/admin";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -15,11 +15,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import api from "@/api/api";
+import AdminFAQ from "./AdminFAQ";
+import AdminTestimonials from "./AdminTestimonials";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = useMemo(() => user?.userType === "organization", [user]);
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "apoiadores";
+  const [isTabChanging, setIsTabChanging] = useState(false);
 
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [currentTopDonors, setCurrentTopDonors] = useState<TopDonor[]>([]);
@@ -84,8 +89,26 @@ export default function AdminPanel() {
     })();
   }, [isAuthenticated, isAdmin, selMonth, selYear]);
 
+  // Efeito para simular loading na troca de tabs
+  useEffect(() => {
+    setIsTabChanging(true);
+    const timer = setTimeout(() => {
+      setIsTabChanging(false);
+    }, 300); // 300ms de delay para transição suave
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
+
+  // Renderizar componentes específicos baseado na tab (sem skeleton, eles já têm o próprio)
+  if (activeTab === "faqs") {
+    return <AdminFAQ />;
+  }
+  
+  if (activeTab === "depoimentos") {
+    return <AdminTestimonials />;
+  }
 
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -292,12 +315,31 @@ export default function AdminPanel() {
         {loading && <div className="text-sm text-muted-foreground">Carregando...</div>}
       </div>
 
-      <Tabs defaultValue="apoiadores" className="w-full">
+      <Tabs value={activeTab} className="w-full">
         <TabsList>
-          <TabsTrigger value="apoiadores">Apoiadores</TabsTrigger>
-          <TabsTrigger value="doadores">Doadores</TabsTrigger>
+          <TabsTrigger value="apoiadores" asChild>
+            <Link to="/admin?tab=apoiadores">Apoiadores</Link>
+          </TabsTrigger>
+          <TabsTrigger value="doadores" asChild>
+            <Link to="/admin?tab=doadores">Doadores</Link>
+          </TabsTrigger>
+          <TabsTrigger value="faqs" asChild>
+            <Link to="/admin?tab=faqs">FAQs</Link>
+          </TabsTrigger>
+          <TabsTrigger value="depoimentos" asChild>
+            <Link to="/admin?tab=depoimentos">Depoimentos</Link>
+          </TabsTrigger>
         </TabsList>
 
+        {isTabChanging ? (
+          <div className="mt-4 space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : (
+          <>
         <TabsContent value="apoiadores" className="mt-4 space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -547,6 +589,8 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
