@@ -29,36 +29,36 @@ export function Header() {
 
   return (
     <header className="fixed top-0 z-50 w-full bg-white shadow-sm border-b border-gray-100">
-      <div className="container mx-auto flex h-20 items-center px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center">
-          <Link to="/" className="flex items-center gap-4">
+      <div className="container mx-auto flex h-16 md:h-20 items-center px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex items-center flex-1 min-w-0">
+          <Link to="/" className="flex items-center gap-2 md:gap-4 flex-shrink-0">
             <div className="relative">
               <img
                 src="/img/logo_rfcc.jpg"
                 alt="Logo da Rede Feminina de Combate ao Câncer"
-                className="h-14 w-14 object-cover rounded-full border-3 border-pink-100 shadow-lg transition-transform hover:scale-105"
+                className="h-10 w-10 md:h-14 md:w-14 object-cover rounded-full border-2 md:border-3 border-pink-100 shadow-lg transition-transform hover:scale-105"
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-xl text-pink-600 leading-tight">
+              <span className="font-bold text-base md:text-xl text-pink-600 leading-tight">
                 RFCC.PB
               </span>
-              <span className="text-sm text-pink-600 font-medium hidden md:block">
+              <span className="text-xs md:text-sm text-pink-600 font-medium hidden lg:block">
                 Rede Feminina de Combate ao Câncer
               </span>
             </div>
           </Link>
 
           {/* Social Media Icons - Desktop and Mobile */}
-          <div className="flex items-center gap-2 ml-8">
+          <div className="hidden sm:flex items-center gap-1 md:gap-2 ml-4 md:ml-8">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-pink-600 hover:text-pink-700 hover:bg-pink-50"
+              className="h-7 w-7 md:h-8 md:w-8 text-pink-600 hover:text-pink-700 hover:bg-pink-50"
               asChild
             >
               <a href="https://www.instagram.com/redefemininajpa/" target="_blank" rel="noopener noreferrer">
-                <Instagram className="h-4 w-4" />
+                <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span className="sr-only">Instagram</span>
               </a>
             </Button>
@@ -66,11 +66,11 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+              className="h-7 w-7 md:h-8 md:w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
               asChild
             >
               <a href="https://api.whatsapp.com/send?phone=558332415373&text=Rede+Feminina+&fbclid=PAZXh0bgNhZW0CMTEAAaeqbKcY131CVjGNS4pxBdk2hCnkmILMCOobBAfbgv0rHmhtH13F0tyO5OhKng_aem_wcJSEVgTkEEvoAKNXSIVRA" target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-4 w-4" />
+                <MessageCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span className="sr-only">WhatsApp</span>
               </a>
             </Button>
@@ -78,23 +78,23 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              className="h-7 w-7 md:h-8 md:w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               asChild
             >
               <a href="mailto:nucleocolabufpb@gmail.com">
-                <Mail className="h-4 w-4" />
+                <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span className="sr-only">Email</span>
               </a>
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 ml-auto">
+        <div className="flex items-center gap-2 md:gap-4 ml-auto">
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <NavLink
               to="/sobre"
-              className="text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-3 py-2 rounded-lg hover:bg-pink-50"
+              className="text-sm lg:text-base text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-2 lg:px-3 py-2 rounded-lg hover:bg-pink-50"
               style={({ isActive }) =>
                 isActive
                   ? { color: "#DB2777", backgroundColor: "#FDF2F8", fontWeight: "600" }
@@ -105,7 +105,7 @@ export function Header() {
             </NavLink>
             <NavLink
               to="/loja"
-              className="text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-3 py-2 rounded-lg hover:bg-pink-50"
+              className="text-sm lg:text-base text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-2 lg:px-3 py-2 rounded-lg hover:bg-pink-50"
               style={({ isActive }) => (isActive ? { color: "#DB2777", backgroundColor: "#FDF2F8", fontWeight: "600" } : undefined)}
             >
               Bazar Solidário
@@ -113,7 +113,7 @@ export function Header() {
             {/* Admin link removed from header navigation */}
             <Button
               asChild
-              className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-full font-medium transition-all duration-200"
+              className="bg-pink-600 hover:bg-pink-700 text-white px-3 lg:px-4 py-2 rounded-full text-sm lg:text-base font-medium transition-all duration-200"
             >
               <Link to="/donations">
                 Faça uma doação
@@ -124,12 +124,12 @@ export function Header() {
           {isMobile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Abrir menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56" modal={false}>
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
                   <Link to="/sobre" className="flex items-center">
                     <Heart className="h-4 w-4 mr-2" />
@@ -229,7 +229,7 @@ export function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" modal={false} sideOffset={5}>
+                  <DropdownMenuContent className="w-56" align="end" sideOffset={5}>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">

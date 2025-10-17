@@ -70,26 +70,26 @@ export function Sobre() {
   }, []);
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-12 md:space-y-20">
       {/* Galeria de fotos no topo (auto-rotating) - modernizado */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-50 via-purple-50/30 to-indigo-50/20 p-8 md:p-12">
-        <div className="absolute -top-20 -right-20 h-96 w-96 rounded-full bg-pink-200/30 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-purple-200/20 blur-3xl" />
+      <section className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-pink-50 via-purple-50/30 to-indigo-50/20 p-4 sm:p-6 md:p-8 lg:p-12">
+        <div className="absolute -top-20 -right-20 h-64 w-64 sm:h-96 sm:w-96 rounded-full bg-pink-200/30 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-64 w-64 sm:h-96 sm:w-96 rounded-full bg-purple-200/20 blur-3xl" />
         
-        <div className="relative grid md:grid-cols-2 gap-10 items-center">
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center">
           {/* Texto ao lado das fotos */}
-          <div className="order-2 md:order-1 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-4 py-1.5 text-sm font-medium text-pink-700">
+          <div className="order-2 md:order-1 space-y-3 sm:space-y-4 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full bg-pink-100 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-pink-700">
               ✨ Transformando vidas desde 1963
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               <span className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Juntos por vidas
                 <br />
                 mais fortes
               </span>
             </h1>
-            <p className="text-gray-700 text-lg md:text-xl leading-relaxed">
+            <p className="text-gray-700 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto md:mx-0">
               Acolhimento, prevenção e esperança para quem enfrenta o câncer. Faça parte dessa rede de apoio,
               participe das ações e conheça o Bazar solidário.
             </p>
@@ -122,76 +122,76 @@ export function Sobre() {
       </section>
 
       {/* Depoimentos - modernizado */}
-      <section className="space-y-8">
-        <div className="text-center space-y-3 relative">
+      <section className="space-y-6 md:space-y-8 px-2 sm:px-4">
+        <div className="text-center space-y-2 sm:space-y-3 relative">
           {isAdmin && (
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 hidden sm:block">
               <Link to="/admin?tab=depoimentos">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Quote className="w-4 h-4" /> Adicionar depoimento
+                <Button size="sm" variant="outline" className="gap-2 text-xs sm:text-sm">
+                  <Quote className="w-3 h-3 sm:w-4 sm:h-4" /> Adicionar depoimento
                 </Button>
               </Link>
             </div>
           )}
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-1 w-12 bg-gradient-to-r from-transparent to-purple-400 rounded-full"></div>
-            <Quote className="w-7 h-7 text-purple-600" />
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-transparent to-purple-400 rounded-full"></div>
+            <Quote className="w-5 h-5 sm:w-7 sm:h-7 text-purple-600" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Depoimentos
             </h2>
-            <div className="h-1 w-12 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></div>
+            <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></div>
           </div>
           {error ? (
-            <p className="text-red-600 max-w-2xl mx-auto">{error}</p>
+            <p className="text-red-600 max-w-2xl mx-auto text-sm sm:text-base">{error}</p>
           ) : (
-            <p className="text-gray-600 max-w-2xl mx-auto">Depoimentos de pessoas impactadas pela causa.</p>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">Depoimentos de pessoas impactadas pela causa.</p>
           )}
         </div>
         
         <div className="relative">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-6">
               {[0,1,2].map((i) => (
                 <Card key={i} className="h-full border-purple-100">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-start gap-3">
+                  <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-40" />
-                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-3 sm:h-4 w-32 sm:w-40" />
+                        <Skeleton className="h-2 sm:h-3 w-20 sm:w-24" />
                       </div>
-                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
                     </div>
                     <div className="space-y-2">
-                      <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-3 w-11/12" />
-                      <Skeleton className="h-3 w-4/5" />
+                      <Skeleton className="h-2 sm:h-3 w-full" />
+                      <Skeleton className="h-2 sm:h-3 w-11/12" />
+                      <Skeleton className="h-2 sm:h-3 w-4/5" />
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : depoimentos.length > 0 ? (
-            <Carousel className="px-10">
+            <Carousel className="px-2 sm:px-10">
               <CarouselContent>
                 {depoimentos.map((d, idx) => (
                   <CarouselItem key={idx} className="md:basis-1/2 lg:basis-1/3">
                     <div className="h-full p-1">
                       <Card className="h-full bg-gradient-to-br from-white via-purple-50/20 to-pink-50/30 border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
+                        <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
+                          <div className="flex items-start justify-between gap-2 sm:gap-3">
                             <div className="flex-1">
-                              <CardTitle className="text-lg font-bold text-gray-900">{d.nome}</CardTitle>
+                              <CardTitle className="text-base sm:text-lg font-bold text-gray-900">{d.nome}</CardTitle>
                               {d.cargo ? (
-                                <CardDescription className="text-purple-600 font-medium">{d.cargo}</CardDescription>
+                                <CardDescription className="text-purple-600 font-medium text-xs sm:text-sm">{d.cargo}</CardDescription>
                               ) : null}
                             </div>
-                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                              <Quote className="h-5 w-5 text-white" />
+                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                              <Quote className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          <p className="text-gray-700 leading-relaxed italic">"{d.depoimento}"</p>
+                        <CardContent className="p-4 sm:p-6 pt-0">
+                          <p className="text-gray-700 leading-relaxed italic text-sm sm:text-base">"{d.depoimento}"</p>
                         </CardContent>
                       </Card>
                     </div>
@@ -212,43 +212,43 @@ export function Sobre() {
       </section>
 
       {/* Dúvidas Frequentes (FAQ) - modernizado */}
-      <section className="space-y-8">
-        <div className="text-center space-y-3 relative">
+      <section className="space-y-6 md:space-y-8 px-2 sm:px-4">
+        <div className="text-center space-y-2 sm:space-y-3 relative">
           {isAdmin && (
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 hidden sm:block">
               <Link to="/admin?tab=faqs">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <HelpCircle className="w-4 h-4" /> Adicionar dúvida
+                <Button size="sm" variant="outline" className="gap-2 text-xs sm:text-sm">
+                  <HelpCircle className="w-3 h-3 sm:w-4 sm:h-4" /> Adicionar dúvida
                 </Button>
               </Link>
             </div>
           )}
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-1 w-12 bg-gradient-to-r from-transparent to-indigo-400 rounded-full"></div>
-            <HelpCircle className="w-7 h-7 text-indigo-600" />
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-transparent to-indigo-400 rounded-full"></div>
+            <HelpCircle className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
               Dúvidas Frequentes
             </h2>
-            <div className="h-1 w-12 bg-gradient-to-r from-indigo-400 to-transparent rounded-full"></div>
+            <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-indigo-400 to-transparent rounded-full"></div>
           </div>
           {error ? (
-            <p className="text-red-600 max-w-2xl mx-auto">{error}</p>
+            <p className="text-red-600 max-w-2xl mx-auto text-sm sm:text-base">{error}</p>
           ) : (
-            <p className="text-gray-600 max-w-2xl mx-auto">Perguntas e respostas mais comuns.</p>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">Perguntas e respostas mais comuns.</p>
           )}
         </div>
         
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto px-2">
           {isLoading ? (
             <Card className="border-indigo-100">
               <CardContent className="p-0">
                 <div className="divide-y divide-indigo-50">
                   {[0,1,2].map((i) => (
-                    <div key={i} className="px-6 py-5 space-y-3">
-                      <Skeleton className="h-4 w-3/4" />
+                    <div key={i} className="px-4 sm:px-6 py-4 sm:py-5 space-y-2 sm:space-y-3">
+                      <Skeleton className="h-3 sm:h-4 w-3/4" />
                       <div className="space-y-2">
-                        <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-3 w-5/6" />
+                        <Skeleton className="h-2 sm:h-3 w-full" />
+                        <Skeleton className="h-2 sm:h-3 w-5/6" />
                       </div>
                     </div>
                   ))}
@@ -261,10 +261,10 @@ export function Sobre() {
                 <Accordion type="single" collapsible className="w-full">
                   {faqs.map((f) => (
                     <AccordionItem key={f.id} value={`item-${f.id}`} className="border-b border-indigo-50 last:border-0">
-                      <AccordionTrigger className="px-6 py-5 text-left hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-transparent transition-all duration-200 text-lg font-semibold">
+                      <AccordionTrigger className="px-4 sm:px-6 py-4 sm:py-5 text-left hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-transparent transition-all duration-200 text-sm sm:text-base md:text-lg font-semibold">
                         {f.pergunta}
                       </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-5 text-gray-700 bg-gradient-to-br from-indigo-50/30 to-transparent">
+                      <AccordionContent className="px-4 sm:px-6 pb-4 sm:pb-5 text-sm sm:text-base text-gray-700 bg-gradient-to-br from-indigo-50/30 to-transparent">
                         {f.resposta}
                       </AccordionContent>
                     </AccordionItem>
@@ -274,7 +274,7 @@ export function Sobre() {
             </Card>
           ) : (
             <Card className="border-indigo-100">
-              <CardContent className="py-8 text-center text-gray-600">
+              <CardContent className="py-6 sm:py-8 text-center text-gray-600 text-sm sm:text-base">
                 Nenhuma dúvida frequente cadastrada ainda.
               </CardContent>
             </Card>
@@ -283,21 +283,21 @@ export function Sobre() {
       </section>
 
       {/* Prestação de Contas - ULTRA modernizado e visual */}
-      <section className="space-y-8">
-        <div className="text-center space-y-3 relative">
+      <section className="space-y-6 md:space-y-8 px-2 sm:px-4">
+        <div className="text-center space-y-2 sm:space-y-3 relative">
           {isAdmin && (
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 hidden sm:block">
               <Link to="/admin">
-                <Button size="sm" variant="outline" className="gap-2">
-                  <FileText className="w-4 h-4" /> Adicionar lançamento
+                <Button size="sm" variant="outline" className="gap-2 text-xs sm:text-sm">
+                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" /> Adicionar lançamento
                 </Button>
               </Link>
             </div>
           )}
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-1 w-12 bg-gradient-to-r from-transparent to-pink-400 rounded-full"></div>
-            <FileText className="w-7 h-7 text-pink-600" />
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-transparent to-pink-400 rounded-full"></div>
+            <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-pink-600" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
               Prestação de Contas
             </h2>
             <div className="h-1 w-12 bg-gradient-to-r from-pink-400 to-transparent rounded-full"></div>
