@@ -14,6 +14,7 @@ import { BecomeDonor } from "./pages/BecomeDonor";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
 import AdminPanel from "./pages/AdminPanel";
+import { Sobre } from "./pages/Sobre";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="sobre" element={<Sobre />} />
               <Route path="loja" element={<Store />} />
               <Route path="produto/:id" element={<ProductDetail />} />
               <Route path="donations" element={<Donations />} />

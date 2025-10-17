@@ -93,7 +93,7 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <NavLink
-              to="/"
+              to="/sobre"
               className="text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-3 py-2 rounded-lg hover:bg-pink-50"
               style={({ isActive }) =>
                 isActive
@@ -101,7 +101,7 @@ export function Header() {
                   : undefined
               }
             >
-              Sobre Nós
+              Sobre
             </NavLink>
             <NavLink
               to="/loja"
@@ -139,17 +139,11 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem
-                  onClick={() => {
-                    const aboutSection = document.getElementById('about-section');
-                    if (aboutSection) {
-                      aboutSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="flex items-center"
-                >
-                  <Heart className="h-4 w-4 mr-2" />
-                  Sobre Nós
+                <DropdownMenuItem asChild>
+                  <Link to="/sobre" className="flex items-center">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Sobre
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/loja" className="flex items-center">
