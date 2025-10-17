@@ -13,6 +13,9 @@ import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
 import AdminPanel from "./pages/AdminPanel";
 import { Sobre } from "./pages/Sobre";
+import { CreateProduct } from "./pages/CreateProduct";
+import { EditProduct } from "./pages/EditProduct";
+import { MyProducts } from "./pages/MyProducts";
 
 function App() {
   return (
@@ -33,6 +36,9 @@ function App() {
               <Route path="admin" element={<AdminPanel />} />
               <Route path="admin/faqs" element={<Navigate to="/admin?tab=faqs" replace />} />
               <Route path="admin/testimonials" element={<Navigate to="/admin?tab=depoimentos" replace />} />
+              <Route path="create-product" element={<CreateProduct />} />
+              <Route path="edit-product/:id" element={<EditProduct />} />
+              <Route path="my-products" element={<MyProducts />} />
             </Route>
           </Routes>
         </Router>
