@@ -189,7 +189,7 @@ export function Home() {
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Users className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-4xl sm:text-5xl font-black text-white mb-2 sm:mb-3 group-hover:scale-110 transition-transform">50+</h3>
+              <h3 className="text-4xl sm:text-5xl font-black text-white mb-2 sm:mb-3 group-hover:scale-110 transition-transform">200+</h3>
               <p className="text-white/95 font-semibold text-base sm:text-lg">Voluntários</p>
             </div>
           </div>

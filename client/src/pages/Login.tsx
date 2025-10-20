@@ -81,20 +81,21 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      const response = await registerUser({
+      await registerUser({
         name: registerData.name,
         email: registerData.email,
         password: registerData.password,
         phone: registerData.phone,
         userType: "common",
       });
-      setAccessToken(response.data.accessToken); // Save token to localStorage
-      login(response.data.user, response.data.accessToken); // Pass user and token
+      
       toast({
         title: "Sucesso!",
-        description: "Conta criada com sucesso!",
+        description: "Conta criada! Verifique seu email para continuar.",
       });
-      navigate("/loja");
+      
+      // Redirecionar para página de verificação
+      navigate("/verify-email", { state: { email: registerData.email } });
     } catch (error) {
       toast({
         title: "Erro",
@@ -176,6 +177,17 @@ export function Login() {
                         )}
                       </Button>
                     </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-xs sm:text-sm px-0 h-auto"
+                      onClick={() => navigate("/forgot-password")}
+                    >
+                      Esqueceu a senha?
+                    </Button>
                   </div>
 
                   <Button

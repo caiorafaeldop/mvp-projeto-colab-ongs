@@ -16,6 +16,9 @@ import { Sobre } from "./pages/Sobre";
 import { CreateProduct } from "./pages/CreateProduct";
 import { EditProduct } from "./pages/EditProduct";
 import { MyProducts } from "./pages/MyProducts";
+import { VerifyEmail } from "./pages/VerifyEmail";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
               <Route path="donations" element={<Donations />} />
               <Route path="become-donor" element={<BecomeDonor />} />
               <Route path="login" element={<Login />} />
+              <Route path="verify-email" element={<VerifyEmail />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="reset-password" element={<ResetPassword />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
               <Route path="admin" element={<AdminPanel />} />

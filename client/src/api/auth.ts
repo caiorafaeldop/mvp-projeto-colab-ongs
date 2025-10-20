@@ -136,3 +136,78 @@ export const logoutUser = async (): Promise<void> => {
     console.error("[logoutUser] Erro ao fazer logout:", error.response?.data || error.message);
   }
 };
+
+// Send verification code
+export const sendVerificationCode = async (email: string): Promise<any> => {
+  try {
+    console.log("[sendVerificationCode] Enviando código para:", email);
+    const response = await api.post("/api/auth/verify-email/send", { email });
+    console.log("[sendVerificationCode] Código enviado:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("[sendVerificationCode] Erro ao enviar código:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao enviar código"
+    );
+  }
+};
+
+// Verify email code
+export const verifyEmailCode = async (email: string, code: string): Promise<any> => {
+  try {
+    console.log("[verifyEmailCode] Verificando código para:", email);
+    const response = await api.post("/api/auth/verify-email/verify", { email, code });
+    console.log("[verifyEmailCode] Código verificado:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("[verifyEmailCode] Erro ao verificar código:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao verificar código"
+    );
+  }
+};
+
+// Resend verification code
+export const resendVerificationCode = async (email: string): Promise<any> => {
+  try {
+    console.log("[resendVerificationCode] Reenviando código para:", email);
+    const response = await api.post("/api/auth/verify-email/resend", { email });
+    console.log("[resendVerificationCode] Código reenviado:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("[resendVerificationCode] Erro ao reenviar código:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao reenviar código"
+    );
+  }
+};
+
+// Request password reset
+export const requestPasswordReset = async (email: string): Promise<any> => {
+  try {
+    console.log("[requestPasswordReset] Solicitando recuperação para:", email);
+    const response = await api.post("/api/auth/password-reset/request", { email });
+    console.log("[requestPasswordReset] Código enviado:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("[requestPasswordReset] Erro ao solicitar recuperação:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao solicitar recuperação"
+    );
+  }
+};
+
+// Reset password
+export const resetPassword = async (email: string, code: string, newPassword: string): Promise<any> => {
+  try {
+    console.log("[resetPassword] Redefinindo senha para:", email);
+    const response = await api.post("/api/auth/password-reset/reset", { email, code, newPassword });
+    console.log("[resetPassword] Senha redefinida:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("[resetPassword] Erro ao redefinir senha:", error.response?.data || error.message);
+    throw new Error(
+      error?.response?.data?.message || error.message || "Erro ao redefinir senha"
+    );
+  }
+};
