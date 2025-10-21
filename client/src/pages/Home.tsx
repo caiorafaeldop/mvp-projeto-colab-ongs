@@ -11,6 +11,7 @@ import { ArrowRight, Heart, ShoppingCart, Users, Phone, MapPin, Clock } from "lu
 import { useEffect, useState } from "react";
 import { getPublicSupporters, type Supporter } from "@/api/supporters";
 import { type CarouselApi, Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export function Home() {
   const [supporters, setSupporters] = useState<Supporter[]>([]);
@@ -75,7 +76,7 @@ export function Home() {
                         const fallbackSrc = images[(idx + 1) % images.length];
                         return (
                           <CarouselItem key={idx}>
-                            <div className="w-full h-[300px] sm:h-[400px] lg:h-[550px] overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
+                            <AspectRatio ratio={16 / 9} className="w-full overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
                               <img
                                 src={src}
                                 alt="Rede Feminina de Combate ao Câncer"
@@ -89,7 +90,7 @@ export function Home() {
                                   }
                                 }}
                               />
-                            </div>
+                            </AspectRatio>
                           </CarouselItem>
                         );
                       });

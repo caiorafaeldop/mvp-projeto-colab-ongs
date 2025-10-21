@@ -14,12 +14,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function Sobre() {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = !!isAuthenticated && user?.userType === "organization";
-  // Simple rotating gallery (autoplay) – color placeholders (no photos yet)
-  const gallerySlides = [
-    { bg: "from-pink-200 to-pink-400" },
-    { bg: "from-purple-200 to-purple-400" },
-    { bg: "from-indigo-200 to-indigo-400" },
-    { bg: "from-blue-200 to-blue-400" },
+  // Galeria com imagens reais (proporção 16:9)
+  const images = [
+    "/img/img1_sobre.jpg",
+    "/img/img2_sobre.jpg",
+    "/img/img3_sobre.jpg",
   ];
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   useEffect(() => {
@@ -95,7 +94,7 @@ export function Sobre() {
             </p>
           </div>
 
-          {/* Carrossel de cores (sem fotos) */}
+          {/* Carrossel com imagens */}
           <div className="order-1 md:order-2">
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl blur opacity-25"></div>
@@ -103,10 +102,15 @@ export function Sobre() {
                 <CardContent className="p-0">
                   <Carousel opts={{ loop: true }} setApi={setCarouselApi}>
                     <CarouselContent>
-                      {gallerySlides.map((s, idx) => (
+                      {images.map((src, idx) => (
                         <CarouselItem key={idx}>
                           <div className="aspect-[16/9] w-full overflow-hidden">
-                            <div className={`h-full w-full bg-gradient-to-br ${s.bg} transition-all duration-500`} />
+                            <img
+                              src={src}
+                              alt={`Galeria Sobre ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                              draggable={false}
+                            />
                           </div>
                         </CarouselItem>
                       ))}
