@@ -7,13 +7,198 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ArrowRight, Heart, ShoppingCart, Users, Phone, MapPin, Clock } from "lucide-react";
+import { ArrowRight, Heart, ShoppingCart, Users, Phone, MapPin, Clock, Quote, HelpCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getPublicSupporters, type Supporter } from "@/api/supporters";
 import { type CarouselApi, Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Testimonial, TestimonialApi } from "@/api/testimonial";
+import { FAQ, FAQApi } from "@/api/faq";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Componente de Depoimentos
+function TestimonialsCarousel() {
+  const [depoimentos, setDepoimentos] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      try {
+        setIsLoading(true);
+        const tst = await TestimonialApi.list(true);
+        setDepoimentos((tst || []).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)));
+      } catch (e) {
+        console.error("Erro ao carregar depoimentos:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTestimonials();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-6">
+        {[0, 1, 2].map((i) => (
+          <Card key={i} className="h-full border-purple-100">
+            <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 sm:h-4 w-32 sm:w-40" />
+                  <Skeleton className="h-2 sm:h-3 w-20 sm:w-24" />
+                </div>
+                <Skeleton className="h-12 w-12 sm:h-14 sm:w-14 rounded-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-2 sm:h-3 w-full" />
+                <Skeleton className="h-2 sm:h-3 w-11/12" />
+                <Skeleton className="h-2 sm:h-3 w-4/5" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (depoimentos.length === 0) {
+    return (
+      <Card className="max-w-2xl mx-auto border-purple-100">
+        <CardContent className="py-8 text-center text-gray-600">
+          Nenhum depoimento disponível ainda.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Carousel className="px-2 sm:px-10">
+      <CarouselContent>
+        {depoimentos.map((d, idx) => (
+          <CarouselItem key={idx} className="md:basis-1/2 lg:basis-1/3">
+            <div className="h-full p-1">
+              <Card className="h-full bg-gradient-to-br from-white via-purple-50/20 to-pink-50/30 border-purple-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <CardHeader className="pb-2 sm:pb-3 p-4 sm:p-6">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
+                    <div className="flex-1">
+                      <CardTitle className="text-base sm:text-lg font-bold text-gray-900">{d.nome}</CardTitle>
+                      {d.cargo && <CardDescription className="text-purple-600 font-medium text-xs sm:text-sm">{d.cargo}</CardDescription>}
+                    </div>
+                    <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden ring-2 ring-purple-200">
+                      {d.fotoUrl ? (
+                        <img
+                          src={d.fotoUrl}
+                          alt={d.nome}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<svg class="h-6 w-6 sm:h-7 sm:w-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 12a1 1 0 011-1h6a1 1 0 110 2H9a1 1 0 01-1-1zm0-4a1 1 0 011-1h6a1 1 0 110 2H9a1 1 0 01-1-1zm8 8a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z"/></svg>';
+                            }
+                          }}
+                        />
+                      ) : (
+                        <Quote className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 pt-0">
+                  <p className="text-gray-700 leading-relaxed italic text-sm sm:text-base">"{d.depoimento}"</p>
+                </CardContent>
+              </Card>
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious className="-left-4 bg-white shadow-lg" />
+      <CarouselNext className="-right-4 bg-white shadow-lg" />
+    </Carousel>
+  );
+}
+
+// Componente de FAQ
+function FAQAccordion() {
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadFAQs = async () => {
+      try {
+        setIsLoading(true);
+        const fq = await FAQApi.list(true);
+        setFaqs((fq || []).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)));
+      } catch (e) {
+        console.error("Erro ao carregar FAQs:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadFAQs();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-2">
+        <Card className="border-indigo-100">
+          <CardContent className="p-0">
+            <div className="divide-y divide-indigo-50">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="px-4 sm:px-6 py-4 sm:py-5 space-y-2 sm:space-y-3">
+                  <Skeleton className="h-3 sm:h-4 w-3/4" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-2 sm:h-3 w-full" />
+                    <Skeleton className="h-2 sm:h-3 w-5/6" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (faqs.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-2">
+        <Card className="border-indigo-100">
+          <CardContent className="py-6 sm:py-8 text-center text-gray-600 text-sm sm:text-base">
+            Nenhuma dúvida frequente cadastrada ainda.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-2">
+      <Card className="border-indigo-100 shadow-lg overflow-hidden">
+        <CardContent className="p-0">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((f) => (
+              <AccordionItem key={f.id} value={`item-${f.id}`} className="border-b border-indigo-50 last:border-0">
+                <AccordionTrigger className="px-4 sm:px-6 py-4 sm:py-5 text-left hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-transparent transition-all duration-200 text-sm sm:text-base md:text-lg font-semibold">
+                  {f.pergunta}
+                </AccordionTrigger>
+                <AccordionContent className="px-4 sm:px-6 pb-4 sm:pb-5 text-sm sm:text-base text-gray-700 bg-gradient-to-br from-indigo-50/30 to-transparent">
+                  {f.resposta}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export function Home() {
+  const { user, isAuthenticated } = useAuth();
   const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [loadingSupporters, setLoadingSupporters] = useState(true);
   const [heroCarouselApi, setHeroCarouselApi] = useState<CarouselApi | null>(null);
@@ -71,6 +256,9 @@ export function Home() {
                       const images = [
                         `${baseUrl}img/redeFemininaCapa.jpg?v=1`,
                         `${baseUrl}img/Frente_RFCC.jpg?v=1`,
+                        `${baseUrl}img/img1_sobre.jpg?v=1`,
+                        `${baseUrl}img/img2_sobre.jpg?v=1`,
+                        `${baseUrl}img/img3_sobre.jpg?v=1`,
                       ];
                       return images.map((src, idx) => {
                         const fallbackSrc = images[(idx + 1) % images.length];
@@ -382,6 +570,61 @@ export function Home() {
         </div>
       </section>
 
+      {/* Depoimentos - modernizado */}
+      <section className="py-12 md:py-20 space-y-6 md:space-y-8 px-2 sm:px-4 bg-gradient-to-br from-purple-50/50 via-white to-pink-50/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-2 sm:space-y-3 relative mb-10 md:mb-16">
+            {isAuthenticated && user?.userType === "organization" && (
+              <div className="absolute right-0 top-0 hidden sm:block">
+                <Button asChild size="sm" variant="outline" className="gap-2 text-xs sm:text-sm">
+                  <Link to="/admin?tab=depoimentos">
+                    <Quote className="w-3 h-3 sm:w-4 sm:h-4" /> Gerenciar depoimentos
+                  </Link>
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-transparent to-purple-400 rounded-full"></div>
+              <Quote className="w-5 h-5 sm:w-7 sm:h-7 text-purple-600" />
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Depoimentos
+              </h2>
+              <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-purple-400 to-transparent rounded-full"></div>
+            </div>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">Histórias de pessoas impactadas pela nossa causa.</p>
+          </div>
+          
+          <TestimonialsCarousel />
+        </div>
+      </section>
+
+      {/* Dúvidas Frequentes (FAQ) - modernizado */}
+      <section className="py-12 md:py-20 space-y-6 md:space-y-8 px-2 sm:px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-2 sm:space-y-3 relative mb-10 md:mb-16">
+            {isAuthenticated && user?.userType === "organization" && (
+              <div className="absolute right-0 top-0 hidden sm:block">
+                <Button asChild size="sm" variant="outline" className="gap-2 text-xs sm:text-sm">
+                  <Link to="/admin?tab=faqs">
+                    <HelpCircle className="w-3 h-3 sm:w-4 sm:h-4" /> Gerenciar dúvidas
+                  </Link>
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-transparent to-indigo-400 rounded-full"></div>
+              <HelpCircle className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600" />
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                Dúvidas Frequentes
+              </h2>
+              <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-indigo-400 to-transparent rounded-full"></div>
+            </div>
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">Perguntas e respostas mais comuns.</p>
+          </div>
+          
+          <FAQAccordion />
+        </div>
+      </section>
       
       
       {/* Contact Section */}

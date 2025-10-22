@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/useToast";
 import api from "@/api/api";
 import AdminFAQ from "./AdminFAQ";
 import AdminTestimonials from "./AdminTestimonials";
+import AdminPrestacaoContas from "./AdminPrestacaoContas";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
@@ -108,6 +109,10 @@ export default function AdminPanel() {
   
   if (activeTab === "depoimentos") {
     return <AdminTestimonials />;
+  }
+
+  if (activeTab === "prestacao") {
+    return <AdminPrestacaoContas />;
   }
 
   const handleImageUpload = async (file: File) => {
@@ -328,6 +333,9 @@ export default function AdminPanel() {
           </TabsTrigger>
           <TabsTrigger value="depoimentos" asChild>
             <Link to="/admin?tab=depoimentos">Depoimentos</Link>
+          </TabsTrigger>
+          <TabsTrigger value="prestacao" asChild>
+            <Link to="/admin?tab=prestacao">Prestação de Contas</Link>
           </TabsTrigger>
         </TabsList>
 

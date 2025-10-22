@@ -12,7 +12,7 @@ import { BecomeDonor } from "./pages/BecomeDonor";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
 import AdminPanel from "./pages/AdminPanel";
-import { Sobre } from "./pages/Sobre";
+import { PrestacaoContas } from "./pages/PrestacaoContas";
 import { CreateProduct } from "./pages/CreateProduct";
 import { EditProduct } from "./pages/EditProduct";
 import { MyProducts } from "./pages/MyProducts";
@@ -28,7 +28,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
-              <Route path="sobre" element={<Sobre />} />
+              <Route path="prestacao-contas" element={<PrestacaoContas />} />
               <Route path="loja" element={<Store />} />
               <Route path="produto/:id" element={<ProductDetail />} />
               <Route path="donations" element={<Donations />} />

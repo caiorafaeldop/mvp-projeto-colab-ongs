@@ -1,16 +1,33 @@
 import api from "./api";
 
-export type PrestacaoCategoria = "Despesa" | "Receita" | "Investimento";
+// Estrutura flexível tipo planilha Excel
+export type ColunaConfig = {
+  id: string;           // Identificador único da coluna
+  nome: string;         // Nome/título da coluna
+  tipo: "text" | "number" | "date"; // Tipo de dado
+  largura?: number;     // Largura em pixels (opcional)
+  somavel?: boolean;    // Se deve ser somada no total
+};
+
+export type LinhaData = {
+  [key: string]: any;   // Dados dinâmicos - cada chave é o ID de uma coluna
+};
 
 export type PrestacaoConta = {
   id: string;
-  titulo?: string;
-  descricao?: string;
-  orgaoDoador?: string;
-  valor: number;
-  data?: string; // ISO date-time
-  categoria: PrestacaoCategoria;
-  tipoDespesa?: string;
+  titulo: string;
+  ano: number;
+  mes?: number;
+  
+  // Estrutura da planilha
+  colunas: ColunaConfig[];   // Definição das colunas
+  linhas: LinhaData[];       // Dados das linhas
+  
+  // Configurações
+  mostrarTotal: boolean;
+  colunasTotal?: string[];   // IDs das colunas que devem ser somadas
+  
+  // Metadados
   organizationId?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -19,7 +36,8 @@ export type PrestacaoConta = {
 type ListParams = {
   page?: number;
   limit?: number;
-  categoria?: PrestacaoCategoria;
+  ano?: number;
+  mes?: number;
   organizationId?: string;
 };
 
@@ -35,50 +53,42 @@ function unwrap<T = any>(res: any): T {
 }
 
 export const PrestacaoContasApi = {
-  // Público: lista lançamentos com filtros opcionais
+  // Lista todas as planilhas
   list: async (params: ListParams = {}): Promise<PrestacaoConta[]> => {
     const res = await api.get("/api/prestacao-contas", { params });
-    // alguns endpoints podem retornar paginado; normalizamos para array simples
     const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
     return Array.isArray(payload) ? payload : (payload?.data ?? []);
   },
 
-  // Público: lista por organização com filtros (page, limit, categoria, startDate, endDate)
+  // Lista por organização
   listByOrganization: async (
     organizationId: string,
-    params: { page?: number; limit?: number; categoria?: PrestacaoCategoria; startDate?: string; endDate?: string } = {}
+    params: { page?: number; limit?: number; ano?: number; mes?: number } = {}
   ): Promise<PrestacaoConta[]> => {
     const res = await api.get(`/api/prestacao-contas/organization/${organizationId}`, { params });
     const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
     return Array.isArray(payload) ? payload : (payload?.data ?? []);
   },
 
-  // Público: lista por categoria com filtros (page, limit, organizationId)
-  listByCategory: async (
-    categoria: PrestacaoCategoria,
-    params: { page?: number; limit?: number; organizationId?: string } = {}
-  ): Promise<PrestacaoConta[]> => {
-    const res = await api.get(`/api/prestacao-contas/categoria/${categoria}`, { params });
-    const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
-    return Array.isArray(payload) ? payload : (payload?.data ?? []);
-  },
-
+  // Busca por ID
   getById: async (id: string): Promise<PrestacaoConta> => {
     const res = await api.get(`/api/prestacao-contas/${id}`);
     return unwrap<PrestacaoConta>(res);
   },
 
-  // Admin CRUD (mantido aqui para uso futuro)
+  // Cria nova planilha
   create: async (data: Partial<PrestacaoConta>): Promise<PrestacaoConta> => {
     const res = await api.post("/api/prestacao-contas", data);
     return unwrap<PrestacaoConta>(res);
   },
 
+  // Atualiza planilha existente
   update: async (id: string, data: Partial<PrestacaoConta>): Promise<PrestacaoConta> => {
     const res = await api.put(`/api/prestacao-contas/${id}`, data);
     return unwrap<PrestacaoConta>(res);
   },
 
+  // Deleta planilha
   delete: async (id: string): Promise<void> => {
     await api.delete(`/api/prestacao-contas/${id}`);
   },

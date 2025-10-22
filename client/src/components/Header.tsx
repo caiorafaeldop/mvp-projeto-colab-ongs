@@ -93,7 +93,7 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <NavLink
-              to="/sobre"
+              to="/prestacao-contas"
               className="text-sm lg:text-base text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-2 lg:px-3 py-2 rounded-lg hover:bg-pink-50"
               style={({ isActive }) =>
                 isActive
@@ -101,7 +101,7 @@ export function Header() {
                   : undefined
               }
             >
-              Sobre
+              Prestação de Contas
             </NavLink>
             <NavLink
               to="/loja"
@@ -131,9 +131,9 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link to="/sobre" className="flex items-center">
+                  <Link to="/prestacao-contas" className="flex items-center">
                     <Heart className="h-4 w-4 mr-2" />
-                    Sobre
+                    Prestação de Contas
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
