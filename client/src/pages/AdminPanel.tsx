@@ -102,19 +102,6 @@ export default function AdminPanel() {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  // Renderizar componentes específicos baseado na tab (sem skeleton, eles já têm o próprio)
-  if (activeTab === "faqs") {
-    return <AdminFAQ />;
-  }
-  
-  if (activeTab === "depoimentos") {
-    return <AdminTestimonials />;
-  }
-
-  if (activeTab === "prestacao") {
-    return <AdminPrestacaoContas />;
-  }
-
   const handleImageUpload = async (file: File) => {
     if (!file) return;
 
@@ -599,6 +586,18 @@ export default function AdminPanel() {
         </TabsContent>
           </>
         )}
+
+        <TabsContent value="faqs" className="mt-4">
+          <AdminFAQ />
+        </TabsContent>
+
+        <TabsContent value="depoimentos" className="mt-4">
+          <AdminTestimonials />
+        </TabsContent>
+
+        <TabsContent value="prestacao" className="mt-4">
+          <AdminPrestacaoContas />
+        </TabsContent>
       </Tabs>
     </div>
   );

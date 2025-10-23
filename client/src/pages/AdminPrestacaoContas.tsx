@@ -120,12 +120,14 @@ export default function AdminPrestacaoContas() {
       const payload = {
         titulo,
         ano,
-        mes,
+        mes: mes === 0 ? undefined : mes,
         mostrarTotal,
         colunas,
         linhas,
         colunasTotal: colunas.filter(c => c.somavel).map(c => c.id),
       };
+
+      console.log("[salvarPlanilha] Payload:", JSON.stringify(payload, null, 2));
 
       if (planilhaAtiva) {
         await PrestacaoContasApi.update(planilhaAtiva.id, payload);
@@ -145,9 +147,13 @@ export default function AdminPrestacaoContas() {
       setEditMode(false);
       loadPlanilhas();
     } catch (e: any) {
+      console.error("[salvarPlanilha] Erro completo:", e);
+      console.error("[salvarPlanilha] Erro response data:", JSON.stringify(e?.response?.data, null, 2));
+      console.error("[salvarPlanilha] Erro status:", e?.response?.status);
+      console.error("[salvarPlanilha] Erro message:", e?.message);
       toast({
         title: "Erro",
-        description: e?.message || "Falha ao salvar",
+        description: e?.response?.data?.message || e?.message || "Falha ao salvar",
         variant: "destructive",
       });
     }
@@ -302,12 +308,12 @@ export default function AdminPrestacaoContas() {
               </div>
               <div className="space-y-2">
                 <Label>Mês (opcional)</Label>
-                <Select value={mes?.toString() || ""} onValueChange={(v) => setMes(v ? parseInt(v) : undefined)}>
+                <Select value={mes?.toString() || "0"} onValueChange={(v) => setMes(v === "0" ? undefined : parseInt(v))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos os meses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os meses</SelectItem>
+                    <SelectItem value="0">Todos os meses</SelectItem>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                       <SelectItem key={m} value={m.toString()}>
                         {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
@@ -559,7 +565,7 @@ export default function AdminPrestacaoContas() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-gray-600 mb-4">
-              Você deseja criar uma planilha em branco ou usar o template baseado na imagem fornecida?
+              Você deseja criar uma planilha em branco ou usar o template baseado na Relação de Pagamentos?
             </p>
             <div className="flex flex-col gap-2">
               <Button onClick={criarNovaPlanilha} className="w-full">
