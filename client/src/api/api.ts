@@ -10,7 +10,7 @@ const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
 //const API_BASE_URL = "http://localhost:3000";
 const localApi = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: false,
+  withCredentials: true, // Importante: permite envio/recebimento de cookies
   headers: {
     "Content-Type": "application/json",
   },
@@ -55,6 +55,24 @@ localApi.interceptors.request.use(
   }
 );
 
+// Variável para controlar se já está renovando o token
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Interceptor para tratar erros de autenticação e refresh token
 localApi.interceptors.response.use(
   (response) => {
@@ -77,8 +95,83 @@ localApi.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 401: não limpar token aqui. Deixe os fluxos de tela (AuthContext/profile) decidirem.
-    if (error.response?.status === 401) {
+    // 401: tentar renovar o token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      const errorData = error.response?.data as any;
+      const isTokenExpired = errorData?.error === "TOKEN_EXPIRED" || errorData?.message === "Token expired";
+      const shouldLogout = errorData?.shouldLogout === true;
+      
+      console.log("[Interceptor] Token expirado?", isTokenExpired, "Should logout?", shouldLogout);
+      
+      // Se backend indicou que deve fazer logout, não tenta renovar
+      if (shouldLogout) {
+        console.log("[Interceptor] Backend solicitou logout, redirecionando...");
+        setAccessToken(null);
+        window.location.href = "/";
+        return Promise.reject(error);
+      }
+      
+      if (isTokenExpired) {
+        if (isRefreshing) {
+          // Se já está renovando, aguarda na fila
+          console.log("[Interceptor] Já renovando token, adicionando à fila");
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return localApi(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        console.log("[Interceptor] Tentando renovar token...");
+        
+        return new Promise((resolve, reject) => {
+          localApi
+            .post("/api/auth/refresh", {}, {
+              withCredentials: true, // Importante: envia cookies
+            })
+            .then((response) => {
+              const newToken = response.data?.data?.accessToken || response.data?.data?.token || response.data?.token;
+              console.log("[Interceptor] Token renovado com sucesso!");
+              
+              if (newToken) {
+                setAccessToken(newToken);
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                processQueue(null, newToken);
+                resolve(localApi(originalRequest));
+              } else {
+                console.error("[Interceptor] Nenhum token retornado pelo refresh");
+                processQueue(new Error("No token returned"), null);
+                reject(error);
+              }
+            })
+            .catch((err) => {
+              console.error("[Interceptor] Erro ao renovar token:", err);
+              const shouldLogoutOnError = err?.response?.data?.shouldLogout === true;
+              processQueue(err, null);
+              // Limpa o token inválido
+              setAccessToken(null);
+              
+              // Só redireciona se o backend explicitamente pediu
+              if (shouldLogoutOnError) {
+                console.log("[Interceptor] Refresh falhou e backend solicitou logout");
+                window.location.href = "/";
+              }
+              reject(err);
+            })
+            .finally(() => {
+              isRefreshing = false;
+            });
+        });
+      }
+
       (error as any).isAuthError = true;
     }
 
