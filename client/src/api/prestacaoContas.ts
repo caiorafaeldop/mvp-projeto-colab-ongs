@@ -17,7 +17,9 @@ export type PrestacaoConta = {
   id: string;
   titulo: string;
   ano: number;
-  mes?: number;
+  mes?: number;          // Mês único (retrocompatibilidade)
+  mesInicial?: number;   // Mês inicial do período
+  mesFinal?: number;     // Mês final do período
   
   // Estrutura da planilha
   colunas: ColunaConfig[];   // Definição das colunas

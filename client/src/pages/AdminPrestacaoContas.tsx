@@ -40,6 +40,9 @@ export default function AdminPrestacaoContas() {
   const [titulo, setTitulo] = useState("");
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState<number | undefined>(undefined);
+  const [usarPeriodo, setUsarPeriodo] = useState(false);
+  const [mesInicial, setMesInicial] = useState<number | undefined>(undefined);
+  const [mesFinal, setMesFinal] = useState<number | undefined>(undefined);
   const [mostrarTotal, setMostrarTotal] = useState(true);
   const [colunas, setColunas] = useState<ColunaConfig[]>([]);
   const [linhas, setLinhas] = useState<LinhaData[]>([]);
@@ -83,6 +86,18 @@ export default function AdminPrestacaoContas() {
     setTitulo(planilha.titulo);
     setAno(planilha.ano);
     setMes(planilha.mes);
+    
+    // Carregar período se existir
+    if (planilha.mesInicial && planilha.mesFinal) {
+      setUsarPeriodo(true);
+      setMesInicial(planilha.mesInicial);
+      setMesFinal(planilha.mesFinal);
+    } else {
+      setUsarPeriodo(false);
+      setMesInicial(undefined);
+      setMesFinal(undefined);
+    }
+    
     setMostrarTotal(planilha.mostrarTotal);
     setColunas(planilha.colunas || []);
     setLinhas(planilha.linhas || []);
@@ -92,6 +107,9 @@ export default function AdminPrestacaoContas() {
     setTitulo("Prestação de Contas " + new Date().getFullYear());
     setAno(new Date().getFullYear());
     setMes(undefined);
+    setUsarPeriodo(false);
+    setMesInicial(undefined);
+    setMesFinal(undefined);
     setMostrarTotal(true);
     
     // Template baseado na imagem fornecida
@@ -134,16 +152,44 @@ export default function AdminPrestacaoContas() {
       return;
     }
 
+    // Validar período se estiver usando
+    if (usarPeriodo) {
+      if (!mesInicial || !mesFinal) {
+        toast({
+          title: "Erro",
+          description: "Informe o mês inicial e final do período",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (mesInicial > mesFinal) {
+        toast({
+          title: "Erro",
+          description: "O mês inicial não pode ser maior que o mês final",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
-      const payload = {
+      const payload: any = {
         titulo,
         ano,
-        mes: mes === 0 ? undefined : mes,
         mostrarTotal,
         colunas,
         linhas,
         colunasTotal: colunas.filter(c => c.somavel).map(c => c.id),
       };
+
+      // Se estiver usando período, enviar mesInicial e mesFinal
+      if (usarPeriodo && mesInicial && mesFinal) {
+        payload.mesInicial = mesInicial;
+        payload.mesFinal = mesFinal;
+      } else {
+        // Caso contrário, enviar apenas mes (retrocompatibilidade)
+        payload.mes = mes === 0 ? undefined : mes;
+      }
 
       console.log("[salvarPlanilha] Payload:", JSON.stringify(payload, null, 2));
 
@@ -451,7 +497,7 @@ export default function AdminPrestacaoContas() {
         
         {editMode && (
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Título</Label>
                 <Input
@@ -468,22 +514,88 @@ export default function AdminPrestacaoContas() {
                   onChange={(e) => setAno(parseInt(e.target.value))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Mês (opcional)</Label>
-                <Select value={mes?.toString() || "0"} onValueChange={(v) => setMes(v === "0" ? undefined : parseInt(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Todos os meses</SelectItem>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                      <SelectItem key={m} value={m.toString()}>
-                        {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            </div>
+
+            {/* Seleção de Período */}
+            <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={usarPeriodo}
+                  onCheckedChange={(checked) => {
+                    setUsarPeriodo(checked);
+                    if (!checked) {
+                      setMesInicial(undefined);
+                      setMesFinal(undefined);
+                    } else {
+                      setMes(undefined);
+                    }
+                  }}
+                />
+                <Label>Planilha com período (múltiplos meses)</Label>
               </div>
+
+              {!usarPeriodo ? (
+                <div className="space-y-2">
+                  <Label>Mês (opcional)</Label>
+                  <Select 
+                    value={mes?.toString() || "0"} 
+                    onValueChange={(v) => setMes(v === "0" ? undefined : parseInt(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os meses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Todos os meses</SelectItem>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                        <SelectItem key={m} value={m.toString()}>
+                          {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Mês Inicial *</Label>
+                    <Select 
+                      value={mesInicial?.toString() || "0"} 
+                      onValueChange={(v) => setMesInicial(v === "0" ? undefined : parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Selecione...</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                          <SelectItem key={m} value={m.toString()}>
+                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mês Final *</Label>
+                    <Select 
+                      value={mesFinal?.toString() || "0"} 
+                      onValueChange={(v) => setMesFinal(v === "0" ? undefined : parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Selecione...</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                          <SelectItem key={m} value={m.toString()}>
+                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-2">
@@ -568,7 +680,22 @@ export default function AdminPrestacaoContas() {
       ) : planilhaAtiva ? (
         <Card>
           <CardHeader>
-            <CardTitle>{planilhaAtiva.titulo} - Ano {planilhaAtiva.ano}</CardTitle>
+            <CardTitle>
+              {planilhaAtiva.titulo} - Ano {planilhaAtiva.ano}
+              {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  (
+                  {new Date(2000, planilhaAtiva.mesInicial - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  {' até '}
+                  {new Date(2000, planilhaAtiva.mesFinal - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  )
+                </span>
+              ) : planilhaAtiva.mes ? (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  ({new Date(2000, planilhaAtiva.mes - 1).toLocaleString('pt-BR', { month: 'long' })})
+                </span>
+              ) : null}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto border rounded-lg">
