@@ -35,9 +35,16 @@ export default function AdminPrestacaoContas() {
   const [planilhas, setPlanilhas] = useState<PrestacaoConta[]>([]);
   const [planilhaAtiva, setPlanilhaAtiva] = useState<PrestacaoConta | null>(null);
   const [editMode, setEditMode] = useState(false);
+
+  // Helper para capitalizar o nome do mês
+  const getNomeMes = (mes: number) => {
+    const nome = new Date(2000, mes - 1).toLocaleString('pt-BR', { month: 'long' });
+    return nome.charAt(0).toUpperCase() + nome.slice(1);
+  };
   
   // Estado local da planilha em edição
   const [titulo, setTitulo] = useState("");
+  const [descricaoPlanilha, setDescricaoPlanilha] = useState("");
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState<number | undefined>(undefined);
   const [usarPeriodo, setUsarPeriodo] = useState(false);
@@ -50,6 +57,8 @@ export default function AdminPrestacaoContas() {
   // Dialogs
   const [dialogColuna, setDialogColuna] = useState(false);
   const [dialogNovaPlanilha, setDialogNovaPlanilha] = useState(false);
+  const [dialogExcluir, setDialogExcluir] = useState(false);
+  const [planilhaParaExcluir, setPlanilhaParaExcluir] = useState<PrestacaoConta | null>(null);
   const [colunaEdit, setColunaEdit] = useState<ColunaConfig | null>(null);
   
   // Form coluna
@@ -84,6 +93,7 @@ export default function AdminPrestacaoContas() {
 
   const carregarPlanilha = (planilha: PrestacaoConta) => {
     setTitulo(planilha.titulo);
+    setDescricaoPlanilha(planilha.descricaoPlanilha || "");
     setAno(planilha.ano);
     setMes(planilha.mes);
     
@@ -105,6 +115,7 @@ export default function AdminPrestacaoContas() {
 
   const criarNovaPlanilha = () => {
     setTitulo("Prestação de Contas " + new Date().getFullYear());
+    setDescricaoPlanilha("");
     setAno(new Date().getFullYear());
     setMes(undefined);
     setUsarPeriodo(false);
@@ -175,6 +186,7 @@ export default function AdminPrestacaoContas() {
     try {
       const payload: any = {
         titulo,
+        descricaoPlanilha: descricaoPlanilha.trim() || undefined,
         ano,
         mostrarTotal,
         colunas,
@@ -218,6 +230,39 @@ export default function AdminPrestacaoContas() {
       toast({
         title: "Erro",
         description: e?.response?.data?.message || e?.message || "Falha ao salvar",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmarExclusao = (planilha: PrestacaoConta) => {
+    setPlanilhaParaExcluir(planilha);
+    setDialogExcluir(true);
+  };
+
+  const excluirPlanilha = async () => {
+    if (!planilhaParaExcluir) return;
+
+    try {
+      await PrestacaoContasApi.delete(planilhaParaExcluir.id);
+      toast({
+        title: "Excluído!",
+        description: "Planilha excluída com sucesso",
+      });
+      
+      // Se a planilha excluída era a ativa, limpar
+      if (planilhaAtiva?.id === planilhaParaExcluir.id) {
+        setPlanilhaAtiva(null);
+        setEditMode(false);
+      }
+      
+      setDialogExcluir(false);
+      setPlanilhaParaExcluir(null);
+      loadPlanilhas();
+    } catch (e: any) {
+      toast({
+        title: "Erro",
+        description: e?.message || "Falha ao excluir planilha",
         variant: "destructive",
       });
     }
@@ -495,11 +540,66 @@ export default function AdminPrestacaoContas() {
           </div>
         </CardHeader>
         
+        {/* Seletor de Planilhas - somente quando não está editando */}
+        {!editMode && planilhas.length > 0 && (
+          <CardContent className="border-b">
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Planilhas Disponíveis ({planilhas.length})</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {planilhas.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setPlanilhaAtiva(p);
+                      carregarPlanilha(p);
+                    }}
+                    className={`relative p-4 rounded-lg border-2 transition-all text-left ${
+                      planilhaAtiva?.id === p.id
+                        ? "border-pink-500 bg-pink-50"
+                        : "border-gray-200 hover:border-pink-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">{p.titulo}</h3>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Ano {p.ano}
+                          {p.mesInicial && p.mesFinal ? (
+                            <> - {getNomeMes(p.mesInicial)}/{getNomeMes(p.mesFinal)}</>
+                          ) : p.mes ? (
+                            <> - {getNomeMes(p.mes)}</>
+                          ) : null}
+                        </p>
+                        {p.descricaoPlanilha && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {p.descricaoPlanilha}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmarExclusao(p);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        )}
+        
         {editMode && (
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label>Título</Label>
+                <Label>Título *</Label>
                 <Input
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
@@ -507,7 +607,15 @@ export default function AdminPrestacaoContas() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Ano</Label>
+                <Label>Descrição (opcional)</Label>
+                <Input
+                  value={descricaoPlanilha}
+                  onChange={(e) => setDescricaoPlanilha(e.target.value)}
+                  placeholder="Descrição breve sobre esta planilha..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Ano *</Label>
                 <Input
                   type="number"
                   value={ano}
@@ -548,7 +656,7 @@ export default function AdminPrestacaoContas() {
                       <SelectItem value="0">Todos os meses</SelectItem>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                         <SelectItem key={m} value={m.toString()}>
-                          {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                          {getNomeMes(m)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -569,7 +677,7 @@ export default function AdminPrestacaoContas() {
                         <SelectItem value="0">Selecione...</SelectItem>
                         {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                           <SelectItem key={m} value={m.toString()}>
-                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                            {getNomeMes(m)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -588,7 +696,7 @@ export default function AdminPrestacaoContas() {
                         <SelectItem value="0">Selecione...</SelectItem>
                         {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                           <SelectItem key={m} value={m.toString()}>
-                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                            {getNomeMes(m)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -685,14 +793,14 @@ export default function AdminPrestacaoContas() {
               {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
                 <span className="text-sm font-normal text-gray-600 ml-2">
                   (
-                  {new Date(2000, planilhaAtiva.mesInicial - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  {getNomeMes(planilhaAtiva.mesInicial)}
                   {' até '}
-                  {new Date(2000, planilhaAtiva.mesFinal - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  {getNomeMes(planilhaAtiva.mesFinal)}
                   )
                 </span>
               ) : planilhaAtiva.mes ? (
                 <span className="text-sm font-normal text-gray-600 ml-2">
-                  ({new Date(2000, planilhaAtiva.mes - 1).toLocaleString('pt-BR', { month: 'long' })})
+                  ({getNomeMes(planilhaAtiva.mes)})
                 </span>
               ) : null}
             </CardTitle>
@@ -812,8 +920,12 @@ export default function AdminPrestacaoContas() {
               <Button
                 onClick={() => {
                   setTitulo("Nova Planilha");
+                  setDescricaoPlanilha("");
                   setAno(new Date().getFullYear());
                   setMes(undefined);
+                  setUsarPeriodo(false);
+                  setMesInicial(undefined);
+                  setMesFinal(undefined);
                   setMostrarTotal(true);
                   setColunas([]);
                   setLinhas([{}]);
@@ -828,6 +940,48 @@ export default function AdminPrestacaoContas() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <Dialog open={dialogExcluir} onOpenChange={setDialogExcluir}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-700 mb-2">
+              Tem certeza que deseja excluir a planilha?
+            </p>
+            {planilhaParaExcluir && (
+              <div className="bg-gray-50 p-3 rounded-lg border mt-3">
+                <p className="font-semibold text-sm">{planilhaParaExcluir.titulo}</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Ano {planilhaParaExcluir.ano}
+                  {planilhaParaExcluir.mesInicial && planilhaParaExcluir.mesFinal ? (
+                    <> - {getNomeMes(planilhaParaExcluir.mesInicial)}/{getNomeMes(planilhaParaExcluir.mesFinal)}</>
+                  ) : planilhaParaExcluir.mes ? (
+                    <> - {getNomeMes(planilhaParaExcluir.mes)}</>
+                  ) : null}
+                </p>
+                {planilhaParaExcluir.descricaoPlanilha && (
+                  <p className="text-xs text-gray-500 mt-1">{planilhaParaExcluir.descricaoPlanilha}</p>
+                )}
+              </div>
+            )}
+            <p className="text-sm text-red-600 mt-3 font-medium">
+              ⚠️ Esta ação não pode ser desfeita!
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogExcluir(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={excluirPlanilha}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Planilha
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

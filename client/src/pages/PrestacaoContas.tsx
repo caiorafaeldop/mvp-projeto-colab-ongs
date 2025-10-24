@@ -18,6 +18,12 @@ import { useAuth } from "@/contexts/AuthContext";
 export function PrestacaoContas() {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = !!isAuthenticated && user?.userType === "organization";
+
+  // Helper para capitalizar o nome do mês
+  const getNomeMes = (mes: number) => {
+    const nome = new Date(2000, mes - 1).toLocaleString('pt-BR', { month: 'long' });
+    return nome.charAt(0).toUpperCase() + nome.slice(1);
+  };
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,7 +151,12 @@ export function PrestacaoContas() {
             </h1>
 
             <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
-              Ano {planilhaAtiva.ano}{planilhaAtiva.mes ? ` - ${new Date(2000, planilhaAtiva.mes - 1).toLocaleString('pt-BR', { month: 'long' })}` : ""}
+              Ano {planilhaAtiva.ano}
+              {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
+                <> - {getNomeMes(planilhaAtiva.mesInicial)} / {getNomeMes(planilhaAtiva.mesFinal)}</>
+              ) : planilhaAtiva.mes ? (
+                <> - {getNomeMes(planilhaAtiva.mes)}</>
+              ) : null}
             </p>
           </div>
         </div>
