@@ -6,8 +6,8 @@ import { Home } from "./pages/Home";
 import { Store } from "./pages/Store";
 import { ProductDetail } from "./pages/ProductDetail";
 import { Donations } from "./pages/Donations";
-import { Login } from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AuthModalProvider } from "./contexts/AuthModalContext";
 import { BecomeDonor } from "./pages/BecomeDonor";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
@@ -24,7 +24,8 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="ui-theme">
       <AuthProvider>
-        <Router>
+        <AuthModalProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
@@ -33,7 +34,6 @@ function App() {
               <Route path="produto/:id" element={<ProductDetail />} />
               <Route path="donations" element={<Donations />} />
               <Route path="become-donor" element={<BecomeDonor />} />
-              <Route path="login" element={<Login />} />
               <Route path="verify-email" element={<VerifyEmail />} />
               <Route path="forgot-password" element={<ForgotPassword />} />
               <Route path="reset-password" element={<ResetPassword />} />
@@ -47,8 +47,9 @@ function App() {
               <Route path="my-products" element={<MyProducts />} />
             </Route>
           </Routes>
-        </Router>
-        <Toaster />
+          </Router>
+          <Toaster />
+        </AuthModalProvider>
       </AuthProvider>
     </ThemeProvider>
   );

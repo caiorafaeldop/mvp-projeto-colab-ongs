@@ -44,6 +44,10 @@ export default function AdminPanel() {
   const [tdName, setTdName] = useState("");
   const [tdAmountText, setTdAmountText] = useState("");
   const [addingDonor, setAddingDonor] = useState(false);
+  const [editingDonor, setEditingDonor] = useState<TopDonor | null>(null);
+  const [donorDialogOpen, setDonorDialogOpen] = useState(false);
+  const [viewingDonor, setViewingDonor] = useState<TopDonor | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
 
   // Supporter Dialog state (create/edit)
   const [supDialogOpen, setSupDialogOpen] = useState(false);
@@ -254,6 +258,18 @@ export default function AdminPanel() {
     return `${intWithSeparators},${decPart}`;
   }
 
+  const openEditDonor = (donor: TopDonor) => {
+    setEditingDonor(donor);
+    setTdName(donor.donorName);
+    setTdAmountText(donor.donatedAmount.toFixed(2).replace(".", ","));
+    setDonorDialogOpen(true);
+  };
+
+  const openViewDonor = (donor: TopDonor) => {
+    setViewingDonor(donor);
+    setViewDialogOpen(true);
+  };
+
   const handleAddTopDonor = async () => {
     const name = tdName.trim();
     const amount = parseDecimalBR(tdAmountText.trim());
@@ -285,6 +301,42 @@ export default function AdminPanel() {
       toast({ title: "Erro", description: "Falha ao adicionar doador.", variant: "destructive" });
     } finally {
       setAddingDonor(false);
+    }
+  };
+
+  const handleSaveDonor = async () => {
+    if (!editingDonor) return;
+    const name = tdName.trim();
+    const amount = parseDecimalBR(tdAmountText.trim());
+    if (!name) {
+      toast({ title: "Atenção", description: "Informe o nome do doador.", variant: "destructive" });
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast({ title: "Atenção", description: "Informe um valor válido maior que zero.", variant: "destructive" });
+      return;
+    }
+    try {
+      // Delete old and create new (since there's no update endpoint)
+      await AdminApi.deleteTopDonor(editingDonor.id);
+      const payload = {
+        donorName: name,
+        donatedAmount: amount,
+        donationType: 'total' as const,
+        referenceMonth: selMonth,
+        referenceYear: selYear,
+        donationDate: new Date().toISOString(),
+      };
+      await AdminApi.createTopDonor(payload);
+      const refreshed = await AdminApi.listTopDonorsPublicByPeriod(selYear, selMonth, 10);
+      setCurrentTopDonors(refreshed);
+      setTdName("");
+      setTdAmountText("");
+      setEditingDonor(null);
+      setDonorDialogOpen(false);
+      toast({ title: "Sucesso", description: "Doador atualizado." });
+    } catch (e) {
+      toast({ title: "Erro", description: "Falha ao atualizar doador.", variant: "destructive" });
     }
   };
 
@@ -601,14 +653,32 @@ export default function AdminPanel() {
                           <TableCell>{t.donorName}</TableCell>
                           <TableCell>R$ {t.donatedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteTopDonor(t)}
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openViewDonor(t)}
+                                title="Visualizar"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openEditDonor(t)}
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteTopDonor(t)}
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -633,6 +703,85 @@ export default function AdminPanel() {
           <AdminPrestacaoContas />
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de Edição de Doador */}
+      <Dialog open={donorDialogOpen} onOpenChange={setDonorDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Doador</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nome do doador</Label>
+              <Input value={tdName} onChange={e => setTdName(e.target.value)} placeholder="Ex.: Ana Souza" />
+            </div>
+            <div>
+              <Label>Valor doado</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9.,]*"
+                value={tdAmountText}
+                onChange={(e) => {
+                  const formatted = formatCurrencyBR(e.target.value);
+                  setTdAmountText(formatted);
+                }}
+                placeholder="Digite o valor (R$ 1.234,56)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setDonorDialogOpen(false);
+              setEditingDonor(null);
+              setTdName("");
+              setTdAmountText("");
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveDonor}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Visualização de Doador */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Doador</DialogTitle>
+          </DialogHeader>
+          {viewingDonor && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground">Nome</Label>
+                <p className="text-lg font-semibold">{viewingDonor.donorName}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Valor Doado</Label>
+                <p className="text-lg font-semibold">
+                  R$ {viewingDonor.donatedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Posição no Ranking</Label>
+                <p className="text-lg font-semibold">
+                  {viewingDonor.topPosition === 1 ? '🥇' : viewingDonor.topPosition === 2 ? '🥈' : viewingDonor.topPosition === 3 ? '🥉' : ''} 
+                  {viewingDonor.topPosition ?? '-'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Período</Label>
+                <p className="text-lg font-semibold">
+                  {viewingDonor.referenceMonth}/{viewingDonor.referenceYear}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setViewDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

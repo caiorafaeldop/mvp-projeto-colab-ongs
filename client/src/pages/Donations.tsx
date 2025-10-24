@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { Heart, CreditCard, Repeat, ExternalLink, Loader2 } from "lucide-react";
+import { Heart, CreditCard, Repeat, Loader2 } from "lucide-react";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 
 function monthYearOf(date: Date) {
@@ -38,6 +40,24 @@ export function Donations() {
   const [paymentUrl, setPaymentUrl] = useState("");
   const { toast } = useToast();
   const predefinedAmounts = [10, 25, 50, 100, 200];
+  
+  // Auth modals
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
+  const [showManageSubscriptionModal, setShowManageSubscriptionModal] = useState(false);
+  const [showDonorInfoModal, setShowDonorInfoModal] = useState(false);
+  
+  // Auth form states
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authPasswordConfirm, setAuthPasswordConfirm] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
+  
+  // Subscription data (mock)
+  const [userSubscription, setUserSubscription] = useState<any>(null);
+  const [donorInfoStep, setDonorInfoStep] = useState<"form" | "success">("form");
 
   useEffect(() => {
     let mounted = true;
@@ -72,102 +92,89 @@ export function Donations() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 pt-2 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 py-6 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-pink-300/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
       
-      <div className="container mx-auto px-4 py-2 relative z-10">
-        <div className="flex flex-col gap-8">
-          {/* Donation Form + Image */}
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Donation Form */}
-            <div className="lg:w-2/3 w-full">
-              <h2 className="text-3xl lg:text-5xl font-extrabold leading-tight lg:leading-[1.15] pb-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent mb-8 animate-fade-in">
-                Faça sua Doação
-              </h2>
+      <div className="container mx-auto px-4 py-6 relative z-10 max-w-7xl">
+        {/* Header com botão de gerenciar */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+              ❤️ Faça sua Doação
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">Apoie a Rede Feminina de Combate ao Câncer</p>
+          </div>
+          <Button
+            onClick={() => setShowLoginModal(true)}
+            variant="outline"
+            className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold"
+          >
+            Gerenciar Assinatura
+          </Button>
+        </div>
 
-              <Card className="mb-6 bg-white/80 backdrop-blur-xl border-0 shadow-2xl hover:shadow-pink-200/50 transition-all duration-300">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Heart className="w-6 h-6 text-pink-500 animate-pulse" />
+        {/* Layout em Grid */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Coluna Esquerda - Formulário */}
+          <div className="lg:col-span-2 space-y-4">
+
+              <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Heart className="w-5 h-5 text-pink-500" />
                     Tipo de Doação
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <RadioGroup value={donationType} onValueChange={(v) => setDonationType(v as "single" | "recurring")}>
-                    <div className={`flex items-center space-x-2 p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${donationType === "single" ? "border-pink-400 bg-gradient-to-br from-pink-50 to-pink-100/50 shadow-lg shadow-pink-200/50" : "border-gray-200 bg-white hover:bg-gray-50 hover:border-pink-300"}`}>
+                    <div className={`flex items-center space-x-2 p-3 rounded-lg border-2 transition-all cursor-pointer ${donationType === "single" ? "border-pink-400 bg-pink-50" : "border-gray-200 bg-white hover:bg-gray-50"}`}>
                       <RadioGroupItem value="single" id="single" />
                       <label htmlFor="single" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="w-5 h-5" />
-                          <span className="font-bold text-lg">Doação Única</span>
+                          <CreditCard className="w-4 h-4" />
+                          <span className="font-semibold text-sm">Doação Única</span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Faça uma doação pontual via Mercado Pago</p>
                       </label>
                     </div>
-                    <div className={`flex items-center space-x-2 p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${donationType === "recurring" ? "border-purple-400 bg-gradient-to-br from-purple-50 to-purple-100/50 shadow-lg shadow-purple-200/50" : "border-gray-200 bg-white hover:bg-gray-50 hover:border-purple-300"}`}>
+                    <div className={`flex items-center space-x-2 p-3 rounded-lg border-2 transition-all cursor-pointer ${donationType === "recurring" ? "border-purple-400 bg-purple-50" : "border-gray-200 bg-white hover:bg-gray-50"}`}>
                       <RadioGroupItem value="recurring" id="recurring" />
                       <label htmlFor="recurring" className="flex-1 cursor-pointer">
                         <div className="flex items-center gap-2">
-                          <Repeat className="w-5 h-5" />
-                          <span className="font-bold text-lg">Doação Recorrente (Assinatura)</span>
+                          <Repeat className="w-4 h-4" />
+                          <span className="font-semibold text-sm">Doação Recorrente</span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Apoie mensalmente de forma automática</p>
                       </label>
                     </div>
                   </RadioGroup>
                 </CardContent>
               </Card>
 
-              <form onSubmit={async (e) => {
+              <form onSubmit={(e) => {
                 e.preventDefault();
                 const val = parseFloat(customAmount || amount || "0");
-                if (!donorEmail) {
-                  toast({ title: "Email obrigatório", description: "Informe seu email para continuar.", variant: "destructive" });
-                  return;
-                }
                 if (isNaN(val) || val < 1) {
                   toast({ title: "Valor inválido", description: "Mínimo R$ 1,00.", variant: "destructive" });
                   return;
                 }
-                setIsSubmitting(true);
-                setPaymentUrl("");
-                try {
-                  const payload = {
-                    amount: val,
-                    donorName: donorName || undefined,
-                    donorEmail,
-                    donorPhone: donorPhone || undefined,
-                    donorDocument: donorDocument || undefined,
-                    message: message || undefined,
-                  };
-                  let response: any;
-                  if (donationType === "single") response = await createSingleDonation(payload);
-                  else response = await createRecurringDonation(payload);
-                  if (response?.success) {
-                    const url = response.data?.paymentUrl || response.data?.subscriptionUrl;
-                    if (url) {
-                      setPaymentUrl(url);
-                      toast({ title: "Link de pagamento gerado!", description: "Clique no botão abaixo para finalizar sua doação no Mercado Pago." });
-                    } else {
-                      throw new Error("URL de pagamento não retornada");
-                    }
-                  } else {
-                    throw new Error(response?.message || "Erro ao processar doação");
-                  }
-                } catch (err: any) {
-                  toast({ title: "Erro ao processar doação", description: err?.message || "Tente novamente.", variant: "destructive" });
-                } finally {
-                  setIsSubmitting(false);
+                
+                // Se for doação recorrente, abre modal de registro
+                if (donationType === "recurring") {
+                  setShowRegisterModal(true);
+                  return;
                 }
+                
+                // Se for doação única, abre modal para preencher informações
+                setShowDonorInfoModal(true);
+                setDonorInfoStep("form");
               }}>
-                <Card className="mb-6 bg-white/80 backdrop-blur-xl border-0 shadow-2xl hover:shadow-purple-200/50 transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="text-xl">Valor da Doação</CardTitle>
+                <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Valor da Doação</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
                       {predefinedAmounts.map((v) => {
                         const selected = amount === String(v);
                         return (
@@ -176,7 +183,7 @@ export function Donations() {
                             type="button"
                             variant="ghost"
                             onClick={() => { setAmount(String(v)); setCustomAmount(""); }}
-                            className={`h-16 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${selected ? "bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 text-white shadow-xl shadow-purple-300/60 scale-105" : "bg-gradient-to-br from-white to-gray-50 hover:from-pink-50 hover:to-purple-50 border-2 border-gray-200 hover:border-pink-300 text-gray-700"}`}
+                            className={`h-12 rounded-lg font-semibold text-sm transition-all ${selected ? "bg-gradient-to-br from-pink-500 to-purple-500 text-white shadow-md" : "bg-white hover:bg-pink-50 border-2 border-gray-200 hover:border-pink-300 text-gray-700"}`}
                           >
                             R$ {v}
                           </Button>
@@ -195,217 +202,615 @@ export function Donations() {
                           placeholder="0,00" 
                           value={customAmount} 
                           onChange={(e) => { setCustomAmount(e.target.value); setAmount(""); }} 
-                          className="pl-12 h-14 text-lg rounded-2xl border-2 border-gray-200 focus:border-pink-400 focus:ring-4 focus:ring-pink-200/50 transition-all duration-300"
+                          className="pl-12 h-10 text-base rounded-lg border-2 border-gray-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200/50 transition-all"
                         />
                       </div>
                     </div>
                     {donationType === "recurring" && (
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-300/50 rounded-2xl p-5 shadow-md">
-                        <p className="text-sm text-blue-800 leading-relaxed"><strong className="text-blue-900">💳 Doação Recorrente Mensal:</strong> Você será cobrado automaticamente todo mês no valor selecionado.</p>
+                      <div className="bg-blue-50 border border-blue-300 rounded-lg p-3">
+                        <p className="text-xs text-blue-800"><strong>💳 Recorrente:</strong> Cobrança automática mensal.</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                <Card className="mb-6 bg-white/80 backdrop-blur-xl border-0 shadow-2xl hover:shadow-indigo-200/50 transition-all duration-300">
-                  <CardHeader>
-                    <CardTitle className="text-xl">Seus Dados</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="donorName" className="text-sm font-semibold text-gray-700 mb-2 block">Nome (opcional)</label>
-                        <Input id="donorName" value={donorName} onChange={(e) => setDonorName(e.target.value)} placeholder="Seu nome" className="h-12 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 transition-all" />
-                      </div>
-                      <div>
-                        <label htmlFor="donorEmail" className="text-sm font-semibold text-gray-700 mb-2 block">Email *</label>
-                        <Input id="donorEmail" type="email" required value={donorEmail} onChange={(e) => setDonorEmail(e.target.value)} placeholder="seu@email.com" className="h-12 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 transition-all" />
-                      </div>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="donorPhone" className="text-sm font-semibold text-gray-700 mb-2 block">Telefone (opcional)</label>
-                        <Input id="donorPhone" value={donorPhone} onChange={(e) => setDonorPhone(e.target.value)} placeholder="(11) 99999-9999" className="h-12 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 transition-all" />
-                      </div>
-                      <div>
-                        <label htmlFor="donorDocument" className="text-sm font-semibold text-gray-700 mb-2 block">CPF (opcional)</label>
-                        <Input id="donorDocument" value={donorDocument} onChange={(e) => setDonorDocument(e.target.value)} placeholder="000.000.000-00" className="h-12 rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 transition-all" />
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="message" className="text-sm font-semibold text-gray-700 mb-2 block">Mensagem (opcional)</label>
-                      <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Deixe uma mensagem de apoio..." rows={3} className="rounded-xl border-2 border-gray-200 focus:border-purple-400 focus:ring-4 focus:ring-purple-200/50 transition-all resize-none" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {!paymentUrl ? (
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting} 
-                    className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-700 text-white font-bold text-xl py-7 shadow-2xl shadow-purple-300/50 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <><Loader2 className="w-6 h-6 mr-2 animate-spin" />Processando...</>
-                    ) : (
-                      <><Heart className="w-6 h-6 mr-2 animate-pulse" />{donationType === "single" ? "Gerar Link de Pagamento" : "Criar Assinatura"}</>
-                    )}
-                  </Button>
-                ) : (
-                  <Card className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-0 shadow-2xl shadow-green-200/50 animate-fade-in">
-                    <CardContent className="pt-6">
-                      <div className="text-center space-y-4">
-                        <div className="text-green-600">
-                          <div className="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                            <Heart className="w-12 h-12 text-green-600 animate-pulse" />
-                          </div>
-                          <h3 className="text-2xl font-bold text-green-700">Link de Pagamento Gerado!</h3>
-                          <p className="text-base mt-2 text-green-600">Clique no botão abaixo para finalizar sua doação no Mercado Pago</p>
-                        </div>
-                        <Button 
-                          type="button" 
-                          onClick={() => window.open(paymentUrl, "_blank")} 
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-xl py-7 shadow-xl shadow-green-300/50 rounded-2xl transition-all duration-300 transform hover:scale-[1.02]"
-                        >
-                          <ExternalLink className="w-6 h-6 mr-2" />Abrir Mercado Pago
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-base py-3 shadow-lg rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processando...</>
+                  ) : (
+                    <><Heart className="w-5 h-5 mr-2" />{donationType === "single" ? "Gerar Link de Pagamento" : "Criar Assinatura"}</>  
+                  )}
+                </Button>
               </form>
-            </div>
+          </div>
 
-            {/* Desktop Image - Shows only on desktop */}
-            <div className="hidden lg:block lg:w-1/3">
-              <div className="w-full sticky top-4">
-                <div className="bg-white/60 backdrop-blur-lg rounded-3xl p-4 shadow-2xl border-0">
+          {/* Coluna Direita - Top Doadores */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg sticky top-4">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  🏆 Top Doadores
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {donors.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center">Sem doadores este mês</p>
+                ) : (
+                  <div className="space-y-3">
+                    {[podium.first, podium.second, podium.third].filter(Boolean).map((d, idx) => {
+                      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                      const bgColor = idx === 0 ? 'from-yellow-100 to-amber-100' : idx === 1 ? 'from-gray-100 to-gray-200' : 'from-orange-100 to-amber-100';
+                      return d ? (
+                        <div key={d.id} className={`p-3 rounded-lg bg-gradient-to-br ${bgColor} border border-gray-200`}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">{medal}</span>
+                            <span className="font-bold text-sm truncate">{d.donorName}</span>
+                          </div>
+                          <p className="text-xs text-gray-600 font-semibold">R$ {d.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                        </div>
+                      ) : null;
+                    })}
+                    {podium.others.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Outros doadores</p>
+                        {podium.others.slice(0, 5).map((d, idx) => (
+                          <div key={d.id || idx} className="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-0">
+                            <span className="text-xs font-medium text-gray-700 truncate">{d.donorName}</span>
+                            <span className="text-xs text-gray-500 ml-2">R$ {d.donatedAmount.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* MODAIS */}
+        
+        {/* Modal de Informações do Doador (Doação Única) */}
+        <Dialog open={showDonorInfoModal} onOpenChange={(open) => {
+          setShowDonorInfoModal(open);
+          if (!open) {
+            setPaymentUrl("");
+          }
+        }}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div className="grid md:grid-cols-2">
+              {/* Lado Esquerdo - Imagem */}
+              <div className="hidden md:block bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 p-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-300/20 to-purple-300/20"></div>
+                <div className="relative h-full flex flex-col items-center justify-center">
                   <img
                     src="/img/For%C3%A7aeEsperan%C3%A7a.png"
                     alt="Força e Esperança"
-                    className="w-full h-auto object-contain max-w-lg mx-auto rounded-2xl"
+                    className="w-full max-w-sm object-contain mb-6"
                   />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Donors Section - Full Width */}
-          <div className="w-full">
-            <div className="p-8 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border-0">
-              <div className="text-center mb-10">
-                <h4 className="text-4xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent mb-4">
-                  🏆 Principais Doadores
-                </h4>
-                <p className="text-base text-gray-600 max-w-2xl mx-auto">
-                  Agradecemos aos doadores que ajudaram a transformar vidas com generosidade e solidariedade.
-                </p>
-              </div>
-
-              {donors.length === 0 ? (
-                <div className="text-center text-gray-500">Sem registros para {month.toString().padStart(2, "0")}/{year}.</div>
-              ) : (
-                <div className={onlyPodium ? "flex flex-col items-center" : "flex flex-col lg:flex-row gap-8"}>
-                  {/* Top Donors Podium */}
-                  <div className={onlyPodium ? "w-full lg:w-2/3 xl:w-1/2 mx-auto" : "lg:w-1/2 w-full"}>
-                    <div className="flex justify-center items-end space-x-6 mb-8">
-                      {/* 2º lugar - Prata */}
-                      {podium.second && (
-                        <div className="flex flex-col items-center transform hover:scale-105 transition-all duration-300">
-                          <div className="relative">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center text-white font-bold text-2xl shadow-2xl border-4 border-white mb-2 ring-4 ring-gray-300/40">
-                              {initials(podium.second.donorName)}
-                            </div>
-                            <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-2 border-white">🥈</div>
-                          </div>
-                          <div className="bg-gradient-to-t from-gray-300 to-gray-100 rounded-t-2xl px-6 py-8 w-28 text-center shadow-xl">
-                            <p className="font-bold text-gray-800 text-lg">2º</p>
-                          </div>
-                          <div className="text-center mt-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md">
-                            <p className="font-bold text-gray-900 text-sm">{podium.second.donorName}</p>
-                            <p className="text-xs text-gray-600 font-semibold mt-1">R$ {podium.second.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 1º lugar - Ouro */}
-                      {podium.first && (
-                        <div className="flex flex-col items-center transform hover:scale-110 transition-all duration-300">
-                          <div className="relative">
-                            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 flex items-center justify-center text-white font-bold text-3xl shadow-2xl border-4 border-white mb-2 ring-4 ring-yellow-400/60 animate-pulse">
-                              {initials(podium.first.donorName)}
-                            </div>
-                            <div className="absolute -top-3 -right-3 w-12 h-12 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-full flex items-center justify-center text-3xl font-bold shadow-xl border-2 border-white">🥇</div>
-                          </div>
-                          <div className="bg-gradient-to-t from-yellow-400 to-yellow-200 rounded-t-2xl px-8 py-10 w-36 text-center shadow-2xl">
-                            <p className="font-extrabold text-yellow-900 text-2xl">1º</p>
-                          </div>
-                          <div className="text-center mt-4 bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
-                            <p className="font-bold text-gray-900 text-base">{podium.first.donorName}</p>
-                            <p className="text-sm text-gray-600 font-semibold mt-1">R$ {podium.first.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 3º lugar - Bronze */}
-                      {podium.third && (
-                        <div className="flex flex-col items-center transform hover:scale-105 transition-all duration-300">
-                          <div className="relative">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-2xl shadow-2xl border-4 border-white mb-2 ring-4 ring-orange-400/40">
-                              {initials(podium.third.donorName)}
-                            </div>
-                            <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-600 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-2 border-white">🥉</div>
-                          </div>
-                          <div className="bg-gradient-to-t from-orange-300 to-orange-100 rounded-t-2xl px-6 py-6 w-28 text-center shadow-xl">
-                            <p className="font-bold text-orange-800 text-lg">3º</p>
-                          </div>
-                          <div className="text-center mt-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md">
-                            <p className="font-bold text-gray-900 text-sm">{podium.third.donorName}</p>
-                            <p className="text-xs text-gray-600 font-semibold mt-1">R$ {podium.third.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                      Sua Generosidade Transforma Vidas
+                    </h3>
+                    <p className="text-gray-700 text-sm">
+                      Cada doação faz a diferença na luta contra o câncer
+                    </p>
                   </div>
-
-                  {/* Other Donors */}
-                  {!onlyPodium && (
-                    <div className="lg:w-1/2 w-full">
-                      <div className="mb-6 text-center">
-                        <h5 className="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-2">
-                          💝 Outros Doadores
-                        </h5>
-                        <p className="text-sm text-gray-600">Gratidão a todos que apoiam nossa causa</p>
-                      </div>
-                      <ul className="space-y-3">
-                        {podium.others.map((d, idx) => (
-                          <li 
-                            key={d.id || `${d.donorName}-${idx}`} 
-                            className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-pink-50/80 via-purple-50/60 to-indigo-50/80 border-2 border-pink-200/50 hover:border-purple-300 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
-                          >
-                            <div className="flex items-center">
-                              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center mr-4 text-white font-bold text-lg shadow-lg">
-                                {initials(d.donorName)}
-                              </div>
-                              <div>
-                                <p className="font-bold text-gray-900">{d.donorName}</p>
-                                <p className="text-sm text-gray-600 font-semibold">R$ {d.donatedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
-                              </div>
-                            </div>
-                            <div className="text-right bg-white/80 rounded-xl px-4 py-2 shadow-sm">
-                              <p className="font-bold text-purple-700 text-lg">{(d.topPosition ?? idx + 4)}º</p>
-                              <p className="text-xs text-gray-500 font-medium">Posição</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Lado Direito - Formulário */}
+              <div className="p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    Só mais uma coisinha...
+                  </DialogTitle>
+                  <p className="text-sm text-gray-600 mt-3">
+                    Adicione suas informações
+                  </p>
+                </DialogHeader>
+                <div className="space-y-4 py-6">
+                  <div>
+                    <Label htmlFor="donor-name" className="text-sm font-semibold">Nome *</Label>
+                    <Input 
+                      id="donor-name" 
+                      value={donorName} 
+                      onChange={(e) => setDonorName(e.target.value)}
+                      placeholder="Seu nome"
+                      className="mt-1.5 h-10"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="donor-phone" className="text-sm font-semibold">Telefone (opcional)</Label>
+                    <Input 
+                      id="donor-phone" 
+                      value={donorPhone} 
+                      onChange={(e) => setDonorPhone(e.target.value)}
+                      placeholder="(11) 99999-9999"
+                      className="mt-1.5 h-10"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="donor-message" className="text-sm font-semibold">Mensagem (opcional)</Label>
+                    <Textarea 
+                      id="donor-message" 
+                      value={message} 
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Deixe uma mensagem..."
+                      rows={2}
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
+                <DialogFooter className="flex-col gap-3">
+                  {!paymentUrl ? (
+                    <div className="flex gap-3 w-full">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowDonorInfoModal(false)}
+                        className="flex-1 h-12 text-base"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={async () => {
+                          if (!donorName || donorName.trim() === "") {
+                            toast({ title: "Nome obrigatório", description: "Informe seu nome para continuar.", variant: "destructive" });
+                            return;
+                          }
+                          
+                          setIsSubmitting(true);
+                          try {
+                            const val = parseFloat(customAmount || amount || "0");
+                            const payload = {
+                              amount: val,
+                              donorName: donorName.trim(),
+                              donorEmail: donorEmail || undefined,
+                              donorPhone: donorPhone || undefined,
+                              donorDocument: donorDocument || undefined,
+                              message: message || undefined,
+                            };
+                            const response = await createSingleDonation(payload);
+                            
+                            const responseData = response?.data;
+                            
+                            if (responseData?.success) {
+                              const url = responseData.data?.paymentUrl;
+                              if (url) {
+                                setPaymentUrl(url);
+                                toast({ title: "Link gerado!", description: "Clique no botão para acessar." });
+                              } else {
+                                throw new Error("URL de pagamento não retornada");
+                              }
+                            } else {
+                              throw new Error(responseData?.message || "Erro ao processar doação");
+                            }
+                          } catch (err: any) {
+                            toast({ title: "Erro ao processar doação", description: err?.message || "Tente novamente.", variant: "destructive" });
+                          } finally {
+                            setIsSubmitting(false);
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="flex-1 h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                      >
+                        {isSubmitting ? (
+                          <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Enviando...</>
+                        ) : (
+                          "Enviar"
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        window.open(paymentUrl, "_blank");
+                        setShowDonorInfoModal(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-base py-6"
+                    >
+                      Acessar Link de Pagamento
+                    </Button>
+                  )}
+                </DialogFooter>
+              </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Modal de Registro (para doação recorrente) */}
+        <Dialog open={showRegisterModal} onOpenChange={(open) => {
+          setShowRegisterModal(open);
+          if (!open) setRegisterStep("form");
+        }}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div className="grid md:grid-cols-2">
+              {/* Lado Esquerdo - Imagem */}
+              <div className="hidden md:block bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 p-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-300/20 to-purple-300/20"></div>
+                <div className="relative h-full flex flex-col items-center justify-center">
+                  <img
+                    src="/img/For%C3%A7aeEsperan%C3%A7a.png"
+                    alt="Força e Esperança"
+                    className="w-full max-w-sm object-contain mb-6"
+                  />
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                      {registerStep === "form" ? "Apoie Mensalmente" : "Verifique seu Email"}
+                    </h3>
+                    <p className="text-gray-700 text-sm">
+                      {registerStep === "form" 
+                        ? "Sua contribuição recorrente faz a diferença na vida de quem precisa"
+                        : "Estamos quase lá! Confirme seu email para continuar"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lado Direito - Formulário ou Verificação */}
+              <div className="p-8">
+                {registerStep === "form" ? (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                        Criar Conta
+                      </DialogTitle>
+                      <p className="text-sm text-gray-600 mt-3">
+                        Para criar uma assinatura, você precisa de uma conta. Isso é necessário para que você possa gerenciar ou cancelar sua assinatura depois.
+                      </p>
+                    </DialogHeader>
+                    <div className="space-y-4 py-6">
+                      <div>
+                        <Label htmlFor="reg-email" className="text-sm font-semibold">Email</Label>
+                        <Input 
+                          id="reg-email" 
+                          type="email" 
+                          value={authEmail} 
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          placeholder="seu@email.com"
+                          className="mt-1.5 h-10"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-password" className="text-sm font-semibold">Senha</Label>
+                        <Input 
+                          id="reg-password" 
+                          type="password" 
+                          value={authPassword} 
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1.5 h-10"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-password-confirm" className="text-sm font-semibold">Confirmar Senha</Label>
+                        <Input 
+                          id="reg-password-confirm" 
+                          type="password" 
+                          value={authPasswordConfirm} 
+                          onChange={(e) => setAuthPasswordConfirm(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1.5 h-10"
+                          required
+                        />
+                      </div>
+                      <div className="text-center pt-2">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setShowRegisterModal(false);
+                            setShowLoginModal(true);
+                          }}
+                          className="text-sm text-gray-600 hover:text-purple-600 font-medium"
+                        >
+                          Já tem uma conta? <span className="text-purple-600 font-semibold">Entrar</span>
+                        </button>
+                      </div>
+                    </div>
+                    <DialogFooter className="flex-col sm:flex-row gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowRegisterModal(false)} 
+                        className="w-full sm:w-auto h-12 text-base"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (!authEmail || !authPassword || !authPasswordConfirm) {
+                            toast({ title: "Campos obrigatórios", description: "Preencha todos os campos.", variant: "destructive" });
+                            return;
+                          }
+                          if (authPassword !== authPasswordConfirm) {
+                            toast({ title: "Senhas não conferem", description: "As senhas devem ser iguais.", variant: "destructive" });
+                            return;
+                          }
+                          if (authPassword.length < 8) {
+                            toast({ title: "Senha muito curta", description: "A senha deve ter no mínimo 8 caracteres.", variant: "destructive" });
+                            return;
+                          }
+                          // TODO: Enviar email de verificação
+                          setRegisterStep("verify");
+                          toast({ title: "Código enviado!", description: `Enviamos um código para ${authEmail}` });
+                        }} 
+                        className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                      >
+                        Criar Conta
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                        Verificar Email
+                      </DialogTitle>
+                      <p className="text-sm text-gray-600 mt-3">
+                        Enviamos um código de verificação para <strong>{authEmail}</strong>
+                      </p>
+                    </DialogHeader>
+                    <div className="space-y-5 py-6">
+                      <div>
+                        <Label htmlFor="verify-code" className="text-base font-semibold">Código de Verificação</Label>
+                        <Input 
+                          id="verify-code" 
+                          value={verificationCode} 
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          placeholder="000000"
+                          className="mt-2 h-16 text-center text-3xl tracking-widest font-bold"
+                          maxLength={6}
+                        />
+                      </div>
+                      <button 
+                        className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                        onClick={() => {
+                          toast({ title: "Código reenviado!", description: `Enviamos um novo código para ${authEmail}` });
+                        }}
+                      >
+                        Reenviar código
+                      </button>
+                    </div>
+                    <DialogFooter className="flex-col sm:flex-row gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setRegisterStep("form")} 
+                        className="w-full sm:w-auto h-12 text-base"
+                      >
+                        Voltar
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (!verificationCode || verificationCode.length !== 6) {
+                            toast({ title: "Código inválido", description: "Digite o código de 6 dígitos.", variant: "destructive" });
+                            return;
+                          }
+                          // TODO: Verificar código e criar conta
+                          setShowRegisterModal(false);
+                          setRegisterStep("form");
+                          toast({ title: "Conta criada!", description: "Agora você pode criar sua assinatura." });
+                        }} 
+                        className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                      >
+                        Verificar
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Verificação de Email - REMOVIDO (agora é parte do registro) */}
+        <Dialog open={showVerifyEmailModal} onOpenChange={setShowVerifyEmailModal} style={{display: 'none'}}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Verificar Email</DialogTitle>
+              <p className="text-sm text-gray-600 mt-2">
+                Enviamos um código de verificação para <strong>{authEmail}</strong>
+              </p>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="verify-code">Código de Verificação</Label>
+                <Input 
+                  id="verify-code" 
+                  value={verificationCode} 
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="000000"
+                  className="mt-1 text-center text-2xl tracking-widest"
+                  maxLength={6}
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setShowVerifyEmailModal(false)} className="w-full sm:w-auto">
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  // TODO: Implementar verificação
+                  setShowVerifyEmailModal(false);
+                  toast({ title: "Email verificado!", description: "Agora você pode criar sua assinatura." });
+                }} 
+                className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600"
+              >
+                Verificar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Login */}
+        <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div className="grid md:grid-cols-2">
+              {/* Lado Esquerdo - Imagem */}
+              <div className="hidden md:block bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 p-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-300/20 to-purple-300/20"></div>
+                <div className="relative h-full flex flex-col items-center justify-center">
+                  <img
+                    src="/img/For%C3%A7aeEsperan%C3%A7a.png"
+                    alt="Força e Esperança"
+                    className="w-full max-w-sm object-contain mb-6"
+                  />
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                      Gerencie sua Assinatura
+                    </h3>
+                    <p className="text-gray-700 text-sm">
+                      Acesse sua conta para visualizar, alterar ou cancelar sua doação recorrente
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lado Direito - Formulário */}
+              <div className="p-8">
+                <DialogHeader>
+                  <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    Entrar
+                  </DialogTitle>
+                  <p className="text-sm text-gray-600 mt-3">
+                    Entre para gerenciar sua assinatura
+                  </p>
+                </DialogHeader>
+                <div className="space-y-4 py-6">
+                  <div>
+                    <Label htmlFor="login-email" className="text-sm font-semibold">Email</Label>
+                    <Input 
+                      id="login-email" 
+                      type="email" 
+                      value={authEmail} 
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="mt-1.5 h-10"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="login-password" className="text-sm font-semibold">Senha</Label>
+                    <Input 
+                      id="login-password" 
+                      type="password" 
+                      value={authPassword} 
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="mt-1.5 h-10"
+                    />
+                    <button className="text-xs text-purple-600 hover:text-purple-700 mt-1 font-medium">
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <div className="text-center pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setShowLoginModal(false);
+                        setShowRegisterModal(true);
+                      }}
+                      className="text-sm text-gray-600 hover:text-purple-600 font-medium"
+                    >
+                      Não tem uma conta? <span className="text-purple-600 font-semibold">Criar conta</span>
+                    </button>
+                  </div>
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowLoginModal(false)} 
+                    className="w-full sm:w-auto h-12 text-base"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      // TODO: Implementar login
+                      setShowLoginModal(false);
+                      setUserSubscription({ amount: 50, status: "active", nextBilling: "15/11/2025" });
+                      setShowManageSubscriptionModal(true);
+                    }} 
+                    className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                  >
+                    Entrar
+                  </Button>
+                </DialogFooter>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Gerenciar Assinatura */}
+        <Dialog open={showManageSubscriptionModal} onOpenChange={setShowManageSubscriptionModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Gerenciar Assinatura</DialogTitle>
+            </DialogHeader>
+            {userSubscription ? (
+              <div className="space-y-6 py-4">
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-600">Status</span>
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                      {userSubscription.status === "active" ? "Ativa" : "Inativa"}
+                    </span>
+                  </div>
+                  <div className="mb-3">
+                    <span className="text-sm font-semibold text-gray-600">Valor Mensal</span>
+                    <p className="text-3xl font-bold text-purple-700">R$ {userSubscription.amount.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-600">Próxima Cobrança</span>
+                    <p className="text-lg font-semibold text-gray-800">{userSubscription.nextBilling}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-2 border-purple-500 text-purple-600 hover:bg-purple-50"
+                    onClick={() => {
+                      // TODO: Implementar alteração
+                      toast({ title: "Em breve", description: "Funcionalidade em desenvolvimento." });
+                    }}
+                  >
+                    Alterar Valor da Assinatura
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-2 border-red-500 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      // TODO: Implementar cancelamento
+                      if (confirm("Tem certeza que deseja cancelar sua assinatura?")) {
+                        setUserSubscription(null);
+                        setShowManageSubscriptionModal(false);
+                        toast({ title: "Assinatura cancelada", description: "Sua assinatura foi cancelada com sucesso." });
+                      }
+                    }}
+                  >
+                    Cancelar Assinatura
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-gray-600">Você não possui assinatura ativa.</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowManageSubscriptionModal(false)} className="w-full">
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

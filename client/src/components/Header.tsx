@@ -11,10 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu, LogOut, User, Settings, ShoppingCart, Heart, Package, Instagram, MessageCircle, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useIsMobile } from "@/hooks/useMobile";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { openLoginModal, openRegisterModal } = useAuthModal();
   const isMobile = useIsMobile();
 
   const getInitials = (name?: string) => {
@@ -185,17 +187,13 @@ export function Header() {
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/login" className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        Entrar
-                      </Link>
+                    <DropdownMenuItem onClick={openLoginModal}>
+                      <User className="h-4 w-4 mr-2" />
+                      Entrar
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/register" className="flex items-center">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Cadastrar
-                      </Link>
+                    <DropdownMenuItem onClick={openRegisterModal}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Cadastrar
                     </DropdownMenuItem>
                   </>
                 )}
@@ -272,11 +270,9 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/login">
-                    <User className="h-5 w-5" />
-                    <span className="sr-only">Login</span>
-                  </Link>
+                <Button variant="ghost" size="icon" onClick={openLoginModal}>
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Login</span>
                 </Button>
               )}
             </>
