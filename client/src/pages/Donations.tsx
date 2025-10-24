@@ -276,10 +276,13 @@ export function Donations() {
         
         {/* Modal de Informações do Doador (Doação Única) */}
         <Dialog open={showDonorInfoModal} onOpenChange={(open) => {
-          setShowDonorInfoModal(open);
           if (!open) {
             setPaymentUrl("");
+            setDonorName("");
+            setDonorPhone("");
+            setMessage("");
           }
+          setShowDonorInfoModal(open);
         }}>
           <DialogContent className="max-w-4xl p-0 overflow-hidden">
             <div className="grid md:grid-cols-2">

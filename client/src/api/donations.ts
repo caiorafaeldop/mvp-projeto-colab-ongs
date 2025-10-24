@@ -7,8 +7,8 @@ const REDE_FEMININA_ORG_NAME = "Rede Feminina de Combate ao Câncer";
 
 export interface SingleDonationData {
   amount: number;
-  donorName?: string;
-  donorEmail: string;
+  donorName: string;
+  donorEmail?: string;
   donorPhone?: string;
   donorDocument?: string;
   message?: string;
@@ -26,10 +26,10 @@ export interface RecurringDonationData {
 
 export const createSingleDonation = async (data: SingleDonationData) => {
   return api.post("/api/donations/single", {
+    ...data,
     organizationId: REDE_FEMININA_ORG_ID,
     organizationName: REDE_FEMININA_ORG_NAME,
-    donorName: data.donorName || "Anônimo",
-    ...data,
+    donorEmail: data.donorEmail || "anonimo@rfcc.org.br",
   });
 };
 

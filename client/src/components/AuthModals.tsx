@@ -5,10 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
 import { useAuthModal } from "@/contexts/AuthModalContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { loginUser, registerUser } from "@/api/auth";
+import { Loader2 } from "lucide-react";
 
 export function AuthModals() {
   const { showLoginModal, showRegisterModal, openLoginModal, openRegisterModal, closeLoginModal, closeRegisterModal } = useAuthModal();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   // Auth form states
   const [authEmail, setAuthEmail] = useState("");
@@ -16,6 +20,8 @@ export function AuthModals() {
   const [authPasswordConfirm, setAuthPasswordConfirm] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   return (
     <>
@@ -120,11 +126,12 @@ export function AuthModals() {
                       variant="outline" 
                       onClick={closeRegisterModal} 
                       className="w-full sm:w-auto h-12 text-base"
+                      disabled={isRegistering}
                     >
                       Cancelar
                     </Button>
                     <Button 
-                      onClick={() => {
+                      onClick={async () => {
                         if (!authEmail || !authPassword || !authPasswordConfirm) {
                           toast({ title: "Campos obrigatórios", description: "Preencha todos os campos.", variant: "destructive" });
                           return;
@@ -137,13 +144,44 @@ export function AuthModals() {
                           toast({ title: "Senha muito curta", description: "A senha deve ter no mínimo 8 caracteres.", variant: "destructive" });
                           return;
                         }
-                        // TODO: Enviar email de verificação
-                        setRegisterStep("verify");
-                        toast({ title: "Código enviado!", description: `Enviamos um código para ${authEmail}` });
+
+                        setIsRegistering(true);
+                        try {
+                          const response = await registerUser({
+                            email: authEmail,
+                            password: authPassword,
+                            name: authEmail.split('@')[0], // Nome temporário baseado no email
+                            userType: "donor"
+                          });
+
+                          if (response.success && response.data) {
+                            login(response.data.user, response.data.accessToken);
+                            closeRegisterModal();
+                            setAuthEmail("");
+                            setAuthPassword("");
+                            setAuthPasswordConfirm("");
+                            toast({ title: "Conta criada!", description: `Bem-vindo, ${response.data.user.name}!` });
+                          } else {
+                            throw new Error(response.message || "Erro ao criar conta");
+                          }
+                        } catch (error: any) {
+                          toast({ 
+                            title: "Erro ao criar conta", 
+                            description: error.message || "Tente novamente mais tarde.", 
+                            variant: "destructive" 
+                          });
+                        } finally {
+                          setIsRegistering(false);
+                        }
                       }} 
+                      disabled={isRegistering}
                       className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
                     >
-                      Criar Conta
+                      {isRegistering ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</>
+                      ) : (
+                        "Criar Conta"
+                      )}
                     </Button>
                   </DialogFooter>
                 </>
@@ -293,18 +331,48 @@ export function AuthModals() {
                   variant="outline" 
                   onClick={closeLoginModal} 
                   className="w-full sm:w-auto h-12 text-base"
+                  disabled={isLoggingIn}
                 >
                   Cancelar
                 </Button>
                 <Button 
-                  onClick={() => {
-                    // TODO: Implementar login
-                    closeLoginModal();
-                    toast({ title: "Login realizado!", description: "Bem-vindo de volta!" });
+                  onClick={async () => {
+                    if (!authEmail || !authPassword) {
+                      toast({ title: "Campos obrigatórios", description: "Preencha email e senha.", variant: "destructive" });
+                      return;
+                    }
+
+                    setIsLoggingIn(true);
+                    try {
+                      const response = await loginUser({ email: authEmail, password: authPassword });
+                      
+                      if (response.success && response.data) {
+                        login(response.data.user, response.data.accessToken);
+                        closeLoginModal();
+                        setAuthEmail("");
+                        setAuthPassword("");
+                        toast({ title: "Login realizado!", description: `Bem-vindo de volta, ${response.data.user.name}!` });
+                      } else {
+                        throw new Error(response.message || "Erro ao fazer login");
+                      }
+                    } catch (error: any) {
+                      toast({ 
+                        title: "Erro no login", 
+                        description: error.message || "Verifique suas credenciais e tente novamente.", 
+                        variant: "destructive" 
+                      });
+                    } finally {
+                      setIsLoggingIn(false);
+                    }
                   }} 
+                  disabled={isLoggingIn}
                   className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
                 >
-                  Entrar
+                  {isLoggingIn ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Entrando...</>
+                  ) : (
+                    "Entrar"
+                  )}
                 </Button>
               </DialogFooter>
             </div>
