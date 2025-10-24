@@ -8,8 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import { PrestacaoConta, PrestacaoContasApi, ColunaConfig, LinhaData } from "@/api/prestacaoContas";
-import { Plus, Trash2, Edit, Save, X, ArrowUp, ArrowDown, Columns } from "lucide-react";
+import { Plus, Trash2, Edit, Save, X, GripVertical, Columns } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export default function AdminPrestacaoContas() {
   const { toast } = useToast();
@@ -22,6 +40,9 @@ export default function AdminPrestacaoContas() {
   const [titulo, setTitulo] = useState("");
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState<number | undefined>(undefined);
+  const [usarPeriodo, setUsarPeriodo] = useState(false);
+  const [mesInicial, setMesInicial] = useState<number | undefined>(undefined);
+  const [mesFinal, setMesFinal] = useState<number | undefined>(undefined);
   const [mostrarTotal, setMostrarTotal] = useState(true);
   const [colunas, setColunas] = useState<ColunaConfig[]>([]);
   const [linhas, setLinhas] = useState<LinhaData[]>([]);
@@ -65,6 +86,18 @@ export default function AdminPrestacaoContas() {
     setTitulo(planilha.titulo);
     setAno(planilha.ano);
     setMes(planilha.mes);
+    
+    // Carregar período se existir
+    if (planilha.mesInicial && planilha.mesFinal) {
+      setUsarPeriodo(true);
+      setMesInicial(planilha.mesInicial);
+      setMesFinal(planilha.mesFinal);
+    } else {
+      setUsarPeriodo(false);
+      setMesInicial(undefined);
+      setMesFinal(undefined);
+    }
+    
     setMostrarTotal(planilha.mostrarTotal);
     setColunas(planilha.colunas || []);
     setLinhas(planilha.linhas || []);
@@ -74,6 +107,9 @@ export default function AdminPrestacaoContas() {
     setTitulo("Prestação de Contas " + new Date().getFullYear());
     setAno(new Date().getFullYear());
     setMes(undefined);
+    setUsarPeriodo(false);
+    setMesInicial(undefined);
+    setMesFinal(undefined);
     setMostrarTotal(true);
     
     // Template baseado na imagem fornecida
@@ -116,16 +152,44 @@ export default function AdminPrestacaoContas() {
       return;
     }
 
+    // Validar período se estiver usando
+    if (usarPeriodo) {
+      if (!mesInicial || !mesFinal) {
+        toast({
+          title: "Erro",
+          description: "Informe o mês inicial e final do período",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (mesInicial > mesFinal) {
+        toast({
+          title: "Erro",
+          description: "O mês inicial não pode ser maior que o mês final",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
-      const payload = {
+      const payload: any = {
         titulo,
         ano,
-        mes: mes === 0 ? undefined : mes,
         mostrarTotal,
         colunas,
         linhas,
         colunasTotal: colunas.filter(c => c.somavel).map(c => c.id),
       };
+
+      // Se estiver usando período, enviar mesInicial e mesFinal
+      if (usarPeriodo && mesInicial && mesFinal) {
+        payload.mesInicial = mesInicial;
+        payload.mesFinal = mesFinal;
+      } else {
+        // Caso contrário, enviar apenas mes (retrocompatibilidade)
+        payload.mes = mes === 0 ? undefined : mes;
+      }
 
       console.log("[salvarPlanilha] Payload:", JSON.stringify(payload, null, 2));
 
@@ -225,13 +289,157 @@ export default function AdminPrestacaoContas() {
     setLinhas(novasLinhas);
   };
 
-  const moverColuna = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= colunas.length) return;
-    
-    const newColunas = [...colunas];
-    [newColunas[index], newColunas[newIndex]] = [newColunas[newIndex], newColunas[index]];
-    setColunas(newColunas);
+  // Drag and Drop handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEndColunas = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = colunas.findIndex((col) => col.id === active.id);
+      const newIndex = colunas.findIndex((col) => col.id === over.id);
+
+      setColunas(arrayMove(colunas, oldIndex, newIndex));
+    }
+  };
+
+  const handleDragEndLinhas = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = parseInt(active.id.toString());
+      const newIndex = parseInt(over.id.toString());
+
+      setLinhas(arrayMove(linhas, oldIndex, newIndex));
+    }
+  };
+
+  // Componente para coluna arrastável
+  const SortableColumnHeader = ({ col }: { col: ColunaConfig }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: col.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      minWidth: col.largura,
+    };
+
+    return (
+      <th
+        ref={setNodeRef}
+        style={style}
+        className="p-2 border-r border-white/20 text-white font-bold text-sm relative"
+      >
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              className="cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <span>{col.nome}</span>
+          </div>
+          <span className="text-xs opacity-75">({col.tipo})</span>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+              onClick={() => {
+                setColunaEdit(col);
+                setColNome(col.nome);
+                setColTipo(col.tipo);
+                setColSomavel(col.somavel || false);
+                setColLargura(col.largura || 150);
+                setDialogColuna(true);
+              }}
+            >
+              <Edit className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
+              onClick={() => removerColuna(col.id)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </th>
+    );
+  };
+
+  // Componente para linha arrastável
+  const SortableRow = ({ linha, linhaIdx }: { linha: LinhaData; linhaIdx: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: linhaIdx });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <tr ref={setNodeRef} style={style} className="border-b hover:bg-gray-50">
+        <td className="p-1 border-r">
+          <div className="flex items-center gap-1">
+            <button
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => removerLinha(linhaIdx)}
+              className="text-red-600 hover:bg-red-50 h-6 w-6 p-0"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </td>
+        {colunas.map((col) => (
+          <td key={col.id} className="p-1 border-r">
+            <Input
+              type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
+              value={linha[col.id] || ""}
+              onChange={(e) => atualizarCelula(linhaIdx, col.id, e.target.value)}
+              className="border-0 focus-visible:ring-1"
+              step={col.tipo === "number" ? "0.01" : undefined}
+            />
+          </td>
+        ))}
+      </tr>
+    );
   };
 
   if (loading) {
@@ -289,7 +497,7 @@ export default function AdminPrestacaoContas() {
         
         {editMode && (
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Título</Label>
                 <Input
@@ -306,22 +514,88 @@ export default function AdminPrestacaoContas() {
                   onChange={(e) => setAno(parseInt(e.target.value))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Mês (opcional)</Label>
-                <Select value={mes?.toString() || "0"} onValueChange={(v) => setMes(v === "0" ? undefined : parseInt(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todos os meses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Todos os meses</SelectItem>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                      <SelectItem key={m} value={m.toString()}>
-                        {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            </div>
+
+            {/* Seleção de Período */}
+            <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={usarPeriodo}
+                  onCheckedChange={(checked) => {
+                    setUsarPeriodo(checked);
+                    if (!checked) {
+                      setMesInicial(undefined);
+                      setMesFinal(undefined);
+                    } else {
+                      setMes(undefined);
+                    }
+                  }}
+                />
+                <Label>Planilha com período (múltiplos meses)</Label>
               </div>
+
+              {!usarPeriodo ? (
+                <div className="space-y-2">
+                  <Label>Mês (opcional)</Label>
+                  <Select 
+                    value={mes?.toString() || "0"} 
+                    onValueChange={(v) => setMes(v === "0" ? undefined : parseInt(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os meses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Todos os meses</SelectItem>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                        <SelectItem key={m} value={m.toString()}>
+                          {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Mês Inicial *</Label>
+                    <Select 
+                      value={mesInicial?.toString() || "0"} 
+                      onValueChange={(v) => setMesInicial(v === "0" ? undefined : parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Selecione...</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                          <SelectItem key={m} value={m.toString()}>
+                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mês Final *</Label>
+                    <Select 
+                      value={mesFinal?.toString() || "0"} 
+                      onValueChange={(v) => setMesFinal(v === "0" ? undefined : parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Selecione...</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                          <SelectItem key={m} value={m.toString()}>
+                            {new Date(2000, m - 1).toLocaleString('pt-BR', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-2">
@@ -363,93 +637,42 @@ export default function AdminPrestacaoContas() {
           <CardContent>
             <div className="overflow-x-auto border rounded-lg">
               <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-pink-600 to-purple-600">
-                    <th className="p-2 border-r border-white/20 text-white font-bold text-xs">Ações</th>
-                    {colunas.map((col, idx) => (
-                      <th
-                        key={col.id}
-                        className="p-2 border-r border-white/20 text-white font-bold text-sm"
-                        style={{ minWidth: col.largura }}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndColunas}
+                >
+                  <thead>
+                    <tr className="bg-gradient-to-r from-pink-600 to-purple-600">
+                      <th className="p-2 border-r border-white/20 text-white font-bold text-xs">Ações</th>
+                      <SortableContext
+                        items={colunas.map((col) => col.id)}
+                        strategy={horizontalListSortingStrategy}
                       >
-                        <div className="flex flex-col items-center gap-1">
-                          <span>{col.nome}</span>
-                          <span className="text-xs opacity-75">({col.tipo})</span>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => moverColuna(idx, "up")}
-                              disabled={idx === 0}
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => moverColuna(idx, "down")}
-                              disabled={idx === colunas.length - 1}
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => {
-                                setColunaEdit(col);
-                                setColNome(col.nome);
-                                setColTipo(col.tipo);
-                                setColSomavel(col.somavel || false);
-                                setColLargura(col.largura || 150);
-                                setDialogColuna(true);
-                              }}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
-                              onClick={() => removerColuna(col.id)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {linhas.map((linha, linhaIdx) => (
-                    <tr key={linhaIdx} className="border-b hover:bg-gray-50">
-                      <td className="p-1 border-r">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removerLinha(linhaIdx)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                      {colunas.map((col) => (
-                        <td key={col.id} className="p-1 border-r">
-                          <Input
-                            type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
-                            value={linha[col.id] || ""}
-                            onChange={(e) => atualizarCelula(linhaIdx, col.id, e.target.value)}
-                            className="border-0 focus-visible:ring-1"
-                            step={col.tipo === "number" ? "0.01" : undefined}
-                          />
-                        </td>
-                      ))}
+                        {colunas.map((col) => (
+                          <SortableColumnHeader key={col.id} col={col} />
+                        ))}
+                      </SortableContext>
                     </tr>
-                  ))}
-                </tbody>
+                  </thead>
+                </DndContext>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndLinhas}
+                >
+                  <tbody>
+                    <SortableContext
+                      items={linhas.map((_, idx) => idx)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {linhas.map((linha, linhaIdx) => (
+                        <SortableRow key={linhaIdx} linha={linha} linhaIdx={linhaIdx} />
+                      ))}
+                    </SortableContext>
+                  </tbody>
+                </DndContext>
               </table>
             </div>
           </CardContent>
@@ -457,7 +680,22 @@ export default function AdminPrestacaoContas() {
       ) : planilhaAtiva ? (
         <Card>
           <CardHeader>
-            <CardTitle>{planilhaAtiva.titulo} - Ano {planilhaAtiva.ano}</CardTitle>
+            <CardTitle>
+              {planilhaAtiva.titulo} - Ano {planilhaAtiva.ano}
+              {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  (
+                  {new Date(2000, planilhaAtiva.mesInicial - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  {' até '}
+                  {new Date(2000, planilhaAtiva.mesFinal - 1).toLocaleString('pt-BR', { month: 'long' })}
+                  )
+                </span>
+              ) : planilhaAtiva.mes ? (
+                <span className="text-sm font-normal text-gray-600 ml-2">
+                  ({new Date(2000, planilhaAtiva.mes - 1).toLocaleString('pt-BR', { month: 'long' })})
+                </span>
+              ) : null}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto border rounded-lg">
