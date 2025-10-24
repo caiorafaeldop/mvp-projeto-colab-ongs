@@ -8,8 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import { PrestacaoConta, PrestacaoContasApi, ColunaConfig, LinhaData } from "@/api/prestacaoContas";
-import { Plus, Trash2, Edit, Save, X, ArrowUp, ArrowDown, Columns } from "lucide-react";
+import { Plus, Trash2, Edit, Save, X, GripVertical, Columns } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export default function AdminPrestacaoContas() {
   const { toast } = useToast();
@@ -225,13 +243,157 @@ export default function AdminPrestacaoContas() {
     setLinhas(novasLinhas);
   };
 
-  const moverColuna = (index: number, direction: "up" | "down") => {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= colunas.length) return;
-    
-    const newColunas = [...colunas];
-    [newColunas[index], newColunas[newIndex]] = [newColunas[newIndex], newColunas[index]];
-    setColunas(newColunas);
+  // Drag and Drop handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEndColunas = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = colunas.findIndex((col) => col.id === active.id);
+      const newIndex = colunas.findIndex((col) => col.id === over.id);
+
+      setColunas(arrayMove(colunas, oldIndex, newIndex));
+    }
+  };
+
+  const handleDragEndLinhas = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = parseInt(active.id.toString());
+      const newIndex = parseInt(over.id.toString());
+
+      setLinhas(arrayMove(linhas, oldIndex, newIndex));
+    }
+  };
+
+  // Componente para coluna arrastável
+  const SortableColumnHeader = ({ col }: { col: ColunaConfig }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: col.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      minWidth: col.largura,
+    };
+
+    return (
+      <th
+        ref={setNodeRef}
+        style={style}
+        className="p-2 border-r border-white/20 text-white font-bold text-sm relative"
+      >
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              className="cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <span>{col.nome}</span>
+          </div>
+          <span className="text-xs opacity-75">({col.tipo})</span>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-white hover:bg-white/20"
+              onClick={() => {
+                setColunaEdit(col);
+                setColNome(col.nome);
+                setColTipo(col.tipo);
+                setColSomavel(col.somavel || false);
+                setColLargura(col.largura || 150);
+                setDialogColuna(true);
+              }}
+            >
+              <Edit className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
+              onClick={() => removerColuna(col.id)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </th>
+    );
+  };
+
+  // Componente para linha arrastável
+  const SortableRow = ({ linha, linhaIdx }: { linha: LinhaData; linhaIdx: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: linhaIdx });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <tr ref={setNodeRef} style={style} className="border-b hover:bg-gray-50">
+        <td className="p-1 border-r">
+          <div className="flex items-center gap-1">
+            <button
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => removerLinha(linhaIdx)}
+              className="text-red-600 hover:bg-red-50 h-6 w-6 p-0"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </td>
+        {colunas.map((col) => (
+          <td key={col.id} className="p-1 border-r">
+            <Input
+              type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
+              value={linha[col.id] || ""}
+              onChange={(e) => atualizarCelula(linhaIdx, col.id, e.target.value)}
+              className="border-0 focus-visible:ring-1"
+              step={col.tipo === "number" ? "0.01" : undefined}
+            />
+          </td>
+        ))}
+      </tr>
+    );
   };
 
   if (loading) {
@@ -363,93 +525,42 @@ export default function AdminPrestacaoContas() {
           <CardContent>
             <div className="overflow-x-auto border rounded-lg">
               <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-pink-600 to-purple-600">
-                    <th className="p-2 border-r border-white/20 text-white font-bold text-xs">Ações</th>
-                    {colunas.map((col, idx) => (
-                      <th
-                        key={col.id}
-                        className="p-2 border-r border-white/20 text-white font-bold text-sm"
-                        style={{ minWidth: col.largura }}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndColunas}
+                >
+                  <thead>
+                    <tr className="bg-gradient-to-r from-pink-600 to-purple-600">
+                      <th className="p-2 border-r border-white/20 text-white font-bold text-xs">Ações</th>
+                      <SortableContext
+                        items={colunas.map((col) => col.id)}
+                        strategy={horizontalListSortingStrategy}
                       >
-                        <div className="flex flex-col items-center gap-1">
-                          <span>{col.nome}</span>
-                          <span className="text-xs opacity-75">({col.tipo})</span>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => moverColuna(idx, "up")}
-                              disabled={idx === 0}
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => moverColuna(idx, "down")}
-                              disabled={idx === colunas.length - 1}
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                              onClick={() => {
-                                setColunaEdit(col);
-                                setColNome(col.nome);
-                                setColTipo(col.tipo);
-                                setColSomavel(col.somavel || false);
-                                setColLargura(col.largura || 150);
-                                setDialogColuna(true);
-                              }}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
-                              onClick={() => removerColuna(col.id)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {linhas.map((linha, linhaIdx) => (
-                    <tr key={linhaIdx} className="border-b hover:bg-gray-50">
-                      <td className="p-1 border-r">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removerLinha(linhaIdx)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </td>
-                      {colunas.map((col) => (
-                        <td key={col.id} className="p-1 border-r">
-                          <Input
-                            type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
-                            value={linha[col.id] || ""}
-                            onChange={(e) => atualizarCelula(linhaIdx, col.id, e.target.value)}
-                            className="border-0 focus-visible:ring-1"
-                            step={col.tipo === "number" ? "0.01" : undefined}
-                          />
-                        </td>
-                      ))}
+                        {colunas.map((col) => (
+                          <SortableColumnHeader key={col.id} col={col} />
+                        ))}
+                      </SortableContext>
                     </tr>
-                  ))}
-                </tbody>
+                  </thead>
+                </DndContext>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndLinhas}
+                >
+                  <tbody>
+                    <SortableContext
+                      items={linhas.map((_, idx) => idx)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {linhas.map((linha, linhaIdx) => (
+                        <SortableRow key={linhaIdx} linha={linha} linhaIdx={linhaIdx} />
+                      ))}
+                    </SortableContext>
+                  </tbody>
+                </DndContext>
               </table>
             </div>
           </CardContent>
