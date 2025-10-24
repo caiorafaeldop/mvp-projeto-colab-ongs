@@ -90,11 +90,92 @@ export function PrestacaoContas() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-96 w-full" />
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        {/* Header Skeleton */}
+        <section className="relative bg-gradient-to-br from-pink-600 via-purple-600 to-indigo-700 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
+            <div className="text-center space-y-6">
+              {/* Badge */}
+              <div className="flex justify-center">
+                <Skeleton className="h-8 w-48 rounded-full bg-white/20" />
+              </div>
+              
+              {/* Título */}
+              <Skeleton className="h-16 w-96 mx-auto bg-white/20" />
+              
+              {/* Subtítulo */}
+              <div className="flex justify-center gap-4">
+                <Skeleton className="h-10 w-40 rounded-lg bg-white/10" />
+                <Skeleton className="h-10 w-32 rounded-lg bg-white/10" />
+              </div>
+              
+              {/* Descrição */}
+              <Skeleton className="h-16 w-full max-w-3xl mx-auto rounded-xl bg-white/10" />
+            </div>
+          </div>
+        </section>
+
+        {/* Cards de Estatísticas Skeleton */}
+        <section className="py-12 px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white shadow-lg rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-32 mb-3" />
+                      <Skeleton className="h-9 w-24" />
+                    </div>
+                    <Skeleton className="w-12 h-12 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabela Skeleton */}
+            <div className="bg-white shadow-2xl rounded-lg overflow-hidden">
+              <div className="p-0">
+                {/* Header da Tabela */}
+                <div className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 p-4">
+                  <div className="flex gap-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-6 flex-1 bg-white/20" />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Linhas da Tabela */}
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="flex gap-4">
+                      {[1, 2, 3, 4, 5].map((j) => (
+                        <Skeleton key={j} className="h-8 flex-1" />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Linha Total */}
+                <div className="bg-gradient-to-r from-pink-100 via-purple-100 to-indigo-100 p-4 border-t-4 border-purple-600">
+                  <div className="flex gap-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-9 flex-1 bg-purple-200/50" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rodapé Skeleton */}
+            <div className="mt-8 flex justify-center">
+              <Skeleton className="h-12 w-80 rounded-full" />
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
