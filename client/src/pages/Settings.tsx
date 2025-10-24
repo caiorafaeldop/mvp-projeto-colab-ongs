@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -17,18 +18,34 @@ import {
   HelpCircle,
   FileText,
   LogOut,
-  Mail
+  Mail,
+  Save
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/ui/theme-provider";
+import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
+import api from "@/api/api";
 
 export function Settings() {
   const { user, logout, isAuthenticated } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  // const [emailNotifications, setEmailNotifications] = useState(true);
-  // const [pushNotifications, setPushNotifications] = useState(false);
+  const { toast } = useToast();
+  
+  // Estados para edição de perfil
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Estados para mudança de senha
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -37,6 +54,101 @@ export function Settings() {
 
   const handleThemeToggle = (checked: boolean) => {
     setTheme(checked ? "dark" : "light");
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!name.trim() || !email.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome e email são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const response = await api.put("/api/auth/profile", {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+      });
+
+      if (response.data.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Perfil atualizado com sucesso",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.message || "Erro ao atualizar perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter no mínimo 8 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await api.put("/api/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+
+      if (response.data.success) {
+        toast({
+          title: "Sucesso!",
+          description: "Senha alterada com sucesso",
+        });
+        setShowPasswordDialog(false);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.message || "Erro ao alterar senha",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleContactSupport = () => {
+    window.location.href = "mailto:nucleocolabufpb@gmail.com";
   };
 
   if (!isAuthenticated || !user) {
@@ -89,17 +201,31 @@ export function Settings() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome</Label>
-                <Input id="name" defaultValue={user.name} />
+                <Input 
+                  id="name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" defaultValue={user.email} />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" type="tel" defaultValue={user.phone || ""} />
+                <Input 
+                  id="phone" 
+                  type="tel" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
@@ -115,12 +241,24 @@ export function Settings() {
             <Separator />
             
             <div className="flex flex-row gap-4">
-  <Button variant="outline" className="w-full md:w-auto">
-    <Lock className="w-4 h-4 mr-2" />
-    Alterar Senha
-  </Button>
-
-</div>
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={() => setShowPasswordDialog(true)}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Alterar Senha
+              </Button>
+              
+              <Button 
+                className="w-full md:w-auto"
+                onClick={handleUpdateProfile}
+                disabled={isUpdating}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isUpdating ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -203,7 +341,12 @@ export function Settings() {
                 <p className="text-sm text-gray-600 mb-3">
                   Precisa de ajuda? Entre em contato conosco
                 </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={handleContactSupport}
+                >
                   <Mail className="w-4 h-4 mr-2" />
                   nucleocolabufpb@gmail.com
                 </Button>
@@ -248,6 +391,71 @@ export function Settings() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog para Alterar Senha */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar Senha</DialogTitle>
+            <DialogDescription>
+              Digite sua senha atual e escolha uma nova senha
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Senha Atual</Label>
+              <Input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Digite sua senha atual"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova Senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha"
+              />
+              <p className="text-xs text-gray-500">Mínimo de 8 caracteres</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme a nova senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPasswordDialog(false);
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
+              disabled={isChangingPassword}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleChangePassword}
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? "Alterando..." : "Alterar Senha"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
