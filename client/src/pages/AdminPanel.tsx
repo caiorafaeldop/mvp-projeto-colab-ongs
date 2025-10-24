@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
+import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import api from "@/api/api";
 import AdminFAQ from "./AdminFAQ";
 import AdminTestimonials from "./AdminTestimonials";
@@ -464,9 +465,35 @@ export default function AdminPanel() {
                       <Switch checked={s.visible} onCheckedChange={() => toggleSupporterVisible(s)} />
                       <span className="text-sm">{s.visible ? "Mostrar" : "Ocultar"}</span>
                     </div>
-                    <div className="space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => openEditSupporter(s)}>Editar</Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteSupporter(s)}>Excluir</Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleSupporterVisible(s)}
+                        title={s.visible ? "Ocultar" : "Mostrar"}
+                      >
+                        {s.visible ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openEditSupporter(s)}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteSupporter(s)}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -573,8 +600,15 @@ export default function AdminPanel() {
                           <TableCell>{medal} {t.topPosition ?? '-'}</TableCell>
                           <TableCell>{t.donorName}</TableCell>
                           <TableCell>R$ {t.donatedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
-                          <TableCell className="space-x-2">
-                            <Button variant="destructive" size="sm" onClick={() => deleteTopDonor(t)}>Excluir</Button>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteTopDonor(t)}
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
