@@ -16,6 +16,7 @@ export type LinhaData = {
 export type PrestacaoConta = {
   id: string;
   titulo: string;
+  descricaoPlanilha?: string; // Descrição opcional da planilha
   ano: number;
   mes?: number;          // Mês único (retrocompatibilidade)
   mesInicial?: number;   // Mês inicial do período
