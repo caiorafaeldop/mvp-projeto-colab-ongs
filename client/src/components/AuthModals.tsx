@@ -183,6 +183,7 @@ export function AuthModals() {
                             email: authEmail,
                             password: authPassword,
                             name: authEmail.split('@')[0], // Nome temporário baseado no email
+                            phone: "", // Telefone vazio
                             userType: "donor"
                           });
 

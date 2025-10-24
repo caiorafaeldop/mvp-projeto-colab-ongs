@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { FAQ, FAQApi } from "@/api/faq";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -212,211 +211,187 @@ export default function AdminFAQ() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Painel do Administrador</h1>
-        {loading && <div className="text-sm text-muted-foreground">Carregando...</div>}
-      </div>
-
-      <Tabs defaultValue="faqs" className="w-full">
-        <TabsList>
-          <TabsTrigger value="apoiadores" asChild>
-            <Link to="/admin?tab=apoiadores">Apoiadores</Link>
-          </TabsTrigger>
-          <TabsTrigger value="doadores" asChild>
-            <Link to="/admin?tab=doadores">Doadores</Link>
-          </TabsTrigger>
-          <TabsTrigger value="faqs">FAQs</TabsTrigger>
-          <TabsTrigger value="depoimentos" asChild>
-            <Link to="/admin?tab=depoimentos">Depoimentos</Link>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="faqs" className="mt-4 space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">📋 Gerenciar FAQs</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={loadFAQs} disabled={loading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                Atualizar
-              </Button>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openCreateDialog}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova FAQ
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingFAQ ? "Editar FAQ" : "Nova FAQ"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-2xl">📋 Gerenciar FAQs</CardTitle>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={loadFAQs} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreateDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova FAQ
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingFAQ ? "Editar FAQ" : "Nova FAQ"}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="pergunta">Pergunta *</Label>
+                    <Input
+                      id="pergunta"
+                      value={pergunta}
+                      onChange={(e) => setPergunta(e.target.value)}
+                      placeholder="Ex: Como faço para doar?"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="resposta">Resposta *</Label>
+                    <Textarea
+                      id="resposta"
+                      value={resposta}
+                      onChange={(e) => setResposta(e.target.value)}
+                      placeholder="Digite a resposta completa..."
+                      rows={6}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="pergunta">Pergunta *</Label>
+                      <Label htmlFor="ordem">Ordem</Label>
                       <Input
-                        id="pergunta"
-                        value={pergunta}
-                        onChange={(e) => setPergunta(e.target.value)}
-                        placeholder="Ex: Como faço para doar?"
+                        id="ordem"
+                        type="number"
+                        value={ordem}
+                        onChange={(e) => setOrdem(Number(e.target.value))}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="resposta">Resposta *</Label>
-                      <Textarea
-                        id="resposta"
-                        value={resposta}
-                        onChange={(e) => setResposta(e.target.value)}
-                        placeholder="Digite a resposta completa..."
-                        rows={6}
+                    <div className="flex items-center space-x-2 pt-8">
+                      <input
+                        type="checkbox"
+                        id="ativo"
+                        checked={ativo}
+                        onChange={(e) => setAtivo(e.target.checked)}
+                        className="h-4 w-4"
                       />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="ordem">Ordem</Label>
-                        <Input
-                          id="ordem"
-                          type="number"
-                          value={ordem}
-                          onChange={(e) => setOrdem(Number(e.target.value))}
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 pt-8">
-                        <input
-                          type="checkbox"
-                          id="ativo"
-                          checked={ativo}
-                          onChange={(e) => setAtivo(e.target.checked)}
-                          className="h-4 w-4"
-                        />
-                        <Label htmlFor="ativo">Ativo</Label>
-                      </div>
+                      <Label htmlFor="ativo">Ativo</Label>
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={saveFAQ}>Salvar</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {orderDirty && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
-              <span className="text-sm text-yellow-800">
-                Você alterou a ordem. Clique em "Salvar Ordem" para persistir as mudanças.
-              </span>
-              <Button size="sm" onClick={persistOrder} disabled={savingOrder}>
-                <Save className="h-4 w-4 mr-2" />
-                {savingOrder ? "Salvando..." : "Salvar Ordem"}
-              </Button>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
-                  <Skeleton className="h-4 w-4" />
-                  <Skeleton className="h-4 flex-1" />
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-8 w-32" />
                 </div>
-              ))}
-            </div>
-          ) : faqs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhuma FAQ cadastrada. Clique em "Nova FAQ" para começar.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Pergunta</TableHead>
-                  <TableHead>Resposta</TableHead>
-                  <TableHead className="w-20">Ordem</TableHead>
-                  <TableHead className="w-24">Status</TableHead>
-                  <TableHead className="w-32">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {faqs.map((faq, idx) => (
-                  <TableRow
-                    key={faq.id}
-                    onDragOver={onDragOver}
-                    onDrop={() => onDrop(idx)}
-                  >
-                    <TableCell>
-                      <div
-                        draggable
-                        onDragStart={() => onDragStart(idx)}
-                        className="cursor-move"
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={saveFAQ}>Salvar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {orderDirty && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+            <span className="text-sm text-yellow-800">
+              Você alterou a ordem. Clique em "Salvar Ordem" para persistir as mudanças.
+            </span>
+            <Button size="sm" onClick={persistOrder} disabled={savingOrder}>
+              <Save className="h-4 w-4 mr-2" />
+              {savingOrder ? "Salvando..." : "Salvar Ordem"}
+            </Button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+            ))}
+          </div>
+        ) : faqs.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nenhuma FAQ cadastrada. Clique em "Nova FAQ" para começar.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>Pergunta</TableHead>
+                <TableHead>Resposta</TableHead>
+                <TableHead className="w-20">Ordem</TableHead>
+                <TableHead className="w-24">Status</TableHead>
+                <TableHead className="w-32">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {faqs.map((faq, idx) => (
+                <TableRow
+                  key={faq.id}
+                  onDragOver={onDragOver}
+                  onDrop={() => onDrop(idx)}
+                >
+                  <TableCell>
+                    <div
+                      draggable
+                      onDragStart={() => onDragStart(idx)}
+                      className="cursor-move"
+                    >
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium max-w-xs truncate">
+                    {faq.pergunta}
+                  </TableCell>
+                  <TableCell className="max-w-md truncate text-sm text-muted-foreground">
+                    {faq.resposta}
+                  </TableCell>
+                  <TableCell>{faq.ordem}</TableCell>
+                  <TableCell>
+                    <Badge variant={faq.ativo ? "default" : "secondary"}>
+                      {faq.ativo ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleActive(faq)}
+                        title={faq.ativo ? "Desativar" : "Ativar"}
                       >
-                        <GripVertical className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium max-w-xs truncate">
-                      {faq.pergunta}
-                    </TableCell>
-                    <TableCell className="max-w-md truncate text-sm text-muted-foreground">
-                      {faq.resposta}
-                    </TableCell>
-                    <TableCell>{faq.ordem}</TableCell>
-                    <TableCell>
-                      <Badge variant={faq.ativo ? "default" : "secondary"}>
-                        {faq.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toggleActive(faq)}
-                          title={faq.ativo ? "Desativar" : "Ativar"}
-                        >
-                          {faq.ativo ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openEditDialog(faq)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteFAQ(faq)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                        {faq.ativo ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openEditDialog(faq)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteFAQ(faq)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 }
