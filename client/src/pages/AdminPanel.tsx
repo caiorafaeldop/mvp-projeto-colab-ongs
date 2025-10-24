@@ -99,7 +99,7 @@ export default function AdminPanel() {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
   const handleImageUpload = async (file: File) => {

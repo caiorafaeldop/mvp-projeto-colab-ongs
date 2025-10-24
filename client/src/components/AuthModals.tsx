@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/useToast";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { loginUser, registerUser } from "@/api/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export function AuthModals() {
   const { showLoginModal, showRegisterModal, openLoginModal, openRegisterModal, closeLoginModal, closeRegisterModal } = useAuthModal();
@@ -22,6 +22,8 @@ export function AuthModals() {
   const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   return (
     <>
@@ -85,28 +87,58 @@ export function AuthModals() {
                     </div>
                     <div>
                       <Label htmlFor="reg-password" className="text-sm font-semibold">Senha</Label>
-                      <Input 
-                        id="reg-password" 
-                        type="password" 
-                        value={authPassword} 
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="mt-1.5 h-10"
-                        required
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="reg-password" 
+                          type={showPassword ? "text" : "password"}
+                          value={authPassword} 
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1.5 h-10 pr-10"
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-500" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-500" />
+                          )}
+                        </Button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
                     </div>
                     <div>
                       <Label htmlFor="reg-password-confirm" className="text-sm font-semibold">Confirmar Senha</Label>
-                      <Input 
-                        id="reg-password-confirm" 
-                        type="password" 
-                        value={authPasswordConfirm} 
-                        onChange={(e) => setAuthPasswordConfirm(e.target.value)}
-                        placeholder="••••••••"
-                        className="mt-1.5 h-10"
-                        required
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="reg-password-confirm" 
+                          type={showPasswordConfirm ? "text" : "password"}
+                          value={authPasswordConfirm} 
+                          onChange={(e) => setAuthPasswordConfirm(e.target.value)}
+                          placeholder="••••••••"
+                          className="mt-1.5 h-10 pr-10"
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                          onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                        >
+                          {showPasswordConfirm ? (
+                            <EyeOff className="h-4 w-4 text-gray-500" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-500" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                     <div className="text-center pt-2">
                       <button 
@@ -301,14 +333,28 @@ export function AuthModals() {
                 </div>
                 <div>
                   <Label htmlFor="login-password" className="text-sm font-semibold">Senha</Label>
-                  <Input 
-                    id="login-password" 
-                    type="password" 
-                    value={authPassword} 
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="mt-1.5 h-10"
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="login-password" 
+                      type={showPassword ? "text" : "password"}
+                      value={authPassword} 
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="mt-1.5 h-10 pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </Button>
+                  </div>
                   <button className="text-xs text-purple-600 hover:text-purple-700 mt-1 font-medium">
                     Esqueci minha senha
                   </button>

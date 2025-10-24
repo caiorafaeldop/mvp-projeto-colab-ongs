@@ -152,7 +152,6 @@ export function Login() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Sua senha"
                         value={loginData.password}
                         onChange={(e) =>
                           setLoginData({
@@ -272,7 +271,6 @@ export function Login() {
                       <Input
                         id="register-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Sua senha"
                         value={registerData.password}
                         onChange={(e) =>
                           setRegisterData({
@@ -306,7 +304,6 @@ export function Login() {
                       <Input
                         id="confirm-password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Confirme sua senha"
                         value={registerData.confirmPassword}
                         onChange={(e) =>
                           setRegisterData({

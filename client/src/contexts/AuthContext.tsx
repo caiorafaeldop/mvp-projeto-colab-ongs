@@ -119,6 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setApiAccessToken(null as any);
     // fire-and-forget server logout
     logoutUser().catch(() => {});
+    
+    // Redirecionar para home após logout
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
   }, []);
 
   return (

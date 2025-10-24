@@ -601,34 +601,52 @@ export default function AdminPrestacaoContas() {
                         : "border-gray-200 hover:border-pink-300 hover:bg-gray-50"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate">{p.titulo}</h3>
-                        <p className="text-xs text-gray-600 mt-1">
-                          Ano {p.ano}
-                          {p.mesInicial && p.mesFinal ? (
-                            <> - {getNomeMes(p.mesInicial)}/{getNomeMes(p.mesFinal)}</>
-                          ) : p.mes ? (
-                            <> - {getNomeMes(p.mes)}</>
-                          ) : null}
-                        </p>
-                        {p.descricaoPlanilha && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {p.descricaoPlanilha}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{p.titulo}</h3>
+                          <p className="text-xs text-gray-600 mt-1">
+                            Ano {p.ano}
+                            {p.mesInicial && p.mesFinal ? (
+                              <> - {getNomeMes(p.mesInicial)}/{getNomeMes(p.mesFinal)}</>
+                            ) : p.mes ? (
+                              <> - {getNomeMes(p.mes)}</>
+                            ) : null}
                           </p>
-                        )}
+                          {p.descricaoPlanilha && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                              {p.descricaoPlanilha}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmarExclusao(p);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 h-8 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPlanilhaAtiva(p);
+                            carregarPlanilha(p);
+                            setEditMode(true);
+                          }}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmarExclusao(p);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </button>
                 ))}
