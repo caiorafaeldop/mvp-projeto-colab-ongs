@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,142 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
+// Componente otimizado para cabeçalho de coluna arrastável
+const SortableColumnHeader = memo(({ 
+  col, 
+  onEdit, 
+  onRemove 
+}: { 
+  col: ColunaConfig; 
+  onEdit: (col: ColunaConfig) => void;
+  onRemove: (id: string) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: col.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    minWidth: col.largura,
+  };
+
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className="p-2 border-r border-white/20 text-white font-bold text-sm relative"
+    >
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center gap-2">
+          <button
+            className="cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+          <span>{col.nome}</span>
+        </div>
+        <span className="text-xs opacity-75">({col.tipo})</span>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-white hover:bg-white/20"
+            onClick={() => onEdit(col)}
+          >
+            <Edit className="w-3 h-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
+            onClick={() => onRemove(col.id)}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    </th>
+  );
+});
+
+SortableColumnHeader.displayName = "SortableColumnHeader";
+
+// Componente otimizado para linha arrastável
+const SortableRow = memo(({ 
+  linha, 
+  linhaIdx, 
+  colunas, 
+  onUpdateCell, 
+  onRemove 
+}: { 
+  linha: LinhaData; 
+  linhaIdx: number;
+  colunas: ColunaConfig[];
+  onUpdateCell: (linhaIdx: number, colId: string, value: string) => void;
+  onRemove: (linhaIdx: number) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: linhaIdx });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b hover:bg-gray-50">
+      <td className="p-1 border-r">
+        <div className="flex items-center gap-1">
+          <button
+            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onRemove(linhaIdx)}
+            className="text-red-600 hover:bg-red-50 h-6 w-6 p-0"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </td>
+      {colunas.map((col) => (
+        <td key={col.id} className="p-1 border-r">
+          <Input
+            type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
+            value={linha[col.id] || ""}
+            onChange={(e) => onUpdateCell(linhaIdx, col.id, e.target.value)}
+            className="border-0 focus-visible:ring-1"
+            step={col.tipo === "number" ? "0.01" : undefined}
+          />
+        </td>
+      ))}
+    </tr>
+  );
+});
+
+SortableRow.displayName = "SortableRow";
 
 export default function AdminPrestacaoContas() {
   const { toast } = useToast();
@@ -110,7 +246,12 @@ export default function AdminPrestacaoContas() {
     
     setMostrarTotal(planilha.mostrarTotal);
     setColunas(planilha.colunas || []);
-    setLinhas(planilha.linhas || []);
+    // Garantir que cada linha tenha um ID único
+    const linhasComId = (planilha.linhas || []).map((linha, idx) => ({
+      ...linha,
+      _rowId: linha._rowId || `row_${Date.now()}_${idx}`
+    }));
+    setLinhas(linhasComId);
   };
 
   const criarNovaPlanilha = () => {
@@ -138,7 +279,7 @@ export default function AdminPrestacaoContas() {
     ];
     
     setColunas(templateColunas);
-    setLinhas([{}]); // Uma linha vazia
+    setLinhas([{ _rowId: `row_${Date.now()}` }]); // Uma linha vazia com ID
     setPlanilhaAtiva(null);
     setEditMode(true);
     setDialogNovaPlanilha(false);
@@ -306,32 +447,8 @@ export default function AdminPrestacaoContas() {
     setColunaEdit(null);
   };
 
-  const removerColuna = (id: string) => {
-    if (!confirm("Remover esta coluna?")) return;
-    setColunas(colunas.filter(c => c.id !== id));
-    // Remover dados da coluna de todas as linhas
-    setLinhas(linhas.map(linha => {
-      const { [id]: _, ...resto } = linha;
-      return resto;
-    }));
-  };
-
   const adicionarLinha = () => {
-    setLinhas([...linhas, {}]);
-  };
-
-  const removerLinha = (index: number) => {
-    if (!confirm("Remover esta linha?")) return;
-    setLinhas(linhas.filter((_, i) => i !== index));
-  };
-
-  const atualizarCelula = (linhaIdx: number, colunaId: string, valor: any) => {
-    const novasLinhas = [...linhas];
-    novasLinhas[linhaIdx] = {
-      ...novasLinhas[linhaIdx],
-      [colunaId]: valor,
-    };
-    setLinhas(novasLinhas);
+    setLinhas([...linhas, { _rowId: `row_${Date.now()}` }]);
   };
 
   // Drag and Drop handlers
@@ -368,124 +485,37 @@ export default function AdminPrestacaoContas() {
     }
   };
 
-  // Componente para coluna arrastável
-  const SortableColumnHeader = ({ col }: { col: ColunaConfig }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: col.id });
+  // Callbacks otimizados para evitar re-renderizações
+  const handleEditColumn = useCallback((col: ColunaConfig) => {
+    setColunaEdit(col);
+    setColNome(col.nome);
+    setColTipo(col.tipo);
+    setColSomavel(col.somavel || false);
+    setColLargura(col.largura || 150);
+    setDialogColuna(true);
+  }, []);
 
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-      minWidth: col.largura,
-    };
+  const handleRemoveColumn = useCallback((id: string) => {
+    if (!confirm("Remover esta coluna?")) return;
+    setColunas(prev => prev.filter(c => c.id !== id));
+    // Remover dados da coluna de todas as linhas
+    setLinhas(prev => prev.map(linha => {
+      const { [id]: _, ...resto } = linha;
+      return resto;
+    }));
+  }, []);
 
-    return (
-      <th
-        ref={setNodeRef}
-        style={style}
-        className="p-2 border-r border-white/20 text-white font-bold text-sm relative"
-      >
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center gap-2">
-            <button
-              className="cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="w-4 h-4" />
-            </button>
-            <span>{col.nome}</span>
-          </div>
-          <span className="text-xs opacity-75">({col.tipo})</span>
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-white/20"
-              onClick={() => {
-                setColunaEdit(col);
-                setColNome(col.nome);
-                setColTipo(col.tipo);
-                setColSomavel(col.somavel || false);
-                setColLargura(col.largura || 150);
-                setDialogColuna(true);
-              }}
-            >
-              <Edit className="w-3 h-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 p-0 text-white hover:bg-red-500/50"
-              onClick={() => removerColuna(col.id)}
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-      </th>
-    );
-  };
+  const handleUpdateCell = useCallback((linhaIdx: number, colId: string, value: string) => {
+    setLinhas(prev => {
+      const novasLinhas = [...prev];
+      novasLinhas[linhaIdx] = { ...novasLinhas[linhaIdx], [colId]: value };
+      return novasLinhas;
+    });
+  }, []);
 
-  // Componente para linha arrastável
-  const SortableRow = ({ linha, linhaIdx }: { linha: LinhaData; linhaIdx: number }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: linhaIdx });
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-      <tr ref={setNodeRef} style={style} className="border-b hover:bg-gray-50">
-        <td className="p-1 border-r">
-          <div className="flex items-center gap-1">
-            <button
-              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="w-4 h-4" />
-            </button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => removerLinha(linhaIdx)}
-              className="text-red-600 hover:bg-red-50 h-6 w-6 p-0"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </td>
-        {colunas.map((col) => (
-          <td key={col.id} className="p-1 border-r">
-            <Input
-              type={col.tipo === "number" ? "number" : col.tipo === "date" ? "date" : "text"}
-              value={linha[col.id] || ""}
-              onChange={(e) => atualizarCelula(linhaIdx, col.id, e.target.value)}
-              className="border-0 focus-visible:ring-1"
-              step={col.tipo === "number" ? "0.01" : undefined}
-            />
-          </td>
-        ))}
-      </tr>
-    );
-  };
+  const handleRemoveRow = useCallback((linhaIdx: number) => {
+    setLinhas(prev => prev.filter((_, i) => i !== linhaIdx));
+  }, []);
 
   if (loading) {
     return (
@@ -758,7 +788,12 @@ export default function AdminPrestacaoContas() {
                         strategy={horizontalListSortingStrategy}
                       >
                         {colunas.map((col) => (
-                          <SortableColumnHeader key={col.id} col={col} />
+                          <SortableColumnHeader 
+                            key={col.id} 
+                            col={col} 
+                            onEdit={handleEditColumn}
+                            onRemove={handleRemoveColumn}
+                          />
                         ))}
                       </SortableContext>
                     </tr>
@@ -776,7 +811,14 @@ export default function AdminPrestacaoContas() {
                       strategy={verticalListSortingStrategy}
                     >
                       {linhas.map((linha, linhaIdx) => (
-                        <SortableRow key={linhaIdx} linha={linha} linhaIdx={linhaIdx} />
+                        <SortableRow 
+                          key={linha._rowId || linhaIdx} 
+                          linha={linha} 
+                          linhaIdx={linhaIdx}
+                          colunas={colunas}
+                          onUpdateCell={handleUpdateCell}
+                          onRemove={handleRemoveRow}
+                        />
                       ))}
                     </SortableContext>
                   </tbody>

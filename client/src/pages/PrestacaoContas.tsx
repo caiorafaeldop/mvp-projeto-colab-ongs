@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Calendar, DollarSign, Eye } from "lucide-react";
 import { PrestacaoConta, PrestacaoContasApi, ColunaConfig, LinhaData } from "@/api/prestacaoContas";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -119,65 +119,189 @@ export function PrestacaoContas() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-      {/* Header Section */}
-      <section className="relative pt-8 pb-12 md:pb-16 px-3 sm:px-4 md:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          <div className="absolute top-20 left-10 w-48 sm:w-72 h-48 sm:h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-          <div className="absolute top-40 right-10 w-48 sm:w-72 h-48 sm:h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Header Section com Design Moderno */}
+      <section className="relative bg-gradient-to-br from-pink-600 via-purple-600 to-indigo-700 text-white overflow-hidden">
+        {/* Decoração de fundo */}
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
+          {/* Botão Admin */}
+          {isAdmin && (
+            <div className="flex justify-end mb-6">
+              <Button asChild size="sm" variant="secondary" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+                <Link to="/admin?tab=prestacao">
+                  <FileText className="w-4 h-4" /> Gerenciar Planilhas
+                </Link>
+              </Button>
+            </div>
+          )}
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center space-y-4 md:space-y-6">
-            {isAdmin && (
-              <div className="flex justify-end mb-4">
-                <Button asChild size="sm" variant="outline" className="gap-2">
-                  <Link to="/admin?tab=prestacao">
-                    <FileText className="w-4 h-4" /> Gerenciar Planilha
-                  </Link>
-                </Button>
+          {/* Seletor de Planilhas Moderno */}
+          {planilhas.length > 1 && (
+            <div className="mb-8">
+              <div className="flex flex-wrap gap-3 justify-center">
+                {planilhas.map((planilha) => {
+                  const isActive = planilhaAtiva?.id === planilha.id;
+                  return (
+                    <button
+                      key={planilha.id}
+                      onClick={() => setPlanilhaAtiva(planilha)}
+                      className={`group relative px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                        isActive
+                          ? "bg-white text-purple-700 shadow-xl scale-105"
+                          : "bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 hover:scale-105"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${isActive ? "bg-purple-600 animate-pulse" : "bg-white/50"}`}></div>
+                        <div className="text-left">
+                          <div className="font-semibold text-sm">{planilha.titulo}</div>
+                          <div className={`text-xs ${isActive ? "text-purple-600/70" : "text-white/70"}`}>
+                            {planilha.ano}
+                            {planilha.mesInicial && planilha.mesFinal
+                              ? ` • ${getNomeMes(planilha.mesInicial).slice(0, 3)}/${getNomeMes(planilha.mesFinal).slice(0, 3)}`
+                              : planilha.mes
+                              ? ` • ${getNomeMes(planilha.mes).slice(0, 3)}`
+                              : ""}
+                          </div>
+                        </div>
+                      </div>
+                      {isActive && (
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-white"></div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-            
-            <div className="inline-flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-full bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 text-xs sm:text-sm font-semibold shadow-sm ring-1 ring-pink-200/50">
-              <FileText className="w-3 h-3 md:w-4 md:h-4" />
-              Transparência e Responsabilidade
+            </div>
+          )}
+
+          {/* Título e Informações */}
+          <div className="text-center space-y-6">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-semibold shadow-lg">
+              <FileText className="w-4 h-4" />
+              Transparência Financeira
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold !leading-tight">
-              <span className="block bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                {planilhaAtiva.titulo}
-              </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+              {planilhaAtiva.titulo}
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
-              Ano {planilhaAtiva.ano}
-              {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
-                <> - {getNomeMes(planilhaAtiva.mesInicial)} / {getNomeMes(planilhaAtiva.mesFinal)}</>
-              ) : planilhaAtiva.mes ? (
-                <> - {getNomeMes(planilhaAtiva.mes)}</>
-              ) : null}
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-white/90">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
+                <Calendar className="w-5 h-5" />
+                <span className="font-medium">
+                  Ano {planilhaAtiva.ano}
+                  {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
+                    <> • {getNomeMes(planilhaAtiva.mesInicial)} - {getNomeMes(planilhaAtiva.mesFinal)}</>
+                  ) : planilhaAtiva.mes ? (
+                    <> • {getNomeMes(planilhaAtiva.mes)}</>
+                  ) : null}
+                </span>
+              </div>
+              
+              {planilhaAtiva.linhas && planilhaAtiva.linhas.length > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
+                  <Eye className="w-5 h-5" />
+                  <span className="font-medium">{planilhaAtiva.linhas.length} registros</span>
+                </div>
+              )}
+            </div>
+
+            {planilhaAtiva.descricaoPlanilha && (
+              <p className="text-lg text-white/90 leading-relaxed max-w-3xl mx-auto px-4 bg-white/10 backdrop-blur-sm rounded-xl py-4">
+                {planilhaAtiva.descricaoPlanilha}
+              </p>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Table Section */}
-      <section className="py-8 md:py-12 px-3 sm:px-4 md:px-6 lg:px-8">
+      {/* Table Section - Design Moderno */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
         <div className="max-w-7xl mx-auto">
-          <Card className="bg-white/90 backdrop-blur-sm shadow-2xl border-0 ring-1 ring-black/5">
-            <CardHeader className="bg-gradient-to-r from-pink-600 to-purple-600 text-white">
-              <CardTitle className="text-2xl md:text-3xl">{planilhaAtiva.titulo}</CardTitle>
-            </CardHeader>
+          {/* Card com estatísticas rápidas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Total de Registros */}
+            <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total de Registros</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                      {planilhaAtiva.linhas?.length || 0}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Geral (se houver colunas somáveis) */}
+            {planilhaAtiva.colunas.some(col => col.somavel) && (
+              <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Valor Total</p>
+                      <p className="text-3xl font-bold text-green-600 mt-2">
+                        {(() => {
+                          const colunaSomavel = planilhaAtiva.colunas.find(c => c.somavel);
+                          return colunaSomavel ? calcularTotal(colunaSomavel, planilhaAtiva.linhas) : "R$ 0,00";
+                        })()}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                      <DollarSign className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Período */}
+            <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Período</p>
+                    <p className="text-lg font-bold text-gray-900 mt-2">
+                      {planilhaAtiva.mesInicial && planilhaAtiva.mesFinal ? (
+                        <>{getNomeMes(planilhaAtiva.mesInicial)} - {getNomeMes(planilhaAtiva.mesFinal)}</>
+                      ) : planilhaAtiva.mes ? (
+                        getNomeMes(planilhaAtiva.mes)
+                      ) : (
+                        "Ano Completo"
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500">{planilhaAtiva.ano}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tabela principal com design moderno */}
+          <Card className="bg-white shadow-2xl border-0 overflow-hidden">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-pink-600 to-purple-600">
-                      {planilhaAtiva.colunas.map((col) => (
+                    <TableRow className="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 border-none">
+                      {planilhaAtiva.colunas.map((col, idx) => (
                         <TableHead
                           key={col.id}
-                          className="font-bold text-white text-center border-r border-white/20"
+                          className={`font-bold text-white text-sm uppercase tracking-wider py-4 ${
+                            col.tipo === "number" ? "text-right" : "text-left"
+                          } ${idx !== planilhaAtiva.colunas.length - 1 ? "border-r border-white/10" : ""}`}
                           style={{ minWidth: col.largura || 150 }}
                         >
                           {col.nome}
@@ -189,14 +313,18 @@ export function PrestacaoContas() {
                     {planilhaAtiva.linhas.map((linha, idx) => (
                       <TableRow
                         key={idx}
-                        className="hover:bg-gray-50/50 transition-colors border-b"
+                        className={`transition-all hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 ${
+                          idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                        }`}
                       >
-                        {planilhaAtiva.colunas.map((col) => (
+                        {planilhaAtiva.colunas.map((col, colIdx) => (
                           <TableCell
                             key={col.id}
-                            className={`border-r text-sm ${
-                              col.tipo === "number" ? "text-right font-semibold" : ""
-                            }`}
+                            className={`py-4 text-sm ${
+                              col.tipo === "number" 
+                                ? "text-right font-semibold text-gray-900" 
+                                : "text-left text-gray-700"
+                            } ${colIdx !== planilhaAtiva.colunas.length - 1 ? "border-r border-gray-100" : ""}`}
                           >
                             {formatValue(linha[col.id], col.tipo)}
                           </TableCell>
@@ -204,19 +332,23 @@ export function PrestacaoContas() {
                       </TableRow>
                     ))}
                     
-                    {/* Linha TOTAL */}
+                    {/* Linha TOTAL com destaque */}
                     {planilhaAtiva.mostrarTotal && (
-                      <TableRow className="bg-gradient-to-r from-pink-100 to-purple-100 font-bold border-t-2 border-pink-600">
+                      <TableRow className="bg-gradient-to-r from-pink-100 via-purple-100 to-indigo-100 border-t-4 border-purple-600">
                         {planilhaAtiva.colunas.map((col, idx) => {
                           const total = calcularTotal(col, planilhaAtiva.linhas);
                           return (
                             <TableCell
                               key={col.id}
-                              className={`text-center text-lg ${
-                                total ? "text-pink-700 font-bold text-right" : ""
+                              className={`py-5 text-base font-bold ${
+                                total 
+                                  ? "text-purple-700 text-right text-xl" 
+                                  : idx === 0 
+                                  ? "text-purple-900 uppercase tracking-wider" 
+                                  : "text-gray-400"
                               }`}
                             >
-                              {idx === 0 && !total ? "TOTAL" : total || ""}
+                              {idx === 0 && !total ? "TOTAL GERAL" : total || ""}
                             </TableCell>
                           );
                         })}
@@ -227,6 +359,18 @@ export function PrestacaoContas() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Rodapé com informações */}
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-lg text-sm text-gray-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              Atualizado em {new Date().toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+              })}
+            </div>
+          </div>
         </div>
       </section>
     </div>
