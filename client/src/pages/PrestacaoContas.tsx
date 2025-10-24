@@ -290,6 +290,13 @@ export function PrestacaoContas() {
                   <span className="font-medium">{planilhaAtiva.linhas.length} registros</span>
                 </div>
               )}
+              
+              {planilhaAtiva.origemRecurso && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
+                  <FileText className="w-5 h-5" />
+                  <span className="font-medium">{planilhaAtiva.origemRecurso}</span>
+                </div>
+              )}
             </div>
 
             {planilhaAtiva.descricaoPlanilha && (
@@ -305,7 +312,7 @@ export function PrestacaoContas() {
       <section className="py-12 px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
         <div className="max-w-7xl mx-auto">
           {/* Card com estatísticas rápidas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total de Registros */}
             <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
               <CardContent className="p-6">
@@ -323,21 +330,54 @@ export function PrestacaoContas() {
               </CardContent>
             </Card>
 
-            {/* Total Geral (se houver colunas somáveis) */}
-            {planilhaAtiva.colunas.some(col => col.somavel) && (
+            {/* Total Geral - Prioriza valorTotalRecurso, senão calcula das colunas somáveis */}
+            {(planilhaAtiva.valorTotalRecurso !== undefined && planilhaAtiva.valorTotalRecurso !== null) || planilhaAtiva.colunas.some(col => col.somavel) ? (
               <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Valor Total</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        {planilhaAtiva.valorTotalRecurso !== undefined && planilhaAtiva.valorTotalRecurso !== null 
+                          ? "Valor Total do Recurso" 
+                          : "Valor Total"}
+                      </p>
                       <p className="text-3xl font-bold text-green-600 mt-2">
-                        {(() => {
-                          const colunaSomavel = planilhaAtiva.colunas.find(c => c.somavel);
-                          return colunaSomavel ? calcularTotal(colunaSomavel, planilhaAtiva.linhas) : "R$ 0,00";
-                        })()}
+                        {planilhaAtiva.valorTotalRecurso !== undefined && planilhaAtiva.valorTotalRecurso !== null ? (
+                          new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(planilhaAtiva.valorTotalRecurso)
+                        ) : (
+                          (() => {
+                            const colunaSomavel = planilhaAtiva.colunas.find(c => c.somavel);
+                            return colunaSomavel ? calcularTotal(colunaSomavel, planilhaAtiva.linhas) : "R$ 0,00";
+                          })()
+                        )}
                       </p>
                     </div>
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                      <DollarSign className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {/* Saldo em Conta */}
+            {planilhaAtiva.saldoConta !== undefined && planilhaAtiva.saldoConta !== null && (
+              <Card className="bg-white shadow-lg hover:shadow-xl transition-all border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Saldo em Conta</p>
+                      <p className="text-3xl font-bold text-blue-600 mt-2">
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        }).format(planilhaAtiva.saldoConta)}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
                       <DollarSign className="w-6 h-6 text-white" />
                     </div>
                   </div>
@@ -362,13 +402,30 @@ export function PrestacaoContas() {
                     </p>
                     <p className="text-sm text-gray-500">{planilhaAtiva.ano}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center">
                     <Calendar className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Card de Origem do Recurso (destaque especial) */}
+          {planilhaAtiva.origemRecurso && (
+            <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xl border-0 mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white/80 uppercase tracking-wider">Origem do Recurso</p>
+                    <p className="text-2xl font-bold mt-1">{planilhaAtiva.origemRecurso}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tabela principal com design moderno */}
           <Card className="bg-white shadow-2xl border-0 overflow-hidden">

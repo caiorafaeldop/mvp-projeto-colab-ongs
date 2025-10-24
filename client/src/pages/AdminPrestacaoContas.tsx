@@ -181,6 +181,9 @@ export default function AdminPrestacaoContas() {
   // Estado local da planilha em edição
   const [titulo, setTitulo] = useState("");
   const [descricaoPlanilha, setDescricaoPlanilha] = useState("");
+  const [origemRecurso, setOrigemRecurso] = useState("");
+  const [valorTotalRecurso, setValorTotalRecurso] = useState<number | undefined>(undefined);
+  const [saldoConta, setSaldoConta] = useState<number | undefined>(undefined);
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState<number | undefined>(undefined);
   const [usarPeriodo, setUsarPeriodo] = useState(false);
@@ -230,6 +233,9 @@ export default function AdminPrestacaoContas() {
   const carregarPlanilha = (planilha: PrestacaoConta) => {
     setTitulo(planilha.titulo);
     setDescricaoPlanilha(planilha.descricaoPlanilha || "");
+    setOrigemRecurso(planilha.origemRecurso || "");
+    setValorTotalRecurso(planilha.valorTotalRecurso);
+    setSaldoConta(planilha.saldoConta);
     setAno(planilha.ano);
     setMes(planilha.mes);
     
@@ -257,6 +263,9 @@ export default function AdminPrestacaoContas() {
   const criarNovaPlanilha = () => {
     setTitulo("Prestação de Contas " + new Date().getFullYear());
     setDescricaoPlanilha("");
+    setOrigemRecurso("");
+    setValorTotalRecurso(undefined);
+    setSaldoConta(undefined);
     setAno(new Date().getFullYear());
     setMes(undefined);
     setUsarPeriodo(false);
@@ -328,6 +337,9 @@ export default function AdminPrestacaoContas() {
       const payload: any = {
         titulo,
         descricaoPlanilha: descricaoPlanilha.trim() || undefined,
+        origemRecurso: origemRecurso.trim() || undefined,
+        valorTotalRecurso: valorTotalRecurso || undefined,
+        saldoConta: saldoConta || undefined,
         ano,
         mostrarTotal,
         colunas,
@@ -642,6 +654,34 @@ export default function AdminPrestacaoContas() {
                   value={descricaoPlanilha}
                   onChange={(e) => setDescricaoPlanilha(e.target.value)}
                   placeholder="Descrição breve sobre esta planilha..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Origem do Recurso (opcional)</Label>
+                <Input
+                  value={origemRecurso}
+                  onChange={(e) => setOrigemRecurso(e.target.value)}
+                  placeholder="Ex: Convênio Federal, Doações, Emendas Parlamentares..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valor Total do Recurso (opcional)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={valorTotalRecurso || ""}
+                  onChange={(e) => setValorTotalRecurso(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Saldo em Conta (opcional)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={saldoConta || ""}
+                  onChange={(e) => setSaldoConta(e.target.value ? parseFloat(e.target.value) : undefined)}
+                  placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">
