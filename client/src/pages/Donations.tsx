@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
 import { Heart, CreditCard, Repeat, Loader2 } from "lucide-react";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
+import { useAuth } from "@/contexts/AuthContext";
 
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
@@ -27,6 +28,7 @@ export function Donations() {
   const { month, year } = useMemo(() => monthYearOf(new Date()), []);
   const [donors, setDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, user } = useAuth();
   // Donation form state (aligned with landing page)
   const [donationType, setDonationType] = useState<"single" | "recurring">("single");
   const [amount, setAmount] = useState("");
@@ -151,7 +153,7 @@ export function Donations() {
                 </CardContent>
               </Card>
 
-              <form onSubmit={(e) => {
+              <form onSubmit={async (e) => {
                 e.preventDefault();
                 const val = parseFloat(customAmount || amount || "0");
                 if (isNaN(val) || val < 1) {
@@ -159,15 +161,48 @@ export function Donations() {
                   return;
                 }
                 
-                // Se for doação recorrente, abre modal de registro
+                // Se for doação recorrente
                 if (donationType === "recurring") {
-                  setShowRegisterModal(true);
+                  // Se NÃO estiver logado, abre modal de registro
+                  if (!isAuthenticated) {
+                    setShowRegisterModal(true);
+                    return;
+                  }
+                  
+                  // Se estiver logado, processa a assinatura
+                  setIsSubmitting(true);
+                  try {
+                    const payload = {
+                      amount: val,
+                      donorName: user?.name || "Doador",
+                      donorEmail: user?.email || "",
+                      frequency: "monthly" as const,
+                    };
+                    const response = await createRecurringDonation(payload);
+                    
+                    const responseData = response?.data;
+                    
+                    if (responseData?.success) {
+                      const url = responseData.data?.checkoutUrl || responseData.checkoutUrl;
+                      if (url) {
+                        toast({ title: "Assinatura criada!", description: "Redirecionando para pagamento..." });
+                        window.location.href = url;
+                      } else {
+                        throw new Error("URL de checkout não retornada");
+                      }
+                    } else {
+                      throw new Error(responseData?.message || "Erro ao criar assinatura");
+                    }
+                  } catch (err: any) {
+                    toast({ title: "Erro ao criar assinatura", description: err?.message || "Tente novamente.", variant: "destructive" });
+                  } finally {
+                    setIsSubmitting(false);
+                  }
                   return;
                 }
                 
                 // Se for doação única, abre modal para preencher informações
                 setShowDonorInfoModal(true);
-                setDonorInfoStep("form");
               }}>
                 <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
                   <CardHeader className="pb-3">
