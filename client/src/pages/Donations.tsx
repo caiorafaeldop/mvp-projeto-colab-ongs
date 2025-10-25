@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/useToast";
 import { Heart, CreditCard, Repeat, Loader2 } from "lucide-react";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 import { useAuth } from "@/contexts/AuthContext";
+import { SubscriptionManageModal } from "@/components/SubscriptionManageModal";
 
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
@@ -57,8 +58,6 @@ export function Donations() {
   const [verificationCode, setVerificationCode] = useState("");
   const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
   
-  // Subscription data (mock)
-  const [userSubscription, setUserSubscription] = useState<any>(null);
   const [donorInfoStep, setDonorInfoStep] = useState<"form" | "success">("form");
 
   useEffect(() => {
@@ -109,7 +108,13 @@ export function Donations() {
             <p className="text-sm text-gray-600 mt-1">Apoie a Rede Feminina de Combate ao Câncer</p>
           </div>
           <Button
-            onClick={() => setShowLoginModal(true)}
+            onClick={() => {
+              if (isAuthenticated) {
+                setShowManageSubscriptionModal(true);
+              } else {
+                setShowLoginModal(true);
+              }
+            }}
             variant="outline"
             className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold"
           >
@@ -169,35 +174,8 @@ export function Donations() {
                     return;
                   }
                   
-                  // Se estiver logado, processa a assinatura
-                  setIsSubmitting(true);
-                  try {
-                    const payload = {
-                      amount: val,
-                      donorName: user?.name || "Doador",
-                      donorEmail: user?.email || "",
-                      frequency: "monthly" as const,
-                    };
-                    const response = await createRecurringDonation(payload);
-                    
-                    const responseData = response?.data;
-                    
-                    if (responseData?.success) {
-                      const url = responseData.data?.checkoutUrl || responseData.checkoutUrl;
-                      if (url) {
-                        toast({ title: "Assinatura criada!", description: "Redirecionando para pagamento..." });
-                        window.location.href = url;
-                      } else {
-                        throw new Error("URL de checkout não retornada");
-                      }
-                    } else {
-                      throw new Error(responseData?.message || "Erro ao criar assinatura");
-                    }
-                  } catch (err: any) {
-                    toast({ title: "Erro ao criar assinatura", description: err?.message || "Tente novamente.", variant: "destructive" });
-                  } finally {
-                    setIsSubmitting(false);
-                  }
+                  // Se estiver logado, abre modal para preencher informações (igual doação única)
+                  setShowDonorInfoModal(true);
                   return;
                 }
                 
@@ -348,7 +326,7 @@ export function Donations() {
                     Só mais uma coisinha...
                   </DialogTitle>
                   <p className="text-sm text-gray-600 mt-3">
-                    Adicione suas informações
+                    {donationType === "recurring" ? "Configure sua doação recorrente" : "Adicione suas informações"}
                   </p>
                 </DialogHeader>
                 <div className="space-y-4 py-6">
@@ -405,31 +383,60 @@ export function Donations() {
                           setIsSubmitting(true);
                           try {
                             const val = parseFloat(customAmount || amount || "0");
-                            const payload = {
-                              amount: val,
-                              donorName: donorName.trim(),
-                              donorEmail: donorEmail || undefined,
-                              donorPhone: donorPhone || undefined,
-                              donorDocument: donorDocument || undefined,
-                              message: message || undefined,
-                            };
-                            const response = await createSingleDonation(payload);
                             
-                            const responseData = response?.data;
-                            
-                            if (responseData?.success) {
-                              const url = responseData.data?.paymentUrl;
-                              if (url) {
-                                setPaymentUrl(url);
-                                toast({ title: "Link gerado!", description: "Clique no botão para acessar." });
+                            // Se for doação recorrente
+                            if (donationType === "recurring") {
+                              const payload = {
+                                amount: val,
+                                donorName: donorName.trim() || user?.name || "Doador",
+                                donorEmail: user?.email || "",
+                                donorPhone: donorPhone || undefined,
+                                message: message || undefined,
+                                frequency: "monthly" as const,
+                              };
+                              const response = await createRecurringDonation(payload);
+                              
+                              const responseData = response?.data;
+                              
+                              if (responseData?.success) {
+                                const url = responseData.data?.subscriptionUrl;
+                                if (url) {
+                                  setPaymentUrl(url);
+                                  toast({ title: "Assinatura criada!", description: "Clique no botão para acessar o pagamento." });
+                                } else {
+                                  throw new Error("URL de checkout não retornada");
+                                }
                               } else {
-                                throw new Error("URL de pagamento não retornada");
+                                throw new Error(responseData?.message || "Erro ao criar assinatura");
                               }
                             } else {
-                              throw new Error(responseData?.message || "Erro ao processar doação");
+                              // Doação única
+                              const payload = {
+                                amount: val,
+                                donorName: donorName.trim(),
+                                donorEmail: donorEmail || undefined,
+                                donorPhone: donorPhone || undefined,
+                                donorDocument: donorDocument || undefined,
+                                message: message || undefined,
+                              };
+                              const response = await createSingleDonation(payload);
+                              
+                              const responseData = response?.data;
+                              
+                              if (responseData?.success) {
+                                const url = responseData.data?.paymentUrl;
+                                if (url) {
+                                  setPaymentUrl(url);
+                                  toast({ title: "Link gerado!", description: "Clique no botão para acessar." });
+                                } else {
+                                  throw new Error("URL de pagamento não retornada");
+                                }
+                              } else {
+                                throw new Error(responseData?.message || "Erro ao processar doação");
+                              }
                             }
                           } catch (err: any) {
-                            toast({ title: "Erro ao processar doação", description: err?.message || "Tente novamente.", variant: "destructive" });
+                            toast({ title: "Erro ao processar", description: err?.message || "Tente novamente.", variant: "destructive" });
                           } finally {
                             setIsSubmitting(false);
                           }
@@ -772,7 +779,6 @@ export function Donations() {
                     onClick={() => {
                       // TODO: Implementar login
                       setShowLoginModal(false);
-                      setUserSubscription({ amount: 50, status: "active", nextBilling: "15/11/2025" });
                       setShowManageSubscriptionModal(true);
                     }} 
                     className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
@@ -785,71 +791,13 @@ export function Donations() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Gerenciar Assinatura */}
-        <Dialog open={showManageSubscriptionModal} onOpenChange={setShowManageSubscriptionModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">Gerenciar Assinatura</DialogTitle>
-            </DialogHeader>
-            {userSubscription ? (
-              <div className="space-y-6 py-4">
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-gray-600">Status</span>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                      {userSubscription.status === "active" ? "Ativa" : "Inativa"}
-                    </span>
-                  </div>
-                  <div className="mb-3">
-                    <span className="text-sm font-semibold text-gray-600">Valor Mensal</span>
-                    <p className="text-3xl font-bold text-purple-700">R$ {userSubscription.amount.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-semibold text-gray-600">Próxima Cobrança</span>
-                    <p className="text-lg font-semibold text-gray-800">{userSubscription.nextBilling}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-2 border-purple-500 text-purple-600 hover:bg-purple-50"
-                    onClick={() => {
-                      // TODO: Implementar alteração
-                      toast({ title: "Em breve", description: "Funcionalidade em desenvolvimento." });
-                    }}
-                  >
-                    Alterar Valor da Assinatura
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-2 border-red-500 text-red-600 hover:bg-red-50"
-                    onClick={() => {
-                      // TODO: Implementar cancelamento
-                      if (confirm("Tem certeza que deseja cancelar sua assinatura?")) {
-                        setUserSubscription(null);
-                        setShowManageSubscriptionModal(false);
-                        toast({ title: "Assinatura cancelada", description: "Sua assinatura foi cancelada com sucesso." });
-                      }
-                    }}
-                  >
-                    Cancelar Assinatura
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <p className="text-gray-600">Você não possui assinatura ativa.</p>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowManageSubscriptionModal(false)} className="w-full">
-                Fechar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+      
+      {/* Modal de Gerenciamento de Assinatura */}
+      <SubscriptionManageModal 
+        open={showManageSubscriptionModal} 
+        onClose={() => setShowManageSubscriptionModal(false)} 
+      />
     </div>
   );
 }

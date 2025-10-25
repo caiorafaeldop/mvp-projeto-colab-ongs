@@ -162,46 +162,61 @@ export const getDonorDashboard = () => {
   // }
 };
 
-// Description: Update subscription (pause/resume)
-// Endpoint: PUT /api/donations/subscription
-// Request: { action: string }
-// Response: { success: boolean, message: string }
-export const updateSubscription = (data: { action: string }) => {
-  // Mocking the response
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: `Assinatura ${data.action === "pause" ? "pausada" : "reativada"} com sucesso!`,
-      });
-    }, 800);
-  });
-  // Uncomment the below lines to make an actual API call
-  // try {
-  //   return await api.put('/api/donations/subscription', data);
-  // } catch (error) {
-  //   throw new Error(error?.response?.data?.error || error.message);
-  // }
+// Description: Get my subscription
+// Endpoint: GET /api/donations/me/subscription
+// Request: {}
+// Response: { success: boolean, message: string, data: subscription }
+export const getMySubscription = async () => {
+  try {
+    return await api.get('/api/donations/me/subscription');
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || error.message);
+  }
 };
 
-// Description: Cancel subscription
-// Endpoint: DELETE /api/donations/subscription
+// Description: Update subscription details (pause/resume/update)
+// Endpoint: PUT /api/donations/recurring/:subscriptionId
+// Request: { action: 'pause'|'resume'|'update', amount?: number, frequency?: string }
+// Response: { success: boolean, message: string, data: updated subscription }
+export const updateSubscriptionDetails = async (
+  subscriptionId: string, 
+  data: { 
+    action: 'pause' | 'resume' | 'update'; 
+    amount?: number; 
+    frequency?: 'monthly' | 'weekly' | 'yearly';
+  }
+) => {
+  try {
+    return await api.put(`/api/donations/recurring/${subscriptionId}`, data);
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || error.message);
+  }
+};
+
+// Description: Reauthorize subscription (update payment card)
+// Endpoint: POST /api/donations/recurring/:subscriptionId/reauthorize
+// Request: {}
+// Response: { success: boolean, message: string, data: { subscriptionUrl: string } }
+export const reauthorizeSubscription = async (subscriptionId: string) => {
+  try {
+    return await api.post(`/api/donations/recurring/${subscriptionId}/reauthorize`);
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || error.message);
+  }
+};
+
+// Description: Cancel my subscription
+// Endpoint: DELETE /api/donations/recurring/:subscriptionId
 // Request: {}
 // Response: { success: boolean, message: string }
-export const cancelSubscription = () => {
-  // Mocking the response
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: "Assinatura cancelada com sucesso!",
-      });
-    }, 800);
-  });
-  // Uncomment the below lines to make an actual API call
-  // try {
-  //   return await api.delete('/api/donations/subscription');
-  // } catch (error) {
-  //   throw new Error(error?.response?.data?.error || error.message);
-  // }
+export const cancelMySubscription = async (subscriptionId: string) => {
+  try {
+    return await api.delete(`/api/donations/recurring/${subscriptionId}`);
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || error.message);
+  }
 };
+
+// Backward compatibility aliases (deprecated - use new functions above)
+export const updateSubscription = updateSubscriptionDetails;
+export const cancelSubscription = cancelMySubscription;
