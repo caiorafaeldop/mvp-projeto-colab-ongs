@@ -6,11 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { loginUser, registerUser } from "@/api/auth";
+import { loginUser, registerUser, verifyEmailCode, sendVerificationCode } from "@/api/auth";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-
-// const API_BASE_URL = "http://localhost:3000";
-const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
 
 export function AuthModals() {
   const { showLoginModal, showRegisterModal, openLoginModal, openRegisterModal, closeLoginModal, closeRegisterModal } = useAuthModal();
@@ -275,8 +272,13 @@ export function AuthModals() {
                     </div>
                     <button 
                       className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                      onClick={() => {
-                        toast({ title: "Código reenviado!", description: `Enviamos um novo código para ${authEmail}` });
+                      onClick={async () => {
+                        try {
+                          await sendVerificationCode(authEmail);
+                          toast({ title: "Código reenviado!", description: `Enviamos um novo código para ${authEmail}` });
+                        } catch (error: any) {
+                          toast({ title: "Erro ao reenviar", description: error.message, variant: "destructive" });
+                        }
                       }}
                     >
                       Reenviar código
@@ -299,17 +301,8 @@ export function AuthModals() {
 
                         setIsVerifying(true);
                         try {
-                          // VERIFICAR CÓDIGO NO BACKEND
-                          const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/verify`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ 
-                              email: authEmail, 
-                              code: verificationCode 
-                            })
-                          });
-                          
-                          const data = await response.json();
+                          // VERIFICAR CÓDIGO NO BACKEND usando função centralizada
+                          const data = await verifyEmailCode(authEmail, verificationCode);
                           
                           if (!data.success) {
                             throw new Error(data.message || "Código inválido ou expirado");
@@ -505,13 +498,8 @@ export function AuthModals() {
 
                         setIsVerifying(true);
                         try {
-                          const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/verify`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ email: pendingVerificationEmail, code: verificationCode })
-                          });
-                          
-                          const data = await response.json();
+                          // Usar função centralizada
+                          const data = await verifyEmailCode(pendingVerificationEmail, verificationCode);
                           
                           if (data.success) {
                             toast({ 
@@ -577,11 +565,7 @@ export function AuthModals() {
                         
                         // Reenviar código automaticamente
                         try {
-                          await fetch(`${API_BASE_URL}/api/auth/verify-email/send`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ email: authEmail })
-                          });
+                          await sendVerificationCode(authEmail);
                           toast({ 
                             title: "📧 Verifique seu email", 
                             description: "Enviamos um código de verificação. Confira sua caixa de entrada." 
