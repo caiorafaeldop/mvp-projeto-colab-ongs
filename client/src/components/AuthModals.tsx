@@ -9,19 +9,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { loginUser, registerUser } from "@/api/auth";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
+// const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
+
 export function AuthModals() {
   const { showLoginModal, showRegisterModal, openLoginModal, openRegisterModal, closeLoginModal, closeRegisterModal } = useAuthModal();
   const { toast } = useToast();
   const { login } = useAuth();
 
   // Auth form states
+  const [authFirstName, setAuthFirstName] = useState("");
+  const [authLastName, setAuthLastName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authPasswordConfirm, setAuthPasswordConfirm] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
+  const [loginStep, setLoginStep] = useState<"form" | "verify">("form");
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
+  const [pendingVerificationName, setPendingVerificationName] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -72,21 +81,48 @@ export function AuthModals() {
                       Para criar uma assinatura, você precisa de uma conta. Isso é necessário para que você possa gerenciar ou cancelar sua assinatura depois.
                     </p>
                   </DialogHeader>
-                  <div className="space-y-4 py-6">
+                  <div className="space-y-3 py-4">
+                    {/* Nome e Sobrenome lado a lado */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="reg-firstname" className="text-xs font-semibold">Nome</Label>
+                        <Input 
+                          id="reg-firstname" 
+                          type="text" 
+                          value={authFirstName} 
+                          onChange={(e) => setAuthFirstName(e.target.value)}
+                          placeholder="Nome"
+                          className="mt-1 h-9"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-lastname" className="text-xs font-semibold">Sobrenome</Label>
+                        <Input 
+                          id="reg-lastname" 
+                          type="text" 
+                          value={authLastName} 
+                          onChange={(e) => setAuthLastName(e.target.value)}
+                          placeholder="Sobrenome"
+                          className="mt-1 h-9"
+                          required
+                        />
+                      </div>
+                    </div>
                     <div>
-                      <Label htmlFor="reg-email" className="text-sm font-semibold">Email</Label>
+                      <Label htmlFor="reg-email" className="text-xs font-semibold">Email</Label>
                       <Input 
                         id="reg-email" 
                         type="email" 
                         value={authEmail} 
                         onChange={(e) => setAuthEmail(e.target.value)}
                         placeholder="seu@email.com"
-                        className="mt-1.5 h-10"
+                        className="mt-1 h-9"
                         required
                       />
                     </div>
                     <div>
-                      <Label htmlFor="reg-password" className="text-sm font-semibold">Senha</Label>
+                      <Label htmlFor="reg-password" className="text-xs font-semibold">Senha</Label>
                       <div className="relative">
                         <Input 
                           id="reg-password" 
@@ -94,27 +130,27 @@ export function AuthModals() {
                           value={authPassword} 
                           onChange={(e) => setAuthPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="mt-1.5 h-10 pr-10"
+                          className="mt-1 h-9 pr-10"
                           required
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                          className="absolute right-0 top-1 h-9 px-2 hover:bg-transparent"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-500" />
+                            <EyeOff className="h-3.5 w-3.5 text-gray-500" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-500" />
+                            <Eye className="h-3.5 w-3.5 text-gray-500" />
                           )}
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Mínimo 8 caracteres</p>
                     </div>
                     <div>
-                      <Label htmlFor="reg-password-confirm" className="text-sm font-semibold">Confirmar Senha</Label>
+                      <Label htmlFor="reg-password-confirm" className="text-xs font-semibold">Confirmar Senha</Label>
                       <div className="relative">
                         <Input 
                           id="reg-password-confirm" 
@@ -122,20 +158,20 @@ export function AuthModals() {
                           value={authPasswordConfirm} 
                           onChange={(e) => setAuthPasswordConfirm(e.target.value)}
                           placeholder="••••••••"
-                          className="mt-1.5 h-10 pr-10"
+                          className="mt-1 h-9 pr-10"
                           required
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                          className="absolute right-0 top-1 h-9 px-2 hover:bg-transparent"
                           onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
                         >
                           {showPasswordConfirm ? (
-                            <EyeOff className="h-4 w-4 text-gray-500" />
+                            <EyeOff className="h-3.5 w-3.5 text-gray-500" />
                           ) : (
-                            <Eye className="h-4 w-4 text-gray-500" />
+                            <Eye className="h-3.5 w-3.5 text-gray-500" />
                           )}
                         </Button>
                       </div>
@@ -164,7 +200,7 @@ export function AuthModals() {
                     </Button>
                     <Button 
                       onClick={async () => {
-                        if (!authEmail || !authPassword || !authPasswordConfirm) {
+                        if (!authFirstName || !authLastName || !authEmail || !authPassword || !authPasswordConfirm) {
                           toast({ title: "Campos obrigatórios", description: "Preencha todos os campos.", variant: "destructive" });
                           return;
                         }
@@ -179,21 +215,18 @@ export function AuthModals() {
 
                         setIsRegistering(true);
                         try {
+                          const fullName = `${authFirstName.trim()} ${authLastName.trim()}`;
                           const response = await registerUser({
+                            name: fullName,
                             email: authEmail,
                             password: authPassword,
-                            name: authEmail.split('@')[0], // Nome temporário baseado no email
-                            phone: "", // Telefone vazio
-                            userType: "donor"
+                            phone: "",
+                            userType: "common"
                           });
 
-                          if (response.success && response.data) {
-                            login(response.data.user, response.data.accessToken);
-                            closeRegisterModal();
-                            setAuthEmail("");
-                            setAuthPassword("");
-                            setAuthPasswordConfirm("");
-                            toast({ title: "Conta criada!", description: `Bem-vindo, ${response.data.user.name}!` });
+                          if (response.success) {
+                            setRegisterStep("verify");
+                            toast({ title: "Código enviado!", description: `Enviamos um código para ${authEmail}` });
                           } else {
                             throw new Error(response.message || "Erro ao criar conta");
                           }
@@ -258,19 +291,67 @@ export function AuthModals() {
                       Voltar
                     </Button>
                     <Button 
-                      onClick={() => {
+                      onClick={async () => {
                         if (!verificationCode || verificationCode.length !== 6) {
                           toast({ title: "Código inválido", description: "Digite o código de 6 dígitos.", variant: "destructive" });
                           return;
                         }
-                        // TODO: Verificar código e criar conta
-                        closeRegisterModal();
-                        setRegisterStep("form");
-                        toast({ title: "Conta criada!", description: "Agora você pode criar sua assinatura." });
+
+                        setIsVerifying(true);
+                        try {
+                          // VERIFICAR CÓDIGO NO BACKEND
+                          const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/verify`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                              email: authEmail, 
+                              code: verificationCode 
+                            })
+                          });
+                          
+                          const data = await response.json();
+                          
+                          if (!data.success) {
+                            throw new Error(data.message || "Código inválido ou expirado");
+                          }
+
+                          // SUCESSO - Conta criada e verificada
+                          closeRegisterModal();
+                          setRegisterStep("form");
+                          setVerificationCode("");
+                          setAuthEmail("");
+                          setAuthPassword("");
+                          setAuthPasswordConfirm("");
+                          setAuthFirstName("");
+                          setAuthLastName("");
+                          
+                          toast({ 
+                            title: "✅ Conta criada com sucesso!", 
+                            description: "Faça login agora para entrar." 
+                          });
+                          
+                          // Abrir modal de login
+                          setTimeout(() => {
+                            openLoginModal();
+                          }, 500);
+                        } catch (error: any) {
+                          toast({ 
+                            title: "❌ Código incorreto", 
+                            description: error.message || "Verifique o código e tente novamente.", 
+                            variant: "destructive" 
+                          });
+                        } finally {
+                          setIsVerifying(false);
+                        }
                       }} 
+                      disabled={isVerifying}
                       className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
                     >
-                      Verificar
+                      {isVerifying ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verificando...</>
+                      ) : (
+                        "Verificar"
+                      )}
                     </Button>
                   </DialogFooter>
                 </>
@@ -286,6 +367,8 @@ export function AuthModals() {
           openLoginModal();
         } else {
           closeLoginModal();
+          setLoginStep("form");
+          setVerificationCode("");
         }
       }}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden">
@@ -314,49 +397,75 @@ export function AuthModals() {
             <div className="p-8">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                  Entrar
+                  {loginStep === "verify" ? "Verificar Email" : "Entrar"}
                 </DialogTitle>
                 <p className="text-sm text-gray-600 mt-3">
-                  Entre para gerenciar sua assinatura
+                  {loginStep === "verify" 
+                    ? "Digite o código de 6 dígitos enviado para seu email" 
+                    : "Ao entrar na sua conta, é possível gerenciar sua assinatura"}
                 </p>
               </DialogHeader>
               <div className="space-y-4 py-6">
+                {loginStep === "verify" ? (
+                  // Tela de Verificação
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-blue-800">
+                        📧 Código enviado para <strong>{pendingVerificationEmail}</strong>
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="verify-code" className="text-xs font-semibold">Código de Verificação</Label>
+                      <Input 
+                        id="verify-code"
+                        type="text"
+                        maxLength={6}
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                        placeholder="000000"
+                        className="mt-1 h-9 text-center text-2xl tracking-widest font-bold"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  // Tela de Login Normal
+                  <>
                 <div>
-                  <Label htmlFor="login-email" className="text-sm font-semibold">Email</Label>
+                  <Label htmlFor="login-email" className="text-xs font-semibold">Email ou Usuário</Label>
                   <Input 
                     id="login-email" 
                     type="email" 
                     value={authEmail} 
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="mt-1.5 h-10"
+                    placeholder=""
+                    className="mt-1 h-9"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="login-password" className="text-sm font-semibold">Senha</Label>
+                  <Label htmlFor="login-password" className="text-xs font-semibold">Senha</Label>
                   <div className="relative">
                     <Input 
                       id="login-password" 
                       type={showPassword ? "text" : "password"}
                       value={authPassword} 
                       onChange={(e) => setAuthPassword(e.target.value)}
-                      className="mt-1.5 h-10 pr-10"
+                      className="mt-1 h-9 pr-10"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-1.5 h-10 px-3 hover:bg-transparent"
+                      className="absolute right-0 top-1 h-9 px-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-500" />
+                        <EyeOff className="h-3.5 w-3.5 text-gray-500" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-500" />
+                        <Eye className="h-3.5 w-3.5 text-gray-500" />
                       )}
                     </Button>
                   </div>
-                  <button className="text-xs text-purple-600 hover:text-purple-700 mt-1 font-medium">
+                  <button className="text-xs text-purple-600 hover:text-purple-700 mt-0.5 font-medium">
                     Esqueci minha senha
                   </button>
                 </div>
@@ -372,18 +481,85 @@ export function AuthModals() {
                     Não tem uma conta? <span className="text-purple-600 font-semibold">Criar conta</span>
                   </button>
                 </div>
+                  </>
+                )}
               </div>
               <DialogFooter className="flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={closeLoginModal} 
-                  className="w-full sm:w-auto h-12 text-base"
-                  disabled={isLoggingIn}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={async () => {
+                {loginStep === "verify" ? (
+                  // Botões da tela de verificação
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setLoginStep("form")} 
+                      className="w-full sm:w-auto h-12 text-base"
+                      disabled={isVerifying}
+                    >
+                      Voltar
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        if (verificationCode.length !== 6) {
+                          toast({ title: "Código inválido", description: "Digite os 6 dígitos do código.", variant: "destructive" });
+                          return;
+                        }
+
+                        setIsVerifying(true);
+                        try {
+                          const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/verify`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: pendingVerificationEmail, code: verificationCode })
+                          });
+                          
+                          const data = await response.json();
+                          
+                          if (data.success) {
+                            toast({ 
+                              title: "✅ Conta verificada com sucesso!", 
+                              description: "Faça login agora para entrar." 
+                            });
+                            setVerificationCode("");
+                            setLoginStep("form");
+                            // Abrir modal de login automaticamente
+                            setTimeout(() => {
+                              openLoginModal();
+                            }, 500);
+                          } else {
+                            throw new Error(data.message || "Código inválido");
+                          }
+                        } catch (error: any) {
+                          toast({ 
+                            title: "Erro na verificação", 
+                            description: error.message || "Código inválido ou expirado.", 
+                            variant: "destructive" 
+                          });
+                        } finally {
+                          setIsVerifying(false);
+                        }
+                      }}
+                      disabled={isVerifying}
+                      className="w-full sm:w-auto h-12 text-base bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+                    >
+                      {isVerifying ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verificando...</>
+                      ) : (
+                        "Verificar"
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  // Botões da tela de login normal
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={closeLoginModal} 
+                      className="w-full sm:w-auto h-12 text-base"
+                      disabled={isLoggingIn}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={async () => {
                     if (!authEmail || !authPassword) {
                       toast({ title: "Campos obrigatórios", description: "Preencha email e senha.", variant: "destructive" });
                       return;
@@ -392,6 +568,32 @@ export function AuthModals() {
                     setIsLoggingIn(true);
                     try {
                       const response = await loginUser({ email: authEmail, password: authPassword });
+                      
+                      // Se email não verificado, mostrar tela de verificação
+                      if (response.emailNotVerified) {
+                        setPendingVerificationEmail(response.data?.email || authEmail);
+                        setPendingVerificationName(response.data?.name || "");
+                        setLoginStep("verify");
+                        
+                        // Reenviar código automaticamente
+                        try {
+                          await fetch(`${API_BASE_URL}/api/auth/verify-email/send`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: authEmail })
+                          });
+                          toast({ 
+                            title: "📧 Verifique seu email", 
+                            description: "Enviamos um código de verificação. Confira sua caixa de entrada." 
+                          });
+                        } catch (e) {
+                          toast({ 
+                            title: "📧 Verificação necessária", 
+                            description: "Insira o código de verificação enviado para seu email." 
+                          });
+                        }
+                        return;
+                      }
                       
                       if (response.success && response.data) {
                         login(response.data.user, response.data.accessToken);
@@ -421,6 +623,8 @@ export function AuthModals() {
                     "Entrar"
                   )}
                 </Button>
+                  </>
+                )}
               </DialogFooter>
             </div>
           </div>

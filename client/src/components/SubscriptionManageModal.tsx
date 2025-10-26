@@ -66,6 +66,16 @@ export function SubscriptionManageModal({ open, onClose }: SubscriptionManageMod
     }
   };
 
+  const handlePayFirstCharge = () => {
+    // Link para realizar a primeira cobrança (checkout da assinatura)
+    if (subscription?.subscriptionUrl) {
+      window.open(subscription.subscriptionUrl, '_blank');
+    } else {
+      // Fallback genérico
+      window.open('https://www.mercadopago.com.br/subscriptions', '_blank');
+    }
+  };
+
   const handleCancel = async () => {
     if (!subscription?.subscriptionId) return;
     
@@ -245,17 +255,33 @@ export function SubscriptionManageModal({ open, onClose }: SubscriptionManageMod
                   <div className="space-y-2">
                     {subscription.status !== "cancelled" && (
                       <>
-                        <Button
-                          onClick={handleManageExternal}
-                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Gerenciar no Mercado Pago
-                        </Button>
-
-                        <p className="text-xs text-gray-500 text-center px-4">
-                          Para pausar, alterar valor ou atualizar cartão, use o painel do Mercado Pago
-                        </p>
+                        {subscription.status === "pending" ? (
+                          <>
+                            <Button
+                              onClick={handlePayFirstCharge}
+                              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Pagar primeira cobrança
+                            </Button>
+                            <p className="text-xs text-gray-500 text-center px-4">
+                              Sua assinatura foi criada e está pendente. Conclua o primeiro pagamento para ativá-la.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={handleManageExternal}
+                              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Gerenciar no Mercado Pago
+                            </Button>
+                            <p className="text-xs text-gray-500 text-center px-4">
+                              Para pausar, alterar valor ou atualizar cartão, use o painel do Mercado Pago
+                            </p>
+                          </>
+                        )}
 
                         <Button
                           onClick={handleCancel}

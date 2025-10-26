@@ -359,7 +359,8 @@ export default function AdminPrestacaoContas() {
       console.log("[salvarPlanilha] Payload:", JSON.stringify(payload, null, 2));
 
       if (planilhaAtiva) {
-        await PrestacaoContasApi.update(planilhaAtiva.id, payload);
+        const atualizada = await PrestacaoContasApi.update(planilhaAtiva.id, payload);
+        setPlanilhaAtiva(atualizada); // Atualizar planilha ativa com dados mais recentes
         toast({
           title: "Atualizado!",
           description: "Planilha atualizada com sucesso",
@@ -374,7 +375,7 @@ export default function AdminPrestacaoContas() {
       }
 
       setEditMode(false);
-      loadPlanilhas();
+      await loadPlanilhas(); // Recarregar lista de planilhas para mostrar mudanças
     } catch (e: any) {
       console.error("[salvarPlanilha] Erro completo:", e);
       console.error("[salvarPlanilha] Erro response data:", JSON.stringify(e?.response?.data, null, 2));
@@ -807,6 +808,7 @@ export default function AdminPrestacaoContas() {
 
       {/* Área da Planilha */}
       {editMode ? (
+        <>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -885,6 +887,19 @@ export default function AdminPrestacaoContas() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Botão Salvar Fixo na Parte Inferior */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button 
+            onClick={salvarPlanilha} 
+            size="lg"
+            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-2xl hover:shadow-3xl transition-all duration-200 px-8 py-6 text-base font-bold"
+          >
+            <Save className="w-5 h-5 mr-2" />
+            Salvar Alterações
+          </Button>
+        </div>
+        </>
       ) : planilhaAtiva ? (
         <Card>
           <CardHeader>
