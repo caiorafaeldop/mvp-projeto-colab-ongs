@@ -96,7 +96,7 @@ export function ProductDetail() {
     if (!product) return;
 
     try {
-      const phone = "5583988083711";
+      const phone = "558332415373";
       const response = await getWhatsAppLink(product._id, phone);
 
       if (response.success) {
