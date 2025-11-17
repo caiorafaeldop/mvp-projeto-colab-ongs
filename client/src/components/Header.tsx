@@ -9,7 +9,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, LogOut, User, Settings, ShoppingCart, Heart, Package, Instagram, MessageCircle, Mail } from "lucide-react";
+import {
+  Menu,
+  LogOut,
+  User,
+  Settings,
+  ShoppingCart,
+  Heart,
+  Package,
+  Instagram,
+  MessageCircle,
+  Mail,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useIsMobile } from "@/hooks/useMobile";
@@ -23,7 +34,11 @@ export function Header() {
     const value = (name || "").trim();
     if (!value) return "";
     const parts = value.split(/\s+/).filter(Boolean);
-    const initials = parts.map((word) => word[0]).join("").toUpperCase().slice(0, 2);
+    const initials = parts
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
     return initials;
   };
 
@@ -33,7 +48,10 @@ export function Header() {
     <header className="fixed top-0 z-50 w-full bg-white shadow-sm border-b border-gray-100">
       <div className="container mx-auto flex h-16 md:h-20 items-center px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center flex-1 min-w-0">
-          <Link to="/" className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 md:gap-4 flex-shrink-0"
+          >
             <div className="relative">
               <img
                 src="/img/logo_rfcc.jpg"
@@ -59,7 +77,11 @@ export function Header() {
               className="h-7 w-7 md:h-8 md:w-8 text-pink-600 hover:text-pink-700 hover:bg-pink-50"
               asChild
             >
-              <a href="https://www.instagram.com/redefemininajpa/" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://www.instagram.com/redefemininajpa/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span className="sr-only">Instagram</span>
               </a>
@@ -71,7 +93,11 @@ export function Header() {
               className="h-7 w-7 md:h-8 md:w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
               asChild
             >
-              <a href="https://api.whatsapp.com/send?phone=558332415373&text=Rede+Feminina+&fbclid=PAZXh0bgNhZW0CMTEAAaeqbKcY131CVjGNS4pxBdk2hCnkmILMCOobBAfbgv0rHmhtH13F0tyO5OhKng_aem_wcJSEVgTkEEvoAKNXSIVRA" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://api.whatsapp.com/send?phone=558332415373&text=Rede+Feminina+&fbclid=PAZXh0bgNhZW0CMTEAAaeqbKcY131CVjGNS4pxBdk2hCnkmILMCOobBAfbgv0rHmhtH13F0tyO5OhKng_aem_wcJSEVgTkEEvoAKNXSIVRA"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <MessageCircle className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span className="sr-only">WhatsApp</span>
               </a>
@@ -99,16 +125,28 @@ export function Header() {
               className="text-sm lg:text-base text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-2 lg:px-3 py-2 rounded-lg hover:bg-pink-50"
               style={({ isActive }) =>
                 isActive
-                  ? { color: "#DB2777", backgroundColor: "#FDF2F8", fontWeight: "600" }
+                  ? {
+                      color: "#DB2777",
+                      backgroundColor: "#FDF2F8",
+                      fontWeight: "600",
+                    }
                   : undefined
               }
             >
-              Prestação de Contas
+              Portal da Transparência
             </NavLink>
             <NavLink
               to="/loja"
               className="text-sm lg:text-base text-gray-700 font-medium transition-all duration-200 hover:text-pink-600 hover:scale-105 px-2 lg:px-3 py-2 rounded-lg hover:bg-pink-50"
-              style={({ isActive }) => (isActive ? { color: "#DB2777", backgroundColor: "#FDF2F8", fontWeight: "600" } : undefined)}
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      color: "#DB2777",
+                      backgroundColor: "#FDF2F8",
+                      fontWeight: "600",
+                    }
+                  : undefined
+              }
             >
               Bazar Solidário
             </NavLink>
@@ -117,16 +155,18 @@ export function Header() {
               asChild
               className="bg-pink-600 hover:bg-pink-700 text-white px-3 lg:px-4 py-2 rounded-full text-sm lg:text-base font-medium transition-all duration-200"
             >
-              <Link to="/donations">
-                Faça uma doação
-              </Link>
+              <Link to="/donations">Faça uma doação</Link>
             </Button>
           </nav>
           {/* Mobile Menu Button */}
           {isMobile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-9 w-9"
+                >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Abrir menu</span>
                 </Button>
@@ -135,7 +175,7 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link to="/prestacao-contas" className="flex items-center">
                     <Heart className="h-4 w-4 mr-2" />
-                    Prestação de Contas
+                    Portal da Transparência
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -153,19 +193,32 @@ export function Header() {
                 {/* Admin link removed from mobile menu */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <a href="https://www.instagram.com/redefemininajpa/" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                  <a
+                    href="https://www.instagram.com/redefemininajpa/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center"
+                  >
                     <Instagram className="h-4 w-4 mr-2" />
                     Instagram
                   </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <a href="https://api.whatsapp.com/send?phone=558332415373&text=Rede+Feminina+&fbclid=PAZXh0bgNhZW0CMTEAAaeqbKcY131CVjGNS4pxBdk2hCnkmILMCOobBAfbgv0rHmhtH13F0tyO5OhKng_aem_wcJSEVgTkEEvoAKNXSIVRA" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                  <a
+                    href="https://api.whatsapp.com/send?phone=558332415373&text=Rede+Feminina+&fbclid=PAZXh0bgNhZW0CMTEAAaeqbKcY131CVjGNS4pxBdk2hCnkmILMCOobBAfbgv0rHmhtH13F0tyO5OhKng_aem_wcJSEVgTkEEvoAKNXSIVRA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center"
+                  >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     WhatsApp
                   </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <a href="mailto:nucleocolabufpb@gmail.com" className="flex items-center">
+                  <a
+                    href="mailto:nucleocolabufpb@gmail.com"
+                    className="flex items-center"
+                  >
                     <Mail className="h-4 w-4 mr-2" />
                     Email
                   </a>
@@ -206,7 +259,12 @@ export function Header() {
             <>
               {isAuthenticated && user && (
                 <span className="hidden md:inline-block text-sm font-medium text-foreground">
-                  Olá, {user.name ? user.name.split(" ")[0] : user.email ? user.email.split("@")[0] : ""}
+                  Olá,{" "}
+                  {user.name
+                    ? user.name.split(" ")[0]
+                    : user.email
+                      ? user.email.split("@")[0]
+                      : ""}
                 </span>
               )}
               {isAuthenticated ? (
@@ -218,8 +276,12 @@ export function Header() {
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                          {getInitials(user?.name) || (user?.email ? getInitials(user.email.split("@")[0]) : "") ? (
-                            getInitials(user?.name) || getInitials(user?.email?.split("@")[0])
+                          {getInitials(user?.name) ||
+                          (user?.email
+                            ? getInitials(user.email.split("@")[0])
+                            : "") ? (
+                            getInitials(user?.name) ||
+                            getInitials(user?.email?.split("@")[0])
                           ) : (
                             <User className="h-4 w-4" />
                           )}
@@ -227,7 +289,11 @@ export function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" sideOffset={5}>
+                  <DropdownMenuContent
+                    className="w-56"
+                    align="end"
+                    sideOffset={5}
+                  >
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">

@@ -222,8 +222,30 @@ export function AuthModals() {
                           });
 
                           if (response.success) {
-                            setRegisterStep("verify");
-                            toast({ title: "Código enviado!", description: `Enviamos um código para ${authEmail}` });
+                            // Login automático após registro
+                            const { accessToken, refreshToken, user } = response.data;
+                            
+                            // Salvar tokens e fazer login
+                            await login({
+                              user,
+                              accessToken,
+                              refreshToken
+                            });
+
+                            // Limpar formulário
+                            setAuthEmail("");
+                            setAuthPassword("");
+                            setAuthPasswordConfirm("");
+                            setAuthFirstName("");
+                            setAuthLastName("");
+                            
+                            // Fechar modal
+                            closeRegisterModal();
+                            
+                            toast({ 
+                              title: "✅ Conta criada com sucesso!", 
+                              description: `Bem-vindo(a), ${user.name}!` 
+                            });
                           } else {
                             throw new Error(response.message || "Erro ao criar conta");
                           }

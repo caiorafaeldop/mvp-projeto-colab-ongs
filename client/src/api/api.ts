@@ -5,9 +5,9 @@ import axios, {
 } from "axios";
 import JSONbig from "json-bigint";
 
-// URL base do servidor backend 
-const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
-// const API_BASE_URL = "http://localhost:3000";
+// URL base do servidor backend
+// const API_BASE_URL = "https://mvp-colab-ongs-backend.onrender.com";
+const API_BASE_URL = "http://localhost:3000";
 const localApi = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Importante: permite envio/recebimento de cookies
@@ -42,10 +42,16 @@ localApi.interceptors.request.use(
     const token = getAccessToken();
     console.log("[Interceptor Request] URL:", config.url);
     if (token && !isAuthEndpoint(config.url || "")) {
-      console.log("[Interceptor Request] Adicionando Authorization: Bearer", token);
+      console.log(
+        "[Interceptor Request] Adicionando Authorization: Bearer",
+        token
+      );
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      console.log("[Interceptor Request] Nenhum token adicionado para", config.url);
+      console.log(
+        "[Interceptor Request] Nenhum token adicionado para",
+        config.url
+      );
     }
     return config;
   },
@@ -76,19 +82,33 @@ const processQueue = (error: any, token: string | null = null) => {
 // Interceptor para tratar erros de autenticação e refresh token
 localApi.interceptors.response.use(
   (response) => {
-    console.log("[Interceptor Response] Resposta bem-sucedida para", response.config.url);
+    console.log(
+      "[Interceptor Response] Resposta bem-sucedida para",
+      response.config.url
+    );
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    console.log("[Interceptor Response] Erro na requisição:", originalRequest.url, "Status:", error.response?.status);
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+    console.log(
+      "[Interceptor Response] Erro na requisição:",
+      originalRequest.url,
+      "Status:",
+      error.response?.status
+    );
 
     // 429: propaga informação para UI lidar com countdown
     if (error.response?.status === 429) {
       try {
-        const retryAfterHeader = (error.response.headers || {})["retry-after"] as string | undefined;
+        const retryAfterHeader = (error.response.headers || {})[
+          "retry-after"
+        ] as string | undefined;
         const retryAfterBody = (error.response.data as any)?.retryAfter;
-        const retryAfter = parseInt((retryAfterHeader || retryAfterBody || "0") as string, 10) || 0;
+        const retryAfter =
+          parseInt((retryAfterHeader || retryAfterBody || "0") as string, 10) ||
+          0;
         (error as any).isRateLimit = true;
         (error as any).retryAfter = retryAfter;
       } catch {}
@@ -98,19 +118,28 @@ localApi.interceptors.response.use(
     // 401: tentar renovar o token
     if (error.response?.status === 401 && !originalRequest._retry) {
       const errorData = error.response?.data as any;
-      const isTokenExpired = errorData?.error === "TOKEN_EXPIRED" || errorData?.message === "Token expired";
+      const isTokenExpired =
+        errorData?.error === "TOKEN_EXPIRED" ||
+        errorData?.message === "Token expired";
       const shouldLogout = errorData?.shouldLogout === true;
-      
-      console.log("[Interceptor] Token expirado?", isTokenExpired, "Should logout?", shouldLogout);
-      
+
+      console.log(
+        "[Interceptor] Token expirado?",
+        isTokenExpired,
+        "Should logout?",
+        shouldLogout
+      );
+
       // Se backend indicou que deve fazer logout, não tenta renovar
       if (shouldLogout) {
-        console.log("[Interceptor] Backend solicitou logout, redirecionando...");
+        console.log(
+          "[Interceptor] Backend solicitou logout, redirecionando..."
+        );
         setAccessToken(null);
         window.location.href = "/";
         return Promise.reject(error);
       }
-      
+
       if (isTokenExpired) {
         if (isRefreshing) {
           // Se já está renovando, aguarda na fila
@@ -131,37 +160,49 @@ localApi.interceptors.response.use(
         isRefreshing = true;
 
         console.log("[Interceptor] Tentando renovar token...");
-        
+
         return new Promise((resolve, reject) => {
           localApi
-            .post("/api/auth/refresh", {}, {
-              withCredentials: true, // Importante: envia cookies
-            })
+            .post(
+              "/api/auth/refresh",
+              {},
+              {
+                withCredentials: true, // Importante: envia cookies
+              }
+            )
             .then((response) => {
-              const newToken = response.data?.data?.accessToken || response.data?.data?.token || response.data?.token;
+              const newToken =
+                response.data?.data?.accessToken ||
+                response.data?.data?.token ||
+                response.data?.token;
               console.log("[Interceptor] Token renovado com sucesso!");
-              
+
               if (newToken) {
                 setAccessToken(newToken);
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
                 processQueue(null, newToken);
                 resolve(localApi(originalRequest));
               } else {
-                console.error("[Interceptor] Nenhum token retornado pelo refresh");
+                console.error(
+                  "[Interceptor] Nenhum token retornado pelo refresh"
+                );
                 processQueue(new Error("No token returned"), null);
                 reject(error);
               }
             })
             .catch((err) => {
               console.error("[Interceptor] Erro ao renovar token:", err);
-              const shouldLogoutOnError = err?.response?.data?.shouldLogout === true;
+              const shouldLogoutOnError =
+                err?.response?.data?.shouldLogout === true;
               processQueue(err, null);
               // Limpa o token inválido
               setAccessToken(null);
-              
+
               // Só redireciona se o backend explicitamente pediu
               if (shouldLogoutOnError) {
-                console.log("[Interceptor] Refresh falhou e backend solicitou logout");
+                console.log(
+                  "[Interceptor] Refresh falhou e backend solicitou logout"
+                );
                 window.location.href = "/";
               }
               reject(err);
@@ -184,11 +225,17 @@ const getApiInstance = () => {
 };
 
 const isAuthEndpoint = (url: string): boolean => {
-  const isAuth = url.includes("/api/auth/login") ||
-                url.includes("/api/auth/register") ||
-                url.includes("/api/auth/refresh") ||
-                url.includes("/api/auth/logout");
-  console.log("[isAuthEndpoint] URL:", url, "É endpoint de autenticação?", isAuth);
+  const isAuth =
+    url.includes("/api/auth/login") ||
+    url.includes("/api/auth/register") ||
+    url.includes("/api/auth/refresh") ||
+    url.includes("/api/auth/logout");
+  console.log(
+    "[isAuthEndpoint] URL:",
+    url,
+    "É endpoint de autenticação?",
+    isAuth
+  );
   return isAuth;
 };
 
