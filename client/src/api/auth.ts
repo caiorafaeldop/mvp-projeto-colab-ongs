@@ -14,8 +14,12 @@ export interface LoginResponse {
   data: {
     user: User;
     accessToken: string;
+  } | {
+    email: string;
+    name: string;
   };
   message: string;
+  emailNotVerified?: boolean;
 }
 
 export interface RegisterResponse {

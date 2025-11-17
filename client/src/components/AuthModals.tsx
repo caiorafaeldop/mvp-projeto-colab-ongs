@@ -42,12 +42,78 @@ export function AuthModals() {
   const [registerStep, setRegisterStep] = useState<"form" | "verify">("form");
   const [loginStep, setLoginStep] = useState<"form" | "verify">("form");
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState("");
-  const [pendingVerificationName, setPendingVerificationName] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+  // Função para lidar com login ao pressionar Enter
+  const handleLoginSubmit = async () => {
+    if (!authEmail || !authPassword) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha email e senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoggingIn(true);
+    try {
+      const response = await loginUser({
+        email: authEmail,
+        password: authPassword,
+      });
+
+      // Se email não verificado, mostrar tela de verificação
+      if (response.emailNotVerified) {
+        const unverifiedData = response.data as { email: string; name: string };
+        const emailToVerify = unverifiedData.email || authEmail;
+        setPendingVerificationEmail(emailToVerify);
+        setLoginStep("verify");
+
+        // Reenviar código automaticamente
+        try {
+          await sendVerificationCode(emailToVerify);
+          toast({
+            title: "📧 Verifique seu email",
+            description:
+              "Enviamos um código de verificação. Confira sua caixa de entrada.",
+          });
+        } catch (e) {
+          toast({
+            title: "📧 Verificação necessária",
+            description:
+              "Insira o código de verificação enviado para seu email.",
+          });
+        }
+        return;
+      }
+
+      if (response.success && response.data && "user" in response.data) {
+        login(response.data.user, response.data.accessToken);
+        closeLoginModal();
+        setAuthEmail("");
+        setAuthPassword("");
+        toast({
+          title: "Login realizado!",
+          description: `Bem-vindo de volta, ${response.data.user.name}!`,
+        });
+      } else {
+        throw new Error(response.message || "Erro ao fazer login");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro no login",
+        description:
+          error.message || "Verifique suas credenciais e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <>
