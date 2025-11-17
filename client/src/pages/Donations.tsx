@@ -9,7 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { Heart, CreditCard, Repeat, Loader2 } from "lucide-react";
+import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode } from "lucide-react";
+import QRCode from "react-qr-code";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -19,14 +20,10 @@ function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
 }
 
-function initials(name: string) {
-  const parts = (name || "").trim().split(/\s+/);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
+// removed unused helper
 
 export function Donations() {
+  const PIX_KEY = "00020126360014BR.GOV.BCB.PIX0114222228790001595204000053039865802BR5901N6001C62100506RFCCPB6304DB62";
   const { month, year } = useMemo(() => monthYearOf(new Date()), []);
   const [donors, setDonors] = useState<TopDonor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,12 +32,13 @@ export function Donations() {
   const [amount, setAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [donorName, setDonorName] = useState("");
-  const [donorEmail, setDonorEmail] = useState("");
+  const donorEmail = "";
   const [donorPhone, setDonorPhone] = useState("");
-  const [donorDocument, setDonorDocument] = useState("");
+  const donorDocument = "";
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
+  const [copiedPix, setCopiedPix] = useState(false);
   const { toast } = useToast();
   const predefinedAmounts = [10, 25, 50, 100, 200];
   
@@ -77,10 +75,33 @@ export function Donations() {
       others: sorted.slice(3),
     };
   }, [donors]);
-  const onlyPodium = podium.others.length === 0 && donors.length > 0;
+  // removed unused variable
 
   if (loading) {
     return <DonationsSkeleton />;
+  }
+
+  async function handleCopyPix() {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(PIX_KEY);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = PIX_KEY;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedPix(true);
+      toast({ title: "Chave PIX copiada!", description: "Cole no app do seu banco para pagar.", });
+      setTimeout(() => setCopiedPix(false), 1800);
+    } catch {
+      toast({ title: "Falha ao copiar", description: "Copie manualmente a chave abaixo.", variant: "destructive" });
+    }
   }
 
   return (
@@ -276,6 +297,113 @@ export function Donations() {
           </div>
         </div>
 
+        {/* PIX - QR Code e Chave - Modernizado */}
+        <div className="mt-6 lg:mt-8">
+          <Card className="bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 backdrop-blur-sm border-0 shadow-xl overflow-hidden relative">
+            {/* Efeito decorativo de fundo */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-200/20 to-purple-200/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+            
+            <CardHeader className="pb-4 relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <QrCode className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Pagamento Instantâneo via PIX
+                    </CardTitle>
+                    <p className="text-xs text-gray-600 mt-0.5">Rápido, seguro e sem taxas</p>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="relative z-10">
+              <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
+                {/* QR Code Section */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                    <div className="relative bg-white p-5 rounded-2xl shadow-2xl border-4 border-purple-100 hover:border-purple-200 transition-all duration-300 hover:scale-105">
+                      <QRCode 
+                        value={PIX_KEY} 
+                        style={{ width: "100%", height: "auto", maxWidth: "220px" }} 
+                        level="M"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-center">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <span className="text-lg">📱</span>
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium">Escaneie com a câmera do seu banco</p>
+                  </div>
+                </div>
+
+                {/* Chave PIX Section */}
+                <div className="flex flex-col justify-center space-y-4">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-purple-100">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <Copy className="w-4 h-4 text-white" />
+                      </div>
+                      <Label htmlFor="pix-key" className="text-sm font-bold text-gray-700">Chave PIX Copia e Cola</Label>
+                    </div>
+                    
+                    <div className="relative">
+                      <Input
+                        id="pix-key"
+                        readOnly
+                        value={PIX_KEY}
+                        onFocus={(e) => e.currentTarget.select()}
+                        className="text-xs font-mono bg-gray-50 border-2 border-gray-200 focus:border-purple-400 pr-3 py-3 h-auto transition-all"
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="button" 
+                      onClick={handleCopyPix}
+                      className={`w-full mt-3 h-12 font-semibold text-base transition-all duration-300 ${
+                        copiedPix 
+                          ? "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600" 
+                          : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      } text-white shadow-lg hover:shadow-xl hover:scale-105`}
+                    >
+                      {copiedPix ? (
+                        <>
+                          <span className="mr-2">✓</span>
+                          Chave Copiada!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-5 h-5 mr-2" />
+                          Copiar Chave PIX
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center">
+                        <span className="text-base">💡</span>
+                      </div>
+                      <div className="text-xs text-gray-700 space-y-1">
+                        <p className="font-semibold text-purple-900">Como funciona:</p>
+                        <p>1. Escaneie o QR Code ou copie a chave</p>
+                        <p>2. Cole no app do seu banco</p>
+                        <p>3. Confirme o pagamento</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* MODAIS */}
         
         {/* Modal de Informações do Doador (Doação Única) */}
@@ -426,8 +554,9 @@ export function Donations() {
                                 throw new Error(responseData?.message || "Erro ao processar doação");
                               }
                             }
-                          } catch (err: any) {
-                            toast({ title: "Erro ao processar", description: err?.message || "Tente novamente.", variant: "destructive" });
+                          } catch (err: unknown) {
+                            const message = err instanceof Error ? err.message : "Tente novamente.";
+                            toast({ title: "Erro ao processar", description: message, variant: "destructive" });
                           } finally {
                             setIsSubmitting(false);
                           }
