@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { getPublicTopDonors, type TopDonor } from "@/api/topDonors";
 import { DonationsSkeleton } from "@/components/skeletons/DonationsSkeleton";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,20 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode } from "lucide-react";
+import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode, ChevronLeft, ChevronRight } from "lucide-react";
 import QRCode from "react-qr-code";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { SubscriptionManageModal } from "@/components/SubscriptionManageModal";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
@@ -48,6 +56,44 @@ export function Donations() {
   
   const { isAuthenticated, user } = useAuth();
   const { openLoginModal, openRegisterModal } = useAuthModal();
+
+  // Carousel state
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideCount, setSlideCount] = useState(0);
+  
+  const donationImages = [
+    { src: "/img/Img_Donations_1.jpeg", alt: "Doação - Imagem 1" },
+    { src: "/img/Img_Donations_2.jpeg", alt: "Doação - Imagem 2" },
+    { src: "/img/Img_Donations_3.jpeg", alt: "Doação - Imagem 3" },
+  ];
+
+  // Carousel auto-play
+  useEffect(() => {
+    if (!carouselApi) return;
+    
+    setSlideCount(carouselApi.scrollSnapList().length);
+    setCurrentSlide(carouselApi.selectedScrollSnap());
+    
+    carouselApi.on("select", () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    });
+    
+    // Auto-play every 5 seconds
+    const autoplayInterval = setInterval(() => {
+      if (carouselApi.canScrollNext()) {
+        carouselApi.scrollNext();
+      } else {
+        carouselApi.scrollTo(0);
+      }
+    }, 5000);
+    
+    return () => clearInterval(autoplayInterval);
+  }, [carouselApi]);
+
+  const scrollToSlide = useCallback((index: number) => {
+    carouselApi?.scrollTo(index);
+  }, [carouselApi]);
 
   useEffect(() => {
     let mounted = true;
@@ -297,6 +343,80 @@ export function Donations() {
           </div>
         </div>
 
+        {/* Carrossel de Imagens de Doação - Compacto */}
+        <div className="mt-6 lg:mt-8">
+          <Card className="bg-gradient-to-br from-white via-pink-50/30 to-purple-50/30 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                {/* Título e descrição */}
+                <div className="flex-shrink-0 md:w-48">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
+                    📸 Galeria
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">Veja o impacto das doações</p>
+                </div>
+                
+                {/* Carrossel compacto */}
+                <div className="flex-1 relative">
+                  <Carousel 
+                    setApi={setCarouselApi}
+                    opts={{ loop: true }}
+                    className="w-full"
+                  >
+                    <CarouselContent>
+                      {donationImages.map((image, index) => (
+                        <CarouselItem key={index}>
+                          <div className="relative aspect-[16/10] md:aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gradient-to-br from-pink-100 to-purple-100">
+                            <img
+                              src={image.src}
+                              alt={image.alt}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    
+                    {/* Botões de navegação compactos */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
+                      onClick={() => carouselApi?.scrollPrev()}
+                    >
+                      <ChevronLeft className="h-4 w-4 text-purple-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
+                      onClick={() => carouselApi?.scrollNext()}
+                    >
+                      <ChevronRight className="h-4 w-4 text-purple-600" />
+                    </Button>
+                  </Carousel>
+                  
+                  {/* Indicadores de slide compactos */}
+                  <div className="flex justify-center gap-1.5 mt-3">
+                    {donationImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => scrollToSlide(index)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          currentSlide === index 
+                            ? "w-6 bg-gradient-to-r from-pink-500 to-purple-500" 
+                            : "w-1.5 bg-gray-300 hover:bg-purple-300"
+                        }`}
+                        aria-label={`Ir para slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* PIX - QR Code e Chave - Modernizado */}
         <div className="mt-6 lg:mt-8">
           <Card className="bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 backdrop-blur-sm border-0 shadow-xl overflow-hidden relative">
@@ -338,7 +458,7 @@ export function Donations() {
                     <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
                       <span className="text-lg">📱</span>
                     </div>
-                    <p className="text-sm text-gray-700 font-medium">Escaneie com a câmera do seu banco</p>
+                    <p className="text-sm text-gray-700 font-medium">Escaneie com a câmera do seu celular</p>
                   </div>
                 </div>
 
