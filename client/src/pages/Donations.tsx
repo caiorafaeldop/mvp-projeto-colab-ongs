@@ -347,6 +347,16 @@ export function Donations() {
         <div className="mt-6 lg:mt-8">
           <Card className="bg-gradient-to-br from-white via-pink-50/30 to-purple-50/30 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
             <CardContent className="p-4 md:p-6">
+              {/* Texto de destaque */}
+              <div className="text-center mb-4">
+                <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-wide bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                  Sua solidariedade transforma uma vida.
+                </h3>
+                <p className="text-sm md:text-base text-gray-600 mt-2 max-w-2xl mx-auto">
+                  Doação de cabelo se transforma em uma bela peruca para elevar a autoestima de quem tanto precisa.
+                </p>
+              </div>
+              
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Título e descrição */}
                 <div className="flex-shrink-0 md:w-48">
