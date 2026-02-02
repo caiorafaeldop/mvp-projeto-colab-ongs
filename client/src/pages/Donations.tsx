@@ -66,6 +66,21 @@ export function Donations() {
     { src: "/img/Img_Donations_1.jpeg", alt: "Doação - Imagem 1" },
     { src: "/img/Img_Donations_2.jpeg", alt: "Doação - Imagem 2" },
     { src: "/img/Img_Donations_3.jpeg", alt: "Doação - Imagem 3" },
+    { src: "/img/Img_Donations_4.jpeg", alt: "Doação - Imagem 4" },
+    { src: "/img/Img_Donations_5.jpeg", alt: "Doação - Imagem 5" },
+    { src: "/img/Img_Donations_6.jpeg", alt: "Doação - Imagem 6" },
+    { src: "/img/Img_Donations_7.jpeg", alt: "Doação - Imagem 7" },
+    { src: "/img/Img_Donations_8.jpeg", alt: "Doação - Imagem 8" },
+    { src: "/img/Img_Donations_9.jpeg", alt: "Doação - Imagem 9" },
+    { src: "/img/Img_Donations_10.jpeg", alt: "Doação - Imagem 10" },
+    { src: "/img/Img_Donations_11.jpeg", alt: "Doação - Imagem 11" },
+    { src: "/img/Img_Donations_12.jpeg", alt: "Doação - Imagem 12" },
+    { src: "/img/Img_Donations_13.jpeg", alt: "Doação - Imagem 13" },
+    { src: "/img/Img_Donations_14.jpeg", alt: "Doação - Imagem 14" },
+    { src: "/img/Img_Donations_15.jpeg", alt: "Doação - Imagem 15" },
+    { src: "/img/Img_Donations_16.jpeg", alt: "Doação - Imagem 16" },
+    { src: "/img/Img_Donations_17.jpeg", alt: "Doação - Imagem 17" },
+    { src: "/img/Img_Donations_18.jpeg", alt: "Doação - Imagem 18" },
   ];
 
   // Carousel auto-play
