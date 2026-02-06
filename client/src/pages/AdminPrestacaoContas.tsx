@@ -334,12 +334,14 @@ export default function AdminPrestacaoContas() {
     }
 
     try {
+      // Usar null em vez de undefined para campos vazios
+      // Isso garante que o backend receba a instrução de limpar esses campos
       const payload: any = {
         titulo,
-        descricaoPlanilha: descricaoPlanilha.trim() || undefined,
-        origemRecurso: origemRecurso.trim() || undefined,
-        valorTotalRecurso: valorTotalRecurso || undefined,
-        saldoConta: saldoConta || undefined,
+        descricaoPlanilha: descricaoPlanilha.trim() || null,
+        origemRecurso: origemRecurso.trim() || null,
+        valorTotalRecurso: valorTotalRecurso ?? null,
+        saldoConta: saldoConta ?? null,
         ano,
         mostrarTotal,
         colunas,
@@ -351,9 +353,14 @@ export default function AdminPrestacaoContas() {
       if (usarPeriodo && mesInicial && mesFinal) {
         payload.mesInicial = mesInicial;
         payload.mesFinal = mesFinal;
+        // Limpar o mes único quando usar período
+        payload.mes = null;
       } else {
         // Caso contrário, enviar apenas mes (retrocompatibilidade)
-        payload.mes = mes === 0 ? undefined : mes;
+        payload.mes = mes ?? null;
+        // Limpar período quando usar mês único
+        payload.mesInicial = null;
+        payload.mesFinal = null;
       }
 
       console.log("[salvarPlanilha] Payload:", JSON.stringify(payload, null, 2));
