@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,13 +18,15 @@ import api from "@/api/api";
 import AdminFAQ from "./AdminFAQ";
 import AdminTestimonials from "./AdminTestimonials";
 import AdminPrestacaoContas from "./AdminPrestacaoContas";
+import AdminCarouselSlides from "./AdminCarouselSlides";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
   const isAdmin = useMemo(() => user?.userType === "organization", [user]);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "apoiadores";
+  const tabFromQuery = searchParams.get("tab");
+  const activeTab = tabFromQuery === "carrossel" ? "slides" : tabFromQuery || "apoiadores";
   const [isTabChanging, setIsTabChanging] = useState(false);
 
   const [supporters, setSupporters] = useState<Supporter[]>([]);
@@ -315,6 +317,9 @@ export default function AdminPanel() {
           <TabsTrigger value="doadores" asChild>
             <Link to="/admin?tab=doadores">Doadores</Link>
           </TabsTrigger>
+          <TabsTrigger value="slides" asChild>
+            <Link to="/admin?tab=slides">Slides</Link>
+          </TabsTrigger>
           <TabsTrigger value="faqs" asChild>
             <Link to="/admin?tab=faqs">FAQs</Link>
           </TabsTrigger>
@@ -351,6 +356,9 @@ export default function AdminPanel() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{editingSupporter ? "Editar Apoiador" : "Novo Apoiador"}</DialogTitle>
+                  <DialogDescription>
+                    Configure os dados do apoiador, incluindo imagem, site, ordem e visibilidade.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
@@ -589,6 +597,10 @@ export default function AdminPanel() {
 
         <TabsContent value="faqs" className="mt-4">
           <AdminFAQ />
+        </TabsContent>
+
+        <TabsContent value="slides" className="mt-4">
+          <AdminCarouselSlides />
         </TabsContent>
 
         <TabsContent value="depoimentos" className="mt-4">

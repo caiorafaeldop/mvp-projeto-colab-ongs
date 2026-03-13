@@ -12,6 +12,13 @@ import { useToast } from "@/hooks/useToast";
 import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode, ChevronLeft, ChevronRight } from "lucide-react";
 import QRCode from "react-qr-code";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
+import {
+  getPublicCarouselSlides,
+  getPublicCarouselSectionSettings,
+  type CarouselSlide as PublicCarouselSlide,
+  type CarouselSectionSettings as PublicCarouselSectionSettings,
+} from "@/api/carouselSlides";
+import { DONATION_CAROUSEL_FALLBACK_SLIDES } from "@/lib/donationCarouselFallback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { SubscriptionManageModal } from "@/components/SubscriptionManageModal";
@@ -27,6 +34,38 @@ import {
 function monthYearOf(date: Date) {
   return { month: date.getMonth() + 1, year: date.getFullYear() };
 }
+
+function normalizeCarouselText(value?: string | null): string {
+  return (value ?? "").trim();
+}
+
+function isGenericCarouselCaption(value?: string | null): boolean {
+  const text = normalizeCarouselText(value);
+  if (!text) return false;
+  return /^doac[aã]o\s*-\s*imagem\s*\d+$/i.test(text);
+}
+
+function getDisplayCarouselCaption(slide?: PublicCarouselSlide): string {
+  if (!slide) return "";
+
+  const caption = normalizeCarouselText(slide.caption);
+  const altText = normalizeCarouselText(slide.altText);
+
+  if (!caption) return "";
+
+  // When admin removes alt text from imported slides, hide generic captions.
+  if (!altText && isGenericCarouselCaption(caption)) {
+    return "";
+  }
+
+  return caption;
+}
+
+const DEFAULT_CAROUSEL_SECTION_SETTINGS: PublicCarouselSectionSettings = {
+  title: "Sua solidariedade transforma uma vida.",
+  subtitle:
+    "Doação de cabelo se transforma em uma bela peruca para elevar a autoestima de quem tanto precisa.",
+};
 
 // removed unused helper
 
@@ -61,27 +100,43 @@ export function Donations() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideCount, setSlideCount] = useState(0);
-  
-  const donationImages = [
-    { src: "/img/Img_Donations_1.jpeg", alt: "Doação - Imagem 1" },
-    { src: "/img/Img_Donations_2.jpeg", alt: "Doação - Imagem 2" },
-    { src: "/img/Img_Donations_3.jpeg", alt: "Doação - Imagem 3" },
-    { src: "/img/Img_Donations_4.jpeg", alt: "Doação - Imagem 4" },
-    { src: "/img/Img_Donations_5.jpeg", alt: "Doação - Imagem 5" },
-    { src: "/img/Img_Donations_6.jpeg", alt: "Doação - Imagem 6" },
-    { src: "/img/Img_Donations_7.jpeg", alt: "Doação - Imagem 7" },
-    { src: "/img/Img_Donations_8.jpeg", alt: "Doação - Imagem 8" },
-    { src: "/img/Img_Donations_9.jpeg", alt: "Doação - Imagem 9" },
-    { src: "/img/Img_Donations_10.jpeg", alt: "Doação - Imagem 10" },
-    { src: "/img/Img_Donations_11.jpeg", alt: "Doação - Imagem 11" },
-    { src: "/img/Img_Donations_12.jpeg", alt: "Doação - Imagem 12" },
-    { src: "/img/Img_Donations_13.jpeg", alt: "Doação - Imagem 13" },
-    { src: "/img/Img_Donations_14.jpeg", alt: "Doação - Imagem 14" },
-    { src: "/img/Img_Donations_15.jpeg", alt: "Doação - Imagem 15" },
-    { src: "/img/Img_Donations_16.jpeg", alt: "Doação - Imagem 16" },
-    { src: "/img/Img_Donations_17.jpeg", alt: "Doação - Imagem 17" },
-    { src: "/img/Img_Donations_18.jpeg", alt: "Doação - Imagem 18" },
-  ];
+  const [donationImages, setDonationImages] = useState<PublicCarouselSlide[]>(DONATION_CAROUSEL_FALLBACK_SLIDES);
+  const [carouselSectionSettings, setCarouselSectionSettings] = useState<PublicCarouselSectionSettings>(
+    DEFAULT_CAROUSEL_SECTION_SETTINGS
+  );
+  const currentSlideCaption = getDisplayCarouselCaption(donationImages[currentSlide]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const slides = await getPublicCarouselSlides();
+        if (!mounted || slides.length === 0) return;
+
+        const sortedSlides = [...slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setDonationImages(sortedSlides);
+      } catch (error) {
+        console.warn("Falha ao carregar slides publicos do carrossel, usando fallback local", error);
+      }
+
+      try {
+        const settings = await getPublicCarouselSectionSettings();
+        if (!mounted || !settings) return;
+
+        setCarouselSectionSettings({
+          title: settings.title || DEFAULT_CAROUSEL_SECTION_SETTINGS.title,
+          subtitle: settings.subtitle || DEFAULT_CAROUSEL_SECTION_SETTINGS.subtitle,
+        });
+      } catch (error) {
+        console.warn("Falha ao carregar textos da secao de slides, usando valores padrao", error);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Carousel auto-play
   useEffect(() => {
@@ -104,7 +159,7 @@ export function Donations() {
     }, 5000);
     
     return () => clearInterval(autoplayInterval);
-  }, [carouselApi]);
+  }, [carouselApi, donationImages.length]);
 
   const scrollToSlide = useCallback((index: number) => {
     carouselApi?.scrollTo(index);
@@ -365,10 +420,10 @@ export function Donations() {
               {/* Texto de destaque */}
               <div className="text-center mb-4">
                 <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-wide bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                  Sua solidariedade transforma uma vida.
+                  {carouselSectionSettings.title}
                 </h3>
                 <p className="text-sm md:text-base text-gray-600 mt-2 max-w-2xl mx-auto">
-                  Doação de cabelo se transforma em uma bela peruca para elevar a autoestima de quem tanto precisa.
+                  {carouselSectionSettings.subtitle}
                 </p>
               </div>
               
@@ -392,11 +447,19 @@ export function Donations() {
                       {donationImages.map((image, index) => (
                         <CarouselItem key={index}>
                           <div className="relative aspect-[16/10] md:aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gradient-to-br from-pink-100 to-purple-100">
-                            <img
-                              src={image.src}
-                              alt={image.alt}
-                              className="w-full h-full object-contain"
-                            />
+                            {(() => {
+                              const altText = normalizeCarouselText(image.altText);
+                              const displayCaption = getDisplayCarouselCaption(image);
+                              const imageAlt = altText || displayCaption || `Doacao - Imagem ${index + 1}`;
+
+                              return (
+                                <img
+                                  src={image.imageUrl}
+                                  alt={imageAlt}
+                                  className="w-full h-full object-contain"
+                                />
+                              );
+                            })()}
                           </div>
                         </CarouselItem>
                       ))}
@@ -420,6 +483,10 @@ export function Donations() {
                       <ChevronRight className="h-4 w-4 text-purple-600" />
                     </Button>
                   </Carousel>
+
+                  <p className="mt-3 text-center text-sm text-gray-600 min-h-5">
+                    {currentSlideCaption || " "}
+                  </p>
                   
                   {/* Indicadores de slide compactos */}
                   <div className="flex justify-center gap-1.5 mt-3">

@@ -1,0 +1,27 @@
+export type DonationCarouselFallbackSlide = {
+  imageUrl: string;
+  caption: string;
+  altText: string;
+  order: number;
+};
+
+export const DONATION_CAROUSEL_FALLBACK_SLIDES: DonationCarouselFallbackSlide[] = [
+  { imageUrl: "/img/Img_Donations_1.jpeg", caption: "Doacao - Imagem 1", altText: "Doacao - Imagem 1", order: 1 },
+  { imageUrl: "/img/Img_Donations_2.jpeg", caption: "Doacao - Imagem 2", altText: "Doacao - Imagem 2", order: 2 },
+  { imageUrl: "/img/Img_Donations_3.jpeg", caption: "Doacao - Imagem 3", altText: "Doacao - Imagem 3", order: 3 },
+  { imageUrl: "/img/Img_Donations_4.jpeg", caption: "Doacao - Imagem 4", altText: "Doacao - Imagem 4", order: 4 },
+  { imageUrl: "/img/Img_Donations_5.jpeg", caption: "Doacao - Imagem 5", altText: "Doacao - Imagem 5", order: 5 },
+  { imageUrl: "/img/Img_Donations_6.jpeg", caption: "Doacao - Imagem 6", altText: "Doacao - Imagem 6", order: 6 },
+  { imageUrl: "/img/Img_Donations_7.jpeg", caption: "Doacao - Imagem 7", altText: "Doacao - Imagem 7", order: 7 },
+  { imageUrl: "/img/Img_Donations_8.jpeg", caption: "Doacao - Imagem 8", altText: "Doacao - Imagem 8", order: 8 },
+  { imageUrl: "/img/Img_Donations_9.jpeg", caption: "Doacao - Imagem 9", altText: "Doacao - Imagem 9", order: 9 },
+  { imageUrl: "/img/Img_Donations_10.jpeg", caption: "Doacao - Imagem 10", altText: "Doacao - Imagem 10", order: 10 },
+  { imageUrl: "/img/Img_Donations_11.jpeg", caption: "Doacao - Imagem 11", altText: "Doacao - Imagem 11", order: 11 },
+  { imageUrl: "/img/Img_Donations_12.jpeg", caption: "Doacao - Imagem 12", altText: "Doacao - Imagem 12", order: 12 },
+  { imageUrl: "/img/Img_Donations_13.jpeg", caption: "Doacao - Imagem 13", altText: "Doacao - Imagem 13", order: 13 },
+  { imageUrl: "/img/Img_Donations_14.jpeg", caption: "Doacao - Imagem 14", altText: "Doacao - Imagem 14", order: 14 },
+  { imageUrl: "/img/Img_Donations_15.jpeg", caption: "Doacao - Imagem 15", altText: "Doacao - Imagem 15", order: 15 },
+  { imageUrl: "/img/Img_Donations_16.jpeg", caption: "Doacao - Imagem 16", altText: "Doacao - Imagem 16", order: 16 },
+  { imageUrl: "/img/Img_Donations_17.jpeg", caption: "Doacao - Imagem 17", altText: "Doacao - Imagem 17", order: 17 },
+  { imageUrl: "/img/Img_Donations_18.jpeg", caption: "Doacao - Imagem 18", altText: "Doacao - Imagem 18", order: 18 },
+];

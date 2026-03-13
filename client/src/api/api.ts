@@ -6,8 +6,12 @@ import axios, {
 import JSONbig from "json-bigint";
 
 // URL base do servidor backend
-const API_BASE_URL = "https://mvp-colab-ongs-backend-c8lx.onrender.com"; 
-// const API_BASE_URL = "http://localhost:3000";
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://mvp-colab-ongs-backend-c8lx.onrender.com";
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+  DEFAULT_API_BASE_URL;
 const localApi = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Importante: permite envio/recebimento de cookies
@@ -41,7 +45,9 @@ localApi.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     console.log("[Interceptor Request] URL:", config.url);
-    if (token && !isAuthEndpoint(config.url || "")) {
+    const url = config.url || "";
+
+    if (token && !isAuthEndpoint(url) && !isPublicEndpoint(url)) {
       console.log(
         "[Interceptor Request] Adicionando Authorization: Bearer",
         token
@@ -237,6 +243,10 @@ const isAuthEndpoint = (url: string): boolean => {
     isAuth
   );
   return isAuth;
+};
+
+const isPublicEndpoint = (url: string): boolean => {
+  return url.includes("/api/public/");
 };
 
 const api = {
