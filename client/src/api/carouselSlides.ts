@@ -6,6 +6,8 @@ export type CarouselSlide = {
   caption?: string | null;
   altText?: string | null;
   theme?: string | null;
+  albumTitle?: string | null;
+  albumSubtitle?: string | null;
   order?: number;
   visible?: boolean;
 };

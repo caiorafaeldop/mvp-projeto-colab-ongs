@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
-import { Pencil, Trash2, Plus, Eye, EyeOff, RefreshCw, Upload, FolderOpen, Filter } from "lucide-react";
+import { Pencil, Trash2, Plus, Eye, EyeOff, RefreshCw, Upload, FolderOpen, Filter, Info, ChevronDown, ChevronUp } from "lucide-react";
 import api from "@/api/api";
 import { DONATION_CAROUSEL_FALLBACK_SLIDES } from "@/lib/donationCarouselFallback";
 
@@ -42,10 +42,13 @@ export default function AdminCarouselSlides() {
   const [caption, setCaption] = useState("");
   const [altText, setAltText] = useState("");
   const [theme, setTheme] = useState("");
+  const [albumTitle, setAlbumTitle] = useState("");
+  const [albumSubtitle, setAlbumSubtitle] = useState("");
   const [order, setOrder] = useState(0);
   const [visible, setVisible] = useState(true);
   const [themeFilter, setThemeFilter] = useState<string | null>(null);
   const [themeSummaries, setThemeSummaries] = useState<CarouselThemeSummary[]>([]);
+  const [showGuide, setShowGuide] = useState(false);
 
   const loadSlides = useCallback(async () => {
     setLoading(true);
@@ -212,6 +215,8 @@ export default function AdminCarouselSlides() {
     setCaption("");
     setAltText("");
     setTheme("");
+    setAlbumTitle("");
+    setAlbumSubtitle("");
     setOrder(0);
     setVisible(true);
     setDialogOpen(true);
@@ -223,6 +228,8 @@ export default function AdminCarouselSlides() {
     setCaption(slide.caption || "");
     setAltText(slide.altText || "");
     setTheme(slide.theme || "");
+    setAlbumTitle(slide.albumTitle || "");
+    setAlbumSubtitle(slide.albumSubtitle || "");
     setOrder(slide.order || 0);
     setVisible(slide.visible ?? true);
     setDialogOpen(true);
@@ -242,12 +249,16 @@ export default function AdminCarouselSlides() {
       const normalizedCaption = caption.trim();
       const normalizedAltText = altText.trim();
       const normalizedTheme = theme.trim();
+      const normalizedAlbumTitle = albumTitle.trim();
+      const normalizedAlbumSubtitle = albumSubtitle.trim();
 
       const payload = {
         imageUrl: imageUrl.trim(),
         caption: normalizedCaption ? normalizedCaption : null,
         altText: normalizedAltText ? normalizedAltText : null,
         theme: normalizedTheme ? normalizedTheme : null,
+        albumTitle: normalizedAlbumTitle ? normalizedAlbumTitle : null,
+        albumSubtitle: normalizedAlbumSubtitle ? normalizedAlbumSubtitle : null,
         order: Number(order) || 0,
         visible,
       } as Partial<CarouselSlide>;
@@ -451,12 +462,16 @@ export default function AdminCarouselSlides() {
                 <DialogHeader>
                   <DialogTitle>{editingSlide ? "Editar Slide" : "Novo Slide"}</DialogTitle>
                   <DialogDescription>
-                    Escolha a imagem, edite a legenda exibida na página e defina a posição em que o slide deve aparecer.
+                    {editingSlide
+                      ? "Altere os dados do slide. As mudanças serão refletidas imediatamente na página de doações."
+                      : "Preencha os campos abaixo para adicionar uma nova foto à galeria. Apenas a imagem é obrigatória — os demais campos são opcionais, mas ajudam a organizar."
+                    }
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="slide-image">Imagem do Slide *</Label>
+                    <p className="text-xs text-muted-foreground mb-1">Envie uma foto do seu computador ou cole o link de uma imagem da internet.</p>
                     <div className="flex gap-2">
                       <Input
                         id="slide-image"
@@ -488,7 +503,8 @@ export default function AdminCarouselSlides() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="slide-caption">Legenda exibida na página (opcional)</Label>
+                      <Label htmlFor="slide-caption">Legenda exibida na página</Label>
+                      <p className="text-xs text-muted-foreground mb-1">Texto curto que aparece embaixo da foto quando o visitante abre o álbum.</p>
                       <Input
                         id="slide-caption"
                         value={caption}
@@ -497,18 +513,23 @@ export default function AdminCarouselSlides() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="slide-alt">Texto alternativo da imagem (acessibilidade)</Label>
+                      <Label htmlFor="slide-alt">Texto alternativo (acessibilidade)</Label>
+                      <p className="text-xs text-muted-foreground mb-1">Descrição da imagem para leitores de tela. Não aparece na página.</p>
                       <Input
                         id="slide-alt"
                         value={altText}
                         onChange={(e) => setAltText(e.target.value)}
-                        placeholder="Ex: Voluntários entregando cestas (não aparece como legenda)"
+                        placeholder="Ex: Voluntários entregando cestas básicas"
                       />
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="slide-theme">Tema / Álbum</Label>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Digite o nome do álbum para agrupar fotos. Fotos com o mesmo tema aparecem juntas como um álbum na galeria.
+                      {uniqueThemes.filter(Boolean).length > 0 && " Você pode escolher um tema existente digitando — sugestões aparecem automaticamente."}
+                    </p>
                     <Input
                       id="slide-theme"
                       value={theme}
@@ -523,14 +544,57 @@ export default function AdminCarouselSlides() {
                         ))}
                       </datalist>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Agrupa este slide com outros do mesmo tema na galeria pública.
-                    </p>
+                    {uniqueThemes.filter(Boolean).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <span className="text-xs text-muted-foreground">Temas existentes:</span>
+                        {uniqueThemes.filter(Boolean).map((t) => (
+                          <button
+                            key={t!}
+                            type="button"
+                            className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                            onClick={() => setTheme(t!)}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {theme.trim() && (
+                    <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4 text-purple-600" />
+                        <p className="text-sm font-semibold text-purple-900">Personalizar álbum "{theme.trim()}"</p>
+                      </div>
+                      <p className="text-xs text-purple-700">
+                        Defina um título e subtitulo para este álbum. Basta preencher em um dos slides do tema — todos os slides do mesmo tema compartilham esses textos.
+                      </p>
+                      <div>
+                        <Label htmlFor="slide-album-title">Título do álbum</Label>
+                        <Input
+                          id="slide-album-title"
+                          value={albumTitle}
+                          onChange={(e) => setAlbumTitle(e.target.value)}
+                          placeholder={`Ex: ${theme.trim()}`}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="slide-album-subtitle">Subtítulo do álbum</Label>
+                        <Input
+                          id="slide-album-subtitle"
+                          value={albumSubtitle}
+                          onChange={(e) => setAlbumSubtitle(e.target.value)}
+                          placeholder="Ex: Conheça as doações de cabelo que transformam vidas."
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="slide-order">Posição de exibição</Label>
+                      <p className="text-xs text-muted-foreground mb-1">Números menores aparecem primeiro dentro do álbum (ex: 1, 2, 3).</p>
                       <Input
                         id="slide-order"
                         type="number"
@@ -538,33 +602,45 @@ export default function AdminCarouselSlides() {
                         onChange={(e) => setOrder(Number(e.target.value))}
                       />
                     </div>
-                    <div className="flex items-center gap-2 pt-8">
-                      <input
-                        type="checkbox"
-                        id="slide-visible"
-                        checked={visible}
-                        onChange={(e) => setVisible(e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      <Label htmlFor="slide-visible">Mostrar este slide no site</Label>
+                    <div className="flex flex-col gap-2 pt-6">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="slide-visible"
+                          checked={visible}
+                          onChange={(e) => setVisible(e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="slide-visible">Mostrar este slide no site</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Desmarque para esconder o slide temporariamente sem excluí-lo.</p>
                     </div>
                   </div>
 
                   <div>
-                    <Label>Como vai aparecer</Label>
-                    <div className="mt-2 rounded-lg border p-3">
+                    <Label>Pré-visualização</Label>
+                    <p className="text-xs text-muted-foreground mb-1">Assim vai ficar o slide quando o visitante abrir o álbum.</p>
+                    <div className="mt-1 rounded-lg border p-3 bg-gray-950">
                       {imageUrl ? (
                         <div className="space-y-2">
                           <img
                             src={imageUrl}
                             alt={altText || caption || "Slide"}
-                            className="h-40 w-full object-contain rounded bg-gray-50"
+                            className="h-40 w-full object-contain rounded"
                           />
-                          {caption && <p className="text-sm text-muted-foreground">{caption}</p>}
+                          {caption && (
+                            <p className="text-sm text-center text-white/80">{caption}</p>
+                          )}
+                          {theme && (
+                            <p className="text-xs text-center text-purple-400">
+                              Álbum: {theme}
+                            </p>
+                          )}
                         </div>
                       ) : (
-                        <div className="h-32 flex items-center justify-center text-sm text-muted-foreground bg-gray-50 rounded">
-                          Nenhuma imagem selecionada
+                        <div className="h-32 flex flex-col items-center justify-center gap-2 text-sm text-white/40 rounded">
+                          <Upload className="h-8 w-8" />
+                          <span>Envie ou cole a URL de uma imagem acima</span>
                         </div>
                       )}
                     </div>
@@ -584,10 +660,15 @@ export default function AdminCarouselSlides() {
 
       <CardContent>
         <div className="mb-4 rounded-lg border bg-white p-4">
-          <p className="text-sm font-semibold text-slate-900">Texto de destaque da seção</p>
-          <p className="mt-1 text-xs text-slate-600">
-            Este título e subtítulo aparecem acima das imagens na página de doações.
-          </p>
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-purple-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Texto de destaque da seção</p>
+              <p className="mt-1 text-xs text-slate-600">
+                Estes textos aparecem acima dos álbuns na página de doações. É o primeiro texto que o visitante vê ao rolar até a galeria de fotos.
+              </p>
+            </div>
+          </div>
 
           <div className="mt-3 grid grid-cols-1 gap-3">
             <div>
@@ -624,9 +705,45 @@ export default function AdminCarouselSlides() {
           </div>
         </div>
 
-        <div className="mb-4 rounded-lg border bg-slate-50 p-3 text-sm text-slate-700">
-          <p className="font-medium">Passo a passo rápido</p>
-          <p className="mt-1">1) Clique em "Novo Slide". 2) Envie uma imagem. 3) Informe o tema/álbum. 4) Salve.</p>
+        <div className="mb-4 rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-3 text-left"
+            onClick={() => setShowGuide((v) => !v)}
+          >
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-900">Como funciona a galeria de slides?</span>
+            </div>
+            {showGuide ? <ChevronUp className="h-4 w-4 text-blue-600" /> : <ChevronDown className="h-4 w-4 text-blue-600" />}
+          </button>
+
+          {showGuide && (
+            <div className="px-4 pb-4 space-y-3 text-sm text-slate-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="rounded-md bg-white p-3 border border-blue-100">
+                  <p className="font-semibold text-blue-800 mb-1">1. Adicionar slides</p>
+                  <p className="text-xs">Clique em <strong>"Novo Slide"</strong> no topo. Envie uma imagem ou cole a URL. Preencha a legenda e salve.</p>
+                </div>
+                <div className="rounded-md bg-white p-3 border border-blue-100">
+                  <p className="font-semibold text-blue-800 mb-1">2. Organizar em álbuns</p>
+                  <p className="text-xs">No campo <strong>"Tema / Álbum"</strong>, escreva o nome do álbum (ex: "Doação de Cabelo"). Slides com o mesmo tema ficam agrupados na galeria pública.</p>
+                </div>
+                <div className="rounded-md bg-white p-3 border border-blue-100">
+                  <p className="font-semibold text-blue-800 mb-1">3. Ordenar slides</p>
+                  <p className="text-xs">O campo <strong>"Posição"</strong> define a ordem dentro do álbum. Números menores aparecem primeiro (ex: 1, 2, 3...).</p>
+                </div>
+                <div className="rounded-md bg-white p-3 border border-blue-100">
+                  <p className="font-semibold text-blue-800 mb-1">4. Mostrar ou ocultar</p>
+                  <p className="text-xs">Use o botão <strong>"Ocultar"</strong> para esconder um slide sem precisar excluí-lo. Ele continuará salvo, mas não aparecerá no site.</p>
+                </div>
+              </div>
+              <div className="rounded-md bg-blue-100/50 p-3 border border-blue-200">
+                <p className="font-semibold text-blue-800 mb-1">Como o visitante vê</p>
+                <p className="text-xs">Na página de doações, cada tema aparece como um <strong>álbum em miniatura</strong> com a foto de capa. O visitante clica no álbum para ver as fotos em um carrossel.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">

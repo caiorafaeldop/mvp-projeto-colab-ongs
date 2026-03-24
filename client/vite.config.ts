@@ -13,8 +13,9 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: "https://mvp-colab-ongs-backend.onrender.com",
+        target: "https://mvp-colab-ongs-backend-c8lx.onrender.com",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api"),
       },
     },
     allowedHosts: ["localhost", ".pythagora.ai", "all"],

@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
-import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode, ChevronLeft, ChevronRight, X, Images } from "lucide-react";
 import QRCode from "react-qr-code";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
 import {
@@ -97,33 +97,53 @@ export function Donations() {
   // Carousel state
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [slideCount, setSlideCount] = useState(0);
   const [donationImages, setDonationImages] = useState<PublicCarouselSlide[]>(DONATION_CAROUSEL_FALLBACK_SLIDES);
   const [carouselSectionSettings, setCarouselSectionSettings] = useState<PublicCarouselSectionSettings>(
     DEFAULT_CAROUSEL_SECTION_SETTINGS
   );
-  const [activeTheme, setActiveTheme] = useState<string | null>(null);
+  const [openAlbum, setOpenAlbum] = useState<string | null>(null);
 
   /**
-   * Lista de temas disponíveis extraída dos slides carregados.
+   * Agrupa slides por tema para exibir como álbuns em miniatura.
+   * Cada álbum tem: nome do tema, título, subtítulo, array de slides e imagem de capa.
    */
-  const availableThemes = useMemo(() => {
-    const set = new Set<string>();
+  const albums = useMemo(() => {
+    const map = new Map<string, PublicCarouselSlide[]>();
     for (const s of donationImages) {
-      if (s.theme) set.add(s.theme);
+      const key = s.theme || "Geral";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return Array.from(map.entries())
+      .map(([name, slides]) => {
+        const sorted = slides.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const meta = sorted.find((s) => s.albumTitle || s.albumSubtitle);
+        return {
+          name,
+          title: meta?.albumTitle || name,
+          subtitle: meta?.albumSubtitle || "",
+          slides: sorted,
+          cover: sorted[0]?.imageUrl ?? "",
+        };
+      })
+      .sort((a, b) => {
+        if (a.name === "Geral") return 1;
+        if (b.name === "Geral") return -1;
+        return a.name.localeCompare(b.name, "pt-BR");
+      });
   }, [donationImages]);
 
   /**
-   * Slides filtrados pelo tema ativo. Se null, mostra todos.
+   * Dados do álbum atualmente aberto.
    */
-  const activeSlides = useMemo(() => {
-    if (activeTheme === null) return donationImages;
-    return donationImages.filter((s) => s.theme === activeTheme);
-  }, [donationImages, activeTheme]);
+  const openAlbumData = useMemo(() => {
+    if (!openAlbum) return null;
+    return albums.find((a) => a.name === openAlbum) ?? null;
+  }, [albums, openAlbum]);
 
-  const currentSlideCaption = getDisplayCarouselCaption(activeSlides[currentSlide]);
+  const openAlbumSlides = openAlbumData?.slides ?? [];
+
+  const currentSlideCaption = getDisplayCarouselCaption(openAlbumSlides[currentSlide]);
 
   useEffect(() => {
     let mounted = true;
@@ -161,7 +181,6 @@ export function Donations() {
   useEffect(() => {
     if (!carouselApi) return;
     
-    setSlideCount(carouselApi.scrollSnapList().length);
     setCurrentSlide(carouselApi.selectedScrollSnap());
     
     carouselApi.on("select", () => {
@@ -178,22 +197,27 @@ export function Donations() {
     }, 5000);
     
     return () => clearInterval(autoplayInterval);
-  }, [carouselApi, activeSlides.length]);
+  }, [carouselApi, openAlbumSlides.length]);
 
   const scrollToSlide = useCallback((index: number) => {
     carouselApi?.scrollTo(index);
   }, [carouselApi]);
 
   /**
-   * Altera o tema ativo e reseta o carrossel para o primeiro slide.
+   * Abre um álbum para visualização em carrossel.
    */
-  const handleThemeChange = useCallback((theme: string | null) => {
-    setActiveTheme(theme);
+  const handleOpenAlbum = useCallback((albumName: string) => {
+    setOpenAlbum(albumName);
     setCurrentSlide(0);
-    setTimeout(() => {
-      carouselApi?.scrollTo(0);
-    }, 50);
-  }, [carouselApi]);
+  }, []);
+
+  /**
+   * Fecha o álbum aberto e volta para a visão de miniaturas.
+   */
+  const handleCloseAlbum = useCallback(() => {
+    setOpenAlbum(null);
+    setCurrentSlide(0);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -443,12 +467,12 @@ export function Donations() {
           </div>
         </div>
 
-        {/* Carrossel de Imagens de Doação - Compacto */}
+        {/* Galeria de Álbuns de Fotos */}
         <div className="mt-6 lg:mt-8">
           <Card className="bg-gradient-to-br from-white via-pink-50/30 to-purple-50/30 backdrop-blur-sm border-0 shadow-lg overflow-hidden">
             <CardContent className="p-4 md:p-6">
               {/* Texto de destaque */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-6">
                 <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-wide bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
                   {carouselSectionSettings.title}
                 </h3>
@@ -456,124 +480,193 @@ export function Donations() {
                   {carouselSectionSettings.subtitle}
                 </p>
               </div>
-              
-              <div className="flex flex-col gap-4">
-                {/* Navegação de temas */}
-                {availableThemes.length > 1 && (
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Álbuns</p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <button
-                        onClick={() => handleThemeChange(null)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-                          activeTheme === null
-                            ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md"
-                            : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
-                        }`}
-                      >
-                        Todos
-                      </button>
-                      {availableThemes.map((t) => (
+
+              {/* Grid de Álbuns em Miniatura */}
+              {albums.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Images className="h-5 w-5 text-purple-500" />
+                    <h4 className="text-base font-bold text-gray-800">Nossos Álbuns</h4>
+                    <span className="text-xs text-gray-400">({albums.length} {albums.length === 1 ? "álbum" : "álbuns"})</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    {albums.map((album) => {
+                      const isOpen = openAlbum === album.name;
+                      return (
                         <button
-                          key={t}
-                          onClick={() => handleThemeChange(t)}
-                          className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
-                            activeTheme === t
-                              ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md"
-                              : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
+                          key={album.name}
+                          onClick={() => handleOpenAlbum(album.name)}
+                          className={`group relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 ${
+                            isOpen ? "ring-2 ring-purple-500 ring-offset-2" : ""
                           }`}
                         >
-                          {t}
+                          {/* Imagem de capa */}
+                          <div className="aspect-[4/3] bg-gradient-to-br from-pink-100 to-purple-100">
+                            <img
+                              src={album.cover}
+                              alt={`Álbum ${album.name}`}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          </div>
+
+                          {/* Overlay com nome e contagem */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3">
+                            <p className="text-white font-bold text-sm md:text-base leading-tight drop-shadow-lg">
+                              {album.title}
+                            </p>
+                            {album.subtitle && (
+                              <p className="text-white/90 text-xs mt-0.5 line-clamp-2 drop-shadow">
+                                {album.subtitle}
+                              </p>
+                            )}
+                            <p className="text-white/60 text-xs mt-0.5">
+                              {album.slides.length} {album.slides.length === 1 ? "foto" : "fotos"}
+                            </p>
+                          </div>
+
+                          {/* Ícone decorativo no canto */}
+                          <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow">
+                            <Images className="h-3.5 w-3.5 text-purple-600" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Modal/Lightbox do Álbum Aberto */}
+        <Dialog open={openAlbum !== null} onOpenChange={(open) => { if (!open) handleCloseAlbum(); }}>
+          <DialogContent className="max-w-4xl p-0 gap-0 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-0">
+            {/* Header do álbum */}
+            <div className="flex items-center justify-between px-4 py-3 bg-black/40 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                  <Images className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-base">{openAlbumData?.title ?? openAlbum}</h3>
+                  {openAlbumData?.subtitle && (
+                    <p className="text-white/70 text-xs">{openAlbumData.subtitle}</p>
+                  )}
+                  <p className="text-white/60 text-xs">
+                    {openAlbumSlides.length} {openAlbumSlides.length === 1 ? "foto" : "fotos"}
+                    {openAlbumSlides.length > 0 && ` — ${currentSlide + 1} de ${openAlbumSlides.length}`}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCloseAlbum}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Carrossel dentro do lightbox */}
+            {openAlbumSlides.length > 0 && (
+              <div className="relative">
+                <Carousel
+                  setApi={setCarouselApi}
+                  opts={{ loop: true }}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {openAlbumSlides.map((image, index) => (
+                      <CarouselItem key={image.id || index}>
+                        <div className="relative aspect-[16/10] md:aspect-[16/9] bg-black flex items-center justify-center">
+                          {(() => {
+                            const alt = normalizeCarouselText(image.altText);
+                            const displayCaption = getDisplayCarouselCaption(image);
+                            const imageAlt = alt || displayCaption || `Foto ${index + 1}`;
+
+                            return (
+                              <img
+                                src={image.imageUrl}
+                                alt={imageAlt}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            );
+                          })()}
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+
+                  {/* Botões de navegação */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                    onClick={() => carouselApi?.scrollPrev()}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                    onClick={() => carouselApi?.scrollNext()}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </Carousel>
+
+                {/* Legenda + indicadores */}
+                <div className="px-4 py-3 bg-black/40">
+                  <p className="text-center text-sm text-white/80 min-h-5 mb-2">
+                    {currentSlideCaption || " "}
+                  </p>
+                  <div className="flex justify-center gap-1.5 flex-wrap">
+                    {openAlbumSlides.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => scrollToSlide(index)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          currentSlide === index
+                            ? "w-6 bg-gradient-to-r from-pink-400 to-purple-400"
+                            : "w-1.5 bg-white/30 hover:bg-white/50"
+                        }`}
+                        aria-label={`Ir para foto ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Miniaturas na parte inferior */}
+                {openAlbumSlides.length > 1 && (
+                  <div className="px-4 pb-3 bg-black/40">
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                      {openAlbumSlides.map((img, idx) => (
+                        <button
+                          key={img.id || idx}
+                          onClick={() => scrollToSlide(idx)}
+                          className={`flex-shrink-0 rounded-md overflow-hidden transition-all duration-200 ${
+                            currentSlide === idx
+                              ? "ring-2 ring-purple-400 opacity-100"
+                              : "opacity-50 hover:opacity-80"
+                          }`}
+                        >
+                          <img
+                            src={img.imageUrl}
+                            alt=""
+                            className="h-12 w-16 md:h-14 md:w-20 object-cover"
+                          />
                         </button>
                       ))}
                     </div>
                   </div>
                 )}
-
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  {/* Título e descrição */}
-                  <div className="flex-shrink-0 md:w-48">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
-                      📸 {activeTheme || "Galeria"}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {activeTheme ? `${activeSlides.length} fotos` : "Veja o impacto das doações"}
-                    </p>
-                  </div>
-
-                  {/* Carrossel compacto */}
-                  <div className="flex-1 relative">
-                    <Carousel
-                      setApi={setCarouselApi}
-                      opts={{ loop: true }}
-                      className="w-full"
-                    >
-                      <CarouselContent>
-                        {activeSlides.map((image, index) => (
-                          <CarouselItem key={image.id || index}>
-                            <div className="relative aspect-[16/10] md:aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gradient-to-br from-pink-100 to-purple-100">
-                              {(() => {
-                                const altText = normalizeCarouselText(image.altText);
-                                const displayCaption = getDisplayCarouselCaption(image);
-                                const imageAlt = altText || displayCaption || `Doacao - Imagem ${index + 1}`;
-
-                                return (
-                                  <img
-                                    src={image.imageUrl}
-                                    alt={imageAlt}
-                                    className="w-full h-full object-contain"
-                                  />
-                                );
-                              })()}
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-
-                      {/* Botões de navegação compactos */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
-                        onClick={() => carouselApi?.scrollPrev()}
-                      >
-                        <ChevronLeft className="h-4 w-4 text-purple-600" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
-                        onClick={() => carouselApi?.scrollNext()}
-                      >
-                        <ChevronRight className="h-4 w-4 text-purple-600" />
-                      </Button>
-                    </Carousel>
-
-                    <p className="mt-3 text-center text-sm text-gray-600 min-h-5">
-                      {currentSlideCaption || " "}
-                    </p>
-
-                    {/* Indicadores de slide compactos */}
-                    <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
-                      {activeSlides.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => scrollToSlide(index)}
-                          className={`h-1.5 rounded-full transition-all duration-300 ${
-                            currentSlide === index
-                              ? "w-6 bg-gradient-to-r from-pink-500 to-purple-500"
-                              : "w-1.5 bg-gray-300 hover:bg-purple-300"
-                          }`}
-                          aria-label={`Ir para slide ${index + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* PIX - QR Code e Chave - Modernizado */}
         <div className="mt-6 lg:mt-8">
@@ -694,7 +787,7 @@ export function Donations() {
           }
           setShowDonorInfoModal(open);
         }}>
-          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogContent className="max-w-4xl p-0">
             <div className="grid md:grid-cols-2">
               {/* Lado Esquerdo - Imagem */}
               <div className="hidden md:block bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 p-8 relative">

@@ -134,7 +134,7 @@ export function SubscriptionManageModal({ open, onClose }: SubscriptionManageMod
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl p-0">
         <div className="grid md:grid-cols-2">
           {/* Lado Esquerdo - Imagem */}
           <div className="hidden md:block bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100 p-8 relative">
