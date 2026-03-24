@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { AdminApi, CarouselSectionSettings, CarouselSlide } from "@/api/admin";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminApi, CarouselSectionSettings, CarouselSlide, CarouselThemeSummary } from "@/api/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
-import { Pencil, Trash2, Plus, Eye, EyeOff, RefreshCw, Upload } from "lucide-react";
+import { Pencil, Trash2, Plus, Eye, EyeOff, RefreshCw, Upload, FolderOpen, Filter } from "lucide-react";
 import api from "@/api/api";
 import { DONATION_CAROUSEL_FALLBACK_SLIDES } from "@/lib/donationCarouselFallback";
 
@@ -41,8 +41,11 @@ export default function AdminCarouselSlides() {
   const [imageUrl, setImageUrl] = useState("");
   const [caption, setCaption] = useState("");
   const [altText, setAltText] = useState("");
+  const [theme, setTheme] = useState("");
   const [order, setOrder] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [themeFilter, setThemeFilter] = useState<string | null>(null);
+  const [themeSummaries, setThemeSummaries] = useState<CarouselThemeSummary[]>([]);
 
   const loadSlides = useCallback(async () => {
     setLoading(true);
@@ -112,10 +115,20 @@ export default function AdminCarouselSlides() {
     }
   }, [toast]);
 
+  const loadThemes = useCallback(async () => {
+    try {
+      const data = await AdminApi.listCarouselThemes();
+      setThemeSummaries(Array.isArray(data) ? data : []);
+    } catch {
+      // non-critical
+    }
+  }, []);
+
   useEffect(() => {
     loadSlides();
     loadSectionSettings();
-  }, [loadSectionSettings, loadSlides]);
+    loadThemes();
+  }, [loadSectionSettings, loadSlides, loadThemes]);
 
   const importFallbackSlides = async () => {
     if (endpointMissing) {
@@ -137,6 +150,7 @@ export default function AdminCarouselSlides() {
       });
 
       await loadSlides();
+      await loadThemes();
     } catch (error) {
       console.error("Erro ao importar fallback:", error);
       toast({
@@ -197,6 +211,7 @@ export default function AdminCarouselSlides() {
     setImageUrl("");
     setCaption("");
     setAltText("");
+    setTheme("");
     setOrder(0);
     setVisible(true);
     setDialogOpen(true);
@@ -207,6 +222,7 @@ export default function AdminCarouselSlides() {
     setImageUrl(slide.imageUrl || "");
     setCaption(slide.caption || "");
     setAltText(slide.altText || "");
+    setTheme(slide.theme || "");
     setOrder(slide.order || 0);
     setVisible(slide.visible ?? true);
     setDialogOpen(true);
@@ -225,11 +241,13 @@ export default function AdminCarouselSlides() {
     try {
       const normalizedCaption = caption.trim();
       const normalizedAltText = altText.trim();
+      const normalizedTheme = theme.trim();
 
       const payload = {
         imageUrl: imageUrl.trim(),
         caption: normalizedCaption ? normalizedCaption : null,
         altText: normalizedAltText ? normalizedAltText : null,
+        theme: normalizedTheme ? normalizedTheme : null,
         order: Number(order) || 0,
         visible,
       } as Partial<CarouselSlide>;
@@ -253,6 +271,7 @@ export default function AdminCarouselSlides() {
       }
 
       setDialogOpen(false);
+      loadThemes();
     } catch (error) {
       console.error("Erro ao salvar slide:", error);
       toast({
@@ -335,6 +354,7 @@ export default function AdminCarouselSlides() {
     try {
       await AdminApi.deleteCarouselSlide(slide.id);
       setSlides((prev) => prev.filter((x) => x.id !== slide.id));
+      loadThemes();
       toast({
         title: "Sucesso",
         description: "Slide removido com sucesso!",
@@ -348,6 +368,62 @@ export default function AdminCarouselSlides() {
       });
     }
   };
+
+  /**
+   * Lista de temas únicos extraída dos slides carregados.
+   * Inclui null para slides sem tema.
+   */
+  const uniqueThemes = useMemo(() => {
+    const set = new Set<string | null>();
+    for (const s of slides) {
+      set.add(s.theme ?? null);
+    }
+    const arr = Array.from(set).sort((a, b) => {
+      if (a === null) return 1;
+      if (b === null) return -1;
+      return a.localeCompare(b, "pt-BR");
+    });
+    return arr;
+  }, [slides]);
+
+  /**
+   * Slides filtrados pelo tema selecionado no admin.
+   */
+  const filteredSlides = useMemo(() => {
+    if (themeFilter === null) return slides;
+    if (themeFilter === "__none__") return slides.filter((s) => !s.theme);
+    return slides.filter((s) => s.theme === themeFilter);
+  }, [slides, themeFilter]);
+
+  /**
+   * Agrupa slides por tema para exibição em seções.
+   */
+  const groupedSlides = useMemo(() => {
+    const groups: { theme: string | null; label: string; slides: CarouselSlide[] }[] = [];
+    const map = new Map<string, CarouselSlide[]>();
+
+    for (const s of filteredSlides) {
+      const key = s.theme || "__none__";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    }
+
+    const sortedKeys = Array.from(map.keys()).sort((a, b) => {
+      if (a === "__none__") return 1;
+      if (b === "__none__") return -1;
+      return a.localeCompare(b, "pt-BR");
+    });
+
+    for (const key of sortedKeys) {
+      groups.push({
+        theme: key === "__none__" ? null : key,
+        label: key === "__none__" ? "Sem tema" : key,
+        slides: map.get(key)!.sort((a, b) => a.order - b.order),
+      });
+    }
+
+    return groups;
+  }, [filteredSlides]);
 
   return (
     <Card>
@@ -429,6 +505,27 @@ export default function AdminCarouselSlides() {
                         placeholder="Ex: Voluntários entregando cestas (não aparece como legenda)"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="slide-theme">Tema / Álbum</Label>
+                    <Input
+                      id="slide-theme"
+                      value={theme}
+                      onChange={(e) => setTheme(e.target.value)}
+                      placeholder="Ex: Doação de Cabelo, Eventos, Campanhas"
+                      list="theme-suggestions"
+                    />
+                    {uniqueThemes.length > 0 && (
+                      <datalist id="theme-suggestions">
+                        {uniqueThemes.filter(Boolean).map((t) => (
+                          <option key={t!} value={t!} />
+                        ))}
+                      </datalist>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agrupa este slide com outros do mesmo tema na galeria pública.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -529,14 +626,51 @@ export default function AdminCarouselSlides() {
 
         <div className="mb-4 rounded-lg border bg-slate-50 p-3 text-sm text-slate-700">
           <p className="font-medium">Passo a passo rápido</p>
-          <p className="mt-1">1) Clique em "Novo Slide". 2) Envie uma imagem. 3) Escreva um texto (opcional). 4) Salve.</p>
+          <p className="mt-1">1) Clique em "Novo Slide". 2) Envie uma imagem. 3) Informe o tema/álbum. 4) Salve.</p>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
           <Badge variant="secondary">Total: {slides.length}</Badge>
           <Badge variant="secondary">Visíveis: {slides.filter((slide) => slide.visible).length}</Badge>
           <Badge variant="secondary">Ocultos: {slides.filter((slide) => !slide.visible).length}</Badge>
+          {themeSummaries.length > 0 && (
+            <Badge variant="outline" className="gap-1">
+              <FolderOpen className="h-3 w-3" />
+              {themeSummaries.length} {themeSummaries.length === 1 ? "tema" : "temas"}
+            </Badge>
+          )}
         </div>
+
+        {uniqueThemes.length > 1 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground mr-1">Filtrar:</span>
+            <Button
+              size="sm"
+              variant={themeFilter === null ? "default" : "outline"}
+              onClick={() => setThemeFilter(null)}
+              className="h-7 text-xs"
+            >
+              Todos
+            </Button>
+            {uniqueThemes.map((t) => {
+              const key = t ?? "__none__";
+              const label = t || "Sem tema";
+              const isActive = themeFilter === key;
+              return (
+                <Button
+                  key={key}
+                  size="sm"
+                  variant={isActive ? "default" : "outline"}
+                  onClick={() => setThemeFilter(key)}
+                  className="h-7 text-xs"
+                >
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
         {!loading && (endpointMissing || slides.length === 0) && (
           <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -589,81 +723,89 @@ export default function AdminCarouselSlides() {
             Nenhum slide cadastrado. Clique em "Novo Slide" para começar.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-32">Imagem</TableHead>
-                <TableHead>Texto</TableHead>
-                <TableHead className="w-20">Posição</TableHead>
-                <TableHead className="w-24">Exibição</TableHead>
-                <TableHead className="w-64">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {slides
-                .slice()
-                .sort((a, b) => a.order - b.order)
-                .map((slide) => (
-                  <TableRow key={slide.id}>
-                    <TableCell>
-                      <img
-                        src={slide.imageUrl}
-                        alt={slide.altText || slide.caption || "Slide"}
-                        className="h-14 w-24 object-cover rounded border"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">{slide.caption || "Sem texto"}</p>
-                        {slide.altText && (
-                          <p className="text-xs text-muted-foreground">Alt/acessibilidade: {slide.altText}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{slide.order}</TableCell>
-                    <TableCell>
-                      <Badge variant={slide.visible ? "default" : "secondary"}>
-                        {slide.visible ? "No ar" : "Oculto"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => toggleVisible(slide)}
-                          title={slide.visible ? "Ocultar slide" : "Mostrar slide"}
-                        >
-                          {slide.visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          <span className="hidden sm:inline">{slide.visible ? "Ocultar" : "Mostrar"}</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => openEditDialog(slide)}
-                          title="Editar slide"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="hidden sm:inline">Editar</span>
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => deleteSlide(slide)}
-                          title="Excluir slide"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="hidden sm:inline">Excluir</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-6">
+            {groupedSlides.map((group) => (
+              <div key={group.label} className="rounded-lg border bg-white">
+                <div className="flex items-center gap-2 px-4 py-3 border-b bg-slate-50 rounded-t-lg">
+                  <FolderOpen className="h-4 w-4 text-purple-600" />
+                  <span className="text-sm font-semibold text-slate-800">{group.label}</span>
+                  <Badge variant="secondary" className="text-xs">{group.slides.length} slides</Badge>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-32">Imagem</TableHead>
+                      <TableHead>Texto</TableHead>
+                      <TableHead className="w-20">Posição</TableHead>
+                      <TableHead className="w-24">Exibição</TableHead>
+                      <TableHead className="w-64">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.slides.map((slide) => (
+                      <TableRow key={slide.id}>
+                        <TableCell>
+                          <img
+                            src={slide.imageUrl}
+                            alt={slide.altText || slide.caption || "Slide"}
+                            className="h-14 w-24 object-cover rounded border"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{slide.caption || "Sem texto"}</p>
+                            {slide.altText && (
+                              <p className="text-xs text-muted-foreground">Alt: {slide.altText}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{slide.order}</TableCell>
+                        <TableCell>
+                          <Badge variant={slide.visible ? "default" : "secondary"}>
+                            {slide.visible ? "No ar" : "Oculto"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => toggleVisible(slide)}
+                              title={slide.visible ? "Ocultar slide" : "Mostrar slide"}
+                            >
+                              {slide.visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              <span className="hidden sm:inline">{slide.visible ? "Ocultar" : "Mostrar"}</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => openEditDialog(slide)}
+                              title="Editar slide"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              <span className="hidden sm:inline">Editar</span>
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => deleteSlide(slide)}
+                              title="Excluir slide"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="hidden sm:inline">Excluir</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>

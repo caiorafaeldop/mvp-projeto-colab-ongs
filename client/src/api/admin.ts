@@ -16,6 +16,7 @@ export type CarouselSlide = {
   imageUrl: string;
   caption?: string | null;
   altText?: string | null;
+  theme?: string | null;
   order: number;
   visible: boolean;
   createdAt?: string;
@@ -33,6 +34,12 @@ export type CarouselSlideImportResult = {
 export type CarouselSectionSettings = {
   title: string;
   subtitle: string;
+};
+
+export type CarouselThemeSummary = {
+  theme: string | null;
+  count: number;
+  visibleCount: number;
 };
 
 export type DonorAlias = {
@@ -100,6 +107,10 @@ export const AdminApi = {
   importDefaultCarouselSlides: async (): Promise<CarouselSlideImportResult> => {
     const res = await api.post("/api/carousel-slides/import-defaults");
     return unwrap<CarouselSlideImportResult>(res);
+  },
+  listCarouselThemes: async (): Promise<CarouselThemeSummary[]> => {
+    const res = await api.get("/api/carousel-slides/themes");
+    return unwrap<CarouselThemeSummary[]>(res);
   },
   getCarouselSectionSettings: async (): Promise<CarouselSectionSettings> => {
     const res = await api.get("/api/carousel-slides/settings");

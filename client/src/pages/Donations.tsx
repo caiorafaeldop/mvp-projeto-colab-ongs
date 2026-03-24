@@ -26,8 +26,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
   type CarouselApi,
 } from "@/components/ui/carousel";
 
@@ -104,7 +102,28 @@ export function Donations() {
   const [carouselSectionSettings, setCarouselSectionSettings] = useState<PublicCarouselSectionSettings>(
     DEFAULT_CAROUSEL_SECTION_SETTINGS
   );
-  const currentSlideCaption = getDisplayCarouselCaption(donationImages[currentSlide]);
+  const [activeTheme, setActiveTheme] = useState<string | null>(null);
+
+  /**
+   * Lista de temas disponíveis extraída dos slides carregados.
+   */
+  const availableThemes = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of donationImages) {
+      if (s.theme) set.add(s.theme);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [donationImages]);
+
+  /**
+   * Slides filtrados pelo tema ativo. Se null, mostra todos.
+   */
+  const activeSlides = useMemo(() => {
+    if (activeTheme === null) return donationImages;
+    return donationImages.filter((s) => s.theme === activeTheme);
+  }, [donationImages, activeTheme]);
+
+  const currentSlideCaption = getDisplayCarouselCaption(activeSlides[currentSlide]);
 
   useEffect(() => {
     let mounted = true;
@@ -159,10 +178,21 @@ export function Donations() {
     }, 5000);
     
     return () => clearInterval(autoplayInterval);
-  }, [carouselApi, donationImages.length]);
+  }, [carouselApi, activeSlides.length]);
 
   const scrollToSlide = useCallback((index: number) => {
     carouselApi?.scrollTo(index);
+  }, [carouselApi]);
+
+  /**
+   * Altera o tema ativo e reseta o carrossel para o primeiro slide.
+   */
+  const handleThemeChange = useCallback((theme: string | null) => {
+    setActiveTheme(theme);
+    setCurrentSlide(0);
+    setTimeout(() => {
+      carouselApi?.scrollTo(0);
+    }, 50);
   }, [carouselApi]);
 
   useEffect(() => {
@@ -427,81 +457,117 @@ export function Donations() {
                 </p>
               </div>
               
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Título e descrição */}
-                <div className="flex-shrink-0 md:w-48">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
-                    📸 Galeria
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">Veja o impacto das doações</p>
-                </div>
-                
-                {/* Carrossel compacto */}
-                <div className="flex-1 relative">
-                  <Carousel 
-                    setApi={setCarouselApi}
-                    opts={{ loop: true }}
-                    className="w-full"
-                  >
-                    <CarouselContent>
-                      {donationImages.map((image, index) => (
-                        <CarouselItem key={index}>
-                          <div className="relative aspect-[16/10] md:aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gradient-to-br from-pink-100 to-purple-100">
-                            {(() => {
-                              const altText = normalizeCarouselText(image.altText);
-                              const displayCaption = getDisplayCarouselCaption(image);
-                              const imageAlt = altText || displayCaption || `Doacao - Imagem ${index + 1}`;
-
-                              return (
-                                <img
-                                  src={image.imageUrl}
-                                  alt={imageAlt}
-                                  className="w-full h-full object-contain"
-                                />
-                              );
-                            })()}
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    
-                    {/* Botões de navegação compactos */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
-                      onClick={() => carouselApi?.scrollPrev()}
-                    >
-                      <ChevronLeft className="h-4 w-4 text-purple-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
-                      onClick={() => carouselApi?.scrollNext()}
-                    >
-                      <ChevronRight className="h-4 w-4 text-purple-600" />
-                    </Button>
-                  </Carousel>
-
-                  <p className="mt-3 text-center text-sm text-gray-600 min-h-5">
-                    {currentSlideCaption || " "}
-                  </p>
-                  
-                  {/* Indicadores de slide compactos */}
-                  <div className="flex justify-center gap-1.5 mt-3">
-                    {donationImages.map((_, index) => (
+              <div className="flex flex-col gap-4">
+                {/* Navegação de temas */}
+                {availableThemes.length > 1 && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Álbuns</p>
+                    <div className="flex flex-wrap justify-center gap-2">
                       <button
-                        key={index}
-                        onClick={() => scrollToSlide(index)}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          currentSlide === index 
-                            ? "w-6 bg-gradient-to-r from-pink-500 to-purple-500" 
-                            : "w-1.5 bg-gray-300 hover:bg-purple-300"
+                        onClick={() => handleThemeChange(null)}
+                        className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                          activeTheme === null
+                            ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md"
+                            : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
                         }`}
-                        aria-label={`Ir para slide ${index + 1}`}
-                      />
-                    ))}
+                      >
+                        Todos
+                      </button>
+                      {availableThemes.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => handleThemeChange(t)}
+                          className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                            activeTheme === t
+                              ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md"
+                              : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:text-purple-600"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  {/* Título e descrição */}
+                  <div className="flex-shrink-0 md:w-48">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
+                      📸 {activeTheme || "Galeria"}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {activeTheme ? `${activeSlides.length} fotos` : "Veja o impacto das doações"}
+                    </p>
+                  </div>
+
+                  {/* Carrossel compacto */}
+                  <div className="flex-1 relative">
+                    <Carousel
+                      setApi={setCarouselApi}
+                      opts={{ loop: true }}
+                      className="w-full"
+                    >
+                      <CarouselContent>
+                        {activeSlides.map((image, index) => (
+                          <CarouselItem key={image.id || index}>
+                            <div className="relative aspect-[16/10] md:aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gradient-to-br from-pink-100 to-purple-100">
+                              {(() => {
+                                const altText = normalizeCarouselText(image.altText);
+                                const displayCaption = getDisplayCarouselCaption(image);
+                                const imageAlt = altText || displayCaption || `Doacao - Imagem ${index + 1}`;
+
+                                return (
+                                  <img
+                                    src={image.imageUrl}
+                                    alt={imageAlt}
+                                    className="w-full h-full object-contain"
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+
+                      {/* Botões de navegação compactos */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
+                        onClick={() => carouselApi?.scrollPrev()}
+                      >
+                        <ChevronLeft className="h-4 w-4 text-purple-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-md rounded-full h-8 w-8"
+                        onClick={() => carouselApi?.scrollNext()}
+                      >
+                        <ChevronRight className="h-4 w-4 text-purple-600" />
+                      </Button>
+                    </Carousel>
+
+                    <p className="mt-3 text-center text-sm text-gray-600 min-h-5">
+                      {currentSlideCaption || " "}
+                    </p>
+
+                    {/* Indicadores de slide compactos */}
+                    <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
+                      {activeSlides.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => scrollToSlide(index)}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            currentSlide === index
+                              ? "w-6 bg-gradient-to-r from-pink-500 to-purple-500"
+                              : "w-1.5 bg-gray-300 hover:bg-purple-300"
+                          }`}
+                          aria-label={`Ir para slide ${index + 1}`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

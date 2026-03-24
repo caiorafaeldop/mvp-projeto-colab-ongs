@@ -5,6 +5,7 @@ export type CarouselSlide = {
   imageUrl: string;
   caption?: string | null;
   altText?: string | null;
+  theme?: string | null;
   order?: number;
   visible?: boolean;
 };
@@ -12,6 +13,12 @@ export type CarouselSlide = {
 export type CarouselSectionSettings = {
   title: string;
   subtitle: string;
+};
+
+export type CarouselThemeSummary = {
+  theme: string | null;
+  count: number;
+  visibleCount: number;
 };
 
 function extractArray(data: any): CarouselSlide[] {
@@ -40,4 +47,10 @@ export async function getPublicCarouselSectionSettings(): Promise<CarouselSectio
   const res = await api.get("/api/public/carousel-slides/settings");
   const payload = (res as any)?.data;
   return extractObject<CarouselSectionSettings>(payload);
+}
+
+export async function getPublicCarouselThemes(): Promise<CarouselThemeSummary[]> {
+  const res = await api.get("/api/public/carousel-slides/themes");
+  const payload = (res as any)?.data;
+  return extractArray(payload) as unknown as CarouselThemeSummary[];
 }
