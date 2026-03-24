@@ -5,7 +5,9 @@ Este documento descreve as integrações implementadas entre o frontend (client)
 ## Configuração da API
 
 ### Arquivo: `src/api/api.ts`
-- **URL Base**: `http://localhost:3000`
+- **URL Base em desenvolvimento**: vazia, com chamadas indo para `/api/...` via proxy do Vite
+- **Override opcional**: `VITE_API_BASE_URL`
+- **URL Base em produção**: `https://mvp-colab-ongs-backend-c8lx.onrender.com`
 - **Interceptors**: Configurados para adicionar automaticamente o token de autenticação
 - **Gerenciamento de Token**: Funções para salvar/recuperar token do localStorage
 - **Tratamento de Erros**: Redirecionamento automático para login em caso de token expirado
@@ -172,7 +174,7 @@ interface Product {
 
 ## Observações
 
-- O backend deve estar rodando na porta 3000
+- Em desenvolvimento, o frontend usa o proxy do Vite para `/api`; para backend local, ajuste o target do proxy ou defina `VITE_API_BASE_URL`
 - Todas as APIs retornam respostas padronizadas com `success` e `message`
 - Erros são tratados e exibidos via toast notifications
 - Tokens são automaticamente gerenciados pelo sistema

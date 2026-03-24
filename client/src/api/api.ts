@@ -7,7 +7,7 @@ import JSONbig from "json-bigint";
 
 // URL base do servidor backend
 const DEFAULT_API_BASE_URL = import.meta.env.DEV
-  ? "http://localhost:3000"
+  ? ""
   : "https://mvp-colab-ongs-backend-c8lx.onrender.com";
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ||

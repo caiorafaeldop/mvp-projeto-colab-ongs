@@ -1,5 +1,4 @@
-import axios from "axios";
-import api from "./api";
+import api, { setAccessToken } from "./api";
 
 export interface User {
   id: string;
@@ -51,7 +50,6 @@ export const loginUser = async (data: {
     if (response.data.data && response.data.data.accessToken) {
       console.log("[loginUser] AccessToken encontrado:", response.data.data.accessToken);
       // Salvar o token imediatamente após o login
-      const { setAccessToken } = await import("./api");
       setAccessToken(response.data.data.accessToken);
       console.log("[loginUser] Token salvo após login:", response.data.data.accessToken);
     } else {
@@ -115,8 +113,8 @@ export const getUserProfile = async (): Promise<ProfileResponse> => {
 export const refreshToken = async (): Promise<{ accessToken: string }> => {
   try {
     console.log("[refreshToken] Tentando renovar token...");
-    const response = await axios.post('/api/auth/refresh', {}, {
-      withCredentials: true 
+    const response = await api.post("/api/auth/refresh", {}, {
+      withCredentials: true,
     });
     console.log("[refreshToken] Resposta do refresh:", response.data);
     const newAccessToken = response.data.data.accessToken;
