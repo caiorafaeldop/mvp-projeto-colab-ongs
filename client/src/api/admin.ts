@@ -11,39 +11,6 @@ export type Supporter = {
   updatedAt?: string;
 };
 
-export type CarouselSlide = {
-  id: string;
-  imageUrl: string;
-  caption?: string | null;
-  altText?: string | null;
-  theme?: string | null;
-  albumTitle?: string | null;
-  albumSubtitle?: string | null;
-  order: number;
-  visible: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type CarouselSlideImportResult = {
-  created: number;
-  updated: number;
-  unchanged: number;
-  total: number;
-  defaults: number;
-};
-
-export type CarouselSectionSettings = {
-  title: string;
-  subtitle: string;
-};
-
-export type CarouselThemeSummary = {
-  theme: string | null;
-  count: number;
-  visibleCount: number;
-};
-
 export type DonorAlias = {
   id: string;
   donorEmail?: string | null;
@@ -87,42 +54,6 @@ export const AdminApi = {
   },
   deleteSupporter: async (id: string): Promise<void> => {
     await api.delete(`/api/supporters/${id}`);
-  },
-
-  // Carousel Slides (Admin)
-  listCarouselSlides: async (visible?: boolean): Promise<CarouselSlide[]> => {
-    const params = visible !== undefined ? { visible } : undefined;
-    const res = await api.get("/api/carousel-slides", { params });
-    return unwrap<CarouselSlide[]>(res);
-  },
-  createCarouselSlide: async (data: Partial<CarouselSlide>): Promise<CarouselSlide> => {
-    const res = await api.post("/api/carousel-slides", data);
-    return unwrap<CarouselSlide>(res);
-  },
-  updateCarouselSlide: async (id: string, data: Partial<CarouselSlide>): Promise<CarouselSlide> => {
-    const res = await api.patch(`/api/carousel-slides/${id}`, data);
-    return unwrap<CarouselSlide>(res);
-  },
-  deleteCarouselSlide: async (id: string): Promise<void> => {
-    await api.delete(`/api/carousel-slides/${id}`);
-  },
-  importDefaultCarouselSlides: async (): Promise<CarouselSlideImportResult> => {
-    const res = await api.post("/api/carousel-slides/import-defaults");
-    return unwrap<CarouselSlideImportResult>(res);
-  },
-  listCarouselThemes: async (): Promise<CarouselThemeSummary[]> => {
-    const res = await api.get("/api/carousel-slides/themes");
-    return unwrap<CarouselThemeSummary[]>(res);
-  },
-  getCarouselSectionSettings: async (): Promise<CarouselSectionSettings> => {
-    const res = await api.get("/api/carousel-slides/settings");
-    return unwrap<CarouselSectionSettings>(res);
-  },
-  updateCarouselSectionSettings: async (
-    payload: CarouselSectionSettings
-  ): Promise<CarouselSectionSettings> => {
-    const res = await api.put("/api/carousel-slides/settings", payload);
-    return unwrap<CarouselSectionSettings>(res);
   },
 
   // Donor Aliases

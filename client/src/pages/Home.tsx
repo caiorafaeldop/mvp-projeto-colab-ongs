@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { AlbumsGallery } from "@/components/AlbumsGallery";
 import {
   Card,
   CardContent,
@@ -344,6 +345,9 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Galeria de Álbuns – carregada do painel administrativo */}
+      <AlbumsGallery />
 
       {/* Stats Section */}
       <section className="py-12 md:py-20 bg-white/80 backdrop-blur-sm">

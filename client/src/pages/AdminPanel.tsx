@@ -18,7 +18,6 @@ import api from "@/api/api";
 import AdminFAQ from "./AdminFAQ";
 import AdminTestimonials from "./AdminTestimonials";
 import AdminPrestacaoContas from "./AdminPrestacaoContas";
-import AdminCarouselSlides from "./AdminCarouselSlides";
 
 export default function AdminPanel() {
   const { user, isAuthenticated } = useAuth();
@@ -26,7 +25,7 @@ export default function AdminPanel() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const tabFromQuery = searchParams.get("tab");
-  const activeTab = tabFromQuery === "carrossel" ? "slides" : tabFromQuery || "apoiadores";
+  const activeTab = tabFromQuery || "apoiadores";
   const [isTabChanging, setIsTabChanging] = useState(false);
 
   const [supporters, setSupporters] = useState<Supporter[]>([]);
@@ -317,9 +316,6 @@ export default function AdminPanel() {
           <TabsTrigger value="doadores" asChild>
             <Link to="/admin?tab=doadores">Doadores</Link>
           </TabsTrigger>
-          <TabsTrigger value="slides" asChild>
-            <Link to="/admin?tab=slides">Slides</Link>
-          </TabsTrigger>
           <TabsTrigger value="faqs" asChild>
             <Link to="/admin?tab=faqs">FAQs</Link>
           </TabsTrigger>
@@ -597,10 +593,6 @@ export default function AdminPanel() {
 
         <TabsContent value="faqs" className="mt-4">
           <AdminFAQ />
-        </TabsContent>
-
-        <TabsContent value="slides" className="mt-4">
-          <AdminCarouselSlides />
         </TabsContent>
 
         <TabsContent value="depoimentos" className="mt-4">
