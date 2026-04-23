@@ -1,4 +1,5 @@
 import api from "./api";
+import { ensureWritable } from "@/lib/dataMode";
 
 // Donations API integrated with backend (Mercado Pago)
 // Fixed organizationId for Rede Feminina (can be moved to env/config later)
@@ -25,6 +26,7 @@ export interface RecurringDonationData {
 }
 
 export const createSingleDonation = async (data: SingleDonationData) => {
+  ensureWritable("Doação única");
   return api.post("/api/donations/single", {
     ...data,
     organizationId: REDE_FEMININA_ORG_ID,
@@ -34,6 +36,7 @@ export const createSingleDonation = async (data: SingleDonationData) => {
 };
 
 export const createRecurringDonation = async (data: RecurringDonationData) => {
+  ensureWritable("Doação recorrente");
   return api.post("/api/donations/recurring", {
     organizationId: REDE_FEMININA_ORG_ID,
     organizationName: REDE_FEMININA_ORG_NAME,
@@ -44,10 +47,12 @@ export const createRecurringDonation = async (data: RecurringDonationData) => {
 };
 
 export const cancelRecurringDonation = async (subscriptionId: string) => {
+  ensureWritable("Cancelar assinatura");
   return api.delete(`/api/donations/recurring/${subscriptionId}`);
 };
 
 export const getSubscriptionStatus = async (subscriptionId: string) => {
+  ensureWritable("Consultar assinatura");
   return api.get(`/api/donations/recurring/${subscriptionId}/status`);
 };
 
@@ -167,6 +172,7 @@ export const getDonorDashboard = () => {
 // Request: {}
 // Response: { success: boolean, message: string, data: subscription }
 export const getMySubscription = async () => {
+  ensureWritable("Consultar minha assinatura");
   try {
     return await api.get('/api/donations/me/subscription');
   } catch (error: any) {
@@ -186,6 +192,7 @@ export const updateSubscriptionDetails = async (
     frequency?: 'monthly' | 'weekly' | 'yearly';
   }
 ) => {
+  ensureWritable("Atualizar assinatura");
   try {
     return await api.put(`/api/donations/recurring/${subscriptionId}`, data);
   } catch (error: any) {
@@ -198,6 +205,7 @@ export const updateSubscriptionDetails = async (
 // Request: {}
 // Response: { success: boolean, message: string, data: { subscriptionUrl: string } }
 export const reauthorizeSubscription = async (subscriptionId: string) => {
+  ensureWritable("Reautorizar assinatura");
   try {
     return await api.post(`/api/donations/recurring/${subscriptionId}/reauthorize`);
   } catch (error: any) {
@@ -210,6 +218,7 @@ export const reauthorizeSubscription = async (subscriptionId: string) => {
 // Request: {}
 // Response: { success: boolean, message: string }
 export const cancelMySubscription = async (subscriptionId: string) => {
+  ensureWritable("Cancelar minha assinatura");
   try {
     return await api.delete(`/api/donations/recurring/${subscriptionId}`);
   } catch (error: any) {

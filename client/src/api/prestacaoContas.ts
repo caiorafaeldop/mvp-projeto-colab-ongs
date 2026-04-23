@@ -1,4 +1,6 @@
 import api from "./api";
+import { ensureWritable, withFallback } from "@/lib/dataMode";
+import { StaticData } from "@/lib/staticData";
 
 // Estrutura flexível tipo planilha Excel
 export type ColunaConfig = {
@@ -58,44 +60,80 @@ function unwrap<T = any>(res: any): T {
   return (res?.data?.data ?? res?.data ?? res) as T;
 }
 
-export const PrestacaoContasApi = {
-  // Lista todas as planilhas
-  list: async (params: ListParams = {}): Promise<PrestacaoConta[]> => {
-    const res = await api.get("/api/prestacao-contas", { params });
-    const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
-    return Array.isArray(payload) ? payload : (payload?.data ?? []);
-  },
+/**
+ * Helper para aplicar filtros simples (ano/mes/organizationId) no
+ * snapshot estático, mantendo paridade básica com o backend.
+ */
+function filterPrestacoes(list: PrestacaoConta[], params: ListParams): PrestacaoConta[] {
+  let out = list;
+  if (params.ano) out = out.filter((p) => p.ano === params.ano);
+  if (params.mes) out = out.filter((p) => p.mes === params.mes || p.mesInicial === params.mes);
+  if (params.organizationId) out = out.filter((p) => p.organizationId === params.organizationId);
+  return out;
+}
 
-  // Lista por organização
+/**
+ * Prestação de contas API. Leitura pública é tolerante a backend offline.
+ * Operações de escrita exigem backend ativo.
+ */
+export const PrestacaoContasApi = {
+  list: async (params: ListParams = {}): Promise<PrestacaoConta[]> =>
+    withFallback(
+      async () => {
+        const res = await api.get("/api/prestacao-contas", { params });
+        const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
+        return Array.isArray(payload) ? payload : (payload?.data ?? []);
+      },
+      async () => {
+        const all = (await StaticData.prestacaoContas()) as unknown as PrestacaoConta[];
+        return filterPrestacoes(all, params);
+      }
+    ),
+
   listByOrganization: async (
     organizationId: string,
     params: { page?: number; limit?: number; ano?: number; mes?: number } = {}
-  ): Promise<PrestacaoConta[]> => {
-    const res = await api.get(`/api/prestacao-contas/organization/${organizationId}`, { params });
-    const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
-    return Array.isArray(payload) ? payload : (payload?.data ?? []);
-  },
+  ): Promise<PrestacaoConta[]> =>
+    withFallback(
+      async () => {
+        const res = await api.get(`/api/prestacao-contas/organization/${organizationId}`, { params });
+        const payload = unwrap<PagedResult<PrestacaoConta> | PrestacaoConta[]>(res);
+        return Array.isArray(payload) ? payload : (payload?.data ?? []);
+      },
+      async () => {
+        const all = (await StaticData.prestacaoContas()) as unknown as PrestacaoConta[];
+        return filterPrestacoes(all, { ...params, organizationId });
+      }
+    ),
 
-  // Busca por ID
-  getById: async (id: string): Promise<PrestacaoConta> => {
-    const res = await api.get(`/api/prestacao-contas/${id}`);
-    return unwrap<PrestacaoConta>(res);
-  },
+  getById: async (id: string): Promise<PrestacaoConta> =>
+    withFallback(
+      async () => {
+        const res = await api.get(`/api/prestacao-contas/${id}`);
+        return unwrap<PrestacaoConta>(res);
+      },
+      async () => {
+        const all = (await StaticData.prestacaoContas()) as unknown as PrestacaoConta[];
+        const found = all.find((p) => p.id === id);
+        if (!found) throw new Error("Prestação de contas não encontrada.");
+        return found;
+      }
+    ),
 
-  // Cria nova planilha
   create: async (data: Partial<PrestacaoConta>): Promise<PrestacaoConta> => {
+    ensureWritable("Criar prestação de contas");
     const res = await api.post("/api/prestacao-contas", data);
     return unwrap<PrestacaoConta>(res);
   },
 
-  // Atualiza planilha existente
   update: async (id: string, data: Partial<PrestacaoConta>): Promise<PrestacaoConta> => {
+    ensureWritable("Atualizar prestação de contas");
     const res = await api.put(`/api/prestacao-contas/${id}`, data);
     return unwrap<PrestacaoConta>(res);
   },
 
-  // Deleta planilha
   delete: async (id: string): Promise<void> => {
+    ensureWritable("Remover prestação de contas");
     await api.delete(`/api/prestacao-contas/${id}`);
   },
 };

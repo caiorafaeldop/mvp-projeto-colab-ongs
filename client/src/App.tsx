@@ -19,6 +19,7 @@ import { MyProducts } from "./pages/MyProducts";
 import { VerifyEmail } from "./pages/VerifyEmail";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
+import { RequireBackend } from "./components/RequireBackend";
 
 function App() {
   return (
@@ -33,18 +34,18 @@ function App() {
               <Route path="loja" element={<Store />} />
               <Route path="produto/:id" element={<ProductDetail />} />
               <Route path="donations" element={<Donations />} />
-              <Route path="become-donor" element={<BecomeDonor />} />
-              <Route path="verify-email" element={<VerifyEmail />} />
-              <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="admin" element={<AdminPanel />} />
+              <Route path="become-donor" element={<RequireBackend><BecomeDonor /></RequireBackend>} />
+              <Route path="verify-email" element={<RequireBackend><VerifyEmail /></RequireBackend>} />
+              <Route path="forgot-password" element={<RequireBackend><ForgotPassword /></RequireBackend>} />
+              <Route path="reset-password" element={<RequireBackend><ResetPassword /></RequireBackend>} />
+              <Route path="profile" element={<RequireBackend><Profile /></RequireBackend>} />
+              <Route path="settings" element={<RequireBackend><Settings /></RequireBackend>} />
+              <Route path="admin" element={<RequireBackend><AdminPanel /></RequireBackend>} />
               <Route path="admin/faqs" element={<Navigate to="/admin?tab=faqs" replace />} />
               <Route path="admin/testimonials" element={<Navigate to="/admin?tab=depoimentos" replace />} />
-              <Route path="create-product" element={<CreateProduct />} />
-              <Route path="edit-product/:id" element={<EditProduct />} />
-              <Route path="my-products" element={<MyProducts />} />
+              <Route path="create-product" element={<RequireBackend><CreateProduct /></RequireBackend>} />
+              <Route path="edit-product/:id" element={<RequireBackend><EditProduct /></RequireBackend>} />
+              <Route path="my-products" element={<RequireBackend><MyProducts /></RequireBackend>} />
             </Route>
           </Routes>
           </Router>

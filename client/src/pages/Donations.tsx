@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/useToast";
 import { Heart, CreditCard, Repeat, Loader2, Copy, QrCode } from "lucide-react";
 import QRCode from "react-qr-code";
 import { createSingleDonation, createRecurringDonation } from "@/api/donations";
+import { isStaticMode, STATIC_UNAVAILABLE_MESSAGE } from "@/lib/dataMode";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
@@ -49,6 +50,11 @@ export function Donations() {
   
   const { isAuthenticated, user } = useAuth();
   const { openLoginModal, openRegisterModal } = useAuthModal();
+  // Em modo paliativo (sem backend) bloqueamos criação de doação
+  // e gestão de assinatura. PIX e ranking público seguem funcionando.
+  const paymentsDisabled = isStaticMode();
+  const submitButtonClass =
+    "w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-base py-3 shadow-lg rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed";
 
   useEffect(() => {
     let mounted = true;
@@ -122,14 +128,23 @@ export function Donations() {
           </div>
           <Button
             onClick={() => {
+              if (paymentsDisabled) {
+                toast({
+                  title: "Indisponível no momento",
+                  description: STATIC_UNAVAILABLE_MESSAGE,
+                  variant: "destructive",
+                });
+                return;
+              }
               if (isAuthenticated) {
                 setShowManageSubscriptionModal(true);
               } else {
                 openLoginModal();
               }
             }}
+            disabled={paymentsDisabled}
             variant="outline"
-            className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold"
+            className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Gerenciar Assinatura
           </Button>
@@ -173,6 +188,15 @@ export function Donations() {
 
               <form onSubmit={async (e) => {
                 e.preventDefault();
+                if (paymentsDisabled) {
+                  toast({
+                    title: "Pagamentos indisponíveis",
+                    description:
+                      "Doações por cartão estão em manutenção. Use o PIX abaixo para apoiar a Rede Feminina agora mesmo.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
                 const val = parseFloat(customAmount || amount || "0");
                 if (isNaN(val) || val < 1) {
                   toast({ title: "Valor inválido", description: "Mínimo R$ 1,00.", variant: "destructive" });
@@ -242,14 +266,25 @@ export function Donations() {
 
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting} 
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-base py-3 shadow-lg rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || paymentsDisabled} 
+                  className={submitButtonClass}
                 >
-                  {isSubmitting ? (
-                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processando...</>
-                  ) : (
-                    <><Heart className="w-5 h-5 mr-2" />{donationType === "single" ? "Gerar Link de Pagamento" : "Criar Assinatura"}</>  
-                  )}
+                  {(() => {
+                    if (paymentsDisabled) {
+                      return (
+                        <><Heart className="w-5 h-5 mr-2" />Pagamentos em manutenção — use o PIX abaixo</>
+                      );
+                    }
+                    if (isSubmitting) {
+                      return (
+                        <><Loader2 className="w-5 h-5 mr-2 animate-spin" />Processando...</>
+                      );
+                    }
+                    const label = donationType === "single" ? "Gerar Link de Pagamento" : "Criar Assinatura";
+                    return (
+                      <><Heart className="w-5 h-5 mr-2" />{label}</>
+                    );
+                  })()}
                 </Button>
               </form>
           </div>

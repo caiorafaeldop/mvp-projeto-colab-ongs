@@ -24,11 +24,14 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthModal } from "@/contexts/AuthModalContext";
 import { useIsMobile } from "@/hooks/useMobile";
+import { isStaticMode } from "@/lib/dataMode";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { openLoginModal, openRegisterModal } = useAuthModal();
   const isMobile = useIsMobile();
+  // Em modo somente leitura escondemos toda a UI de autenticação.
+  const authDisabled = isStaticMode();
 
   const getInitials = (name?: string) => {
     const value = (name || "").trim();
@@ -239,16 +242,18 @@ export function Header() {
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <>
-                    <DropdownMenuItem onClick={openLoginModal}>
-                      <User className="h-4 w-4 mr-2" />
-                      Entrar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={openRegisterModal}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Cadastrar
-                    </DropdownMenuItem>
-                  </>
+                  !authDisabled && (
+                    <>
+                      <DropdownMenuItem onClick={openLoginModal}>
+                        <User className="h-4 w-4 mr-2" />
+                        Entrar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={openRegisterModal}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Cadastrar
+                      </DropdownMenuItem>
+                    </>
+                  )
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -336,10 +341,12 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button variant="ghost" size="icon" onClick={openLoginModal}>
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Login</span>
-                </Button>
+                !authDisabled && (
+                  <Button variant="ghost" size="icon" onClick={openLoginModal}>
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Login</span>
+                  </Button>
+                )
               )}
             </>
           )}
