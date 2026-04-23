@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": "68f167b68276b12dd889e826",
+    "name": "Sonho Doce",
+    "imageUrl": "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1760651171/produtos/meauden2rbu9xjfaqwu6.jpg",
+    "website": "https://www.instagram.com/sonhodoce/feed/",
+    "order": 0,
+    "visible": true
+  },
+  {
+    "id": "68f168678276b12dd889e827",
+    "name": "Alpargatas",
+    "imageUrl": "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1760651356/produtos/qrvrxtvnf27hajooecl4.png",
+    "website": "https://alpargatas.com.br/",
+    "order": 2,
+    "visible": true
+  }
+]

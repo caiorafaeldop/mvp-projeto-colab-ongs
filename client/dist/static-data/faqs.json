@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "68f1998dcfb98ab3588b975e",
+    "pergunta": "Como faço para doar?",
+    "resposta": "Você pode doar através do botão 'Doar Agora' na página inicial.",
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "id": "68f1a19bcfb98ab3588b975f",
+    "pergunta": "Como faço para conhecer de perto a ONG?",
+    "resposta": "Agende uma visita conosco!",
+    "ordem": 2,
+    "ativo": true
+  }
+]

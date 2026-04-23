@@ -1,1 +1,143 @@
-[]
+[
+  {
+    "id": "68b782df1cabed9d7d099962",
+    "name": "ALPARGATAS SANDÁLIA ESPADRILLE",
+    "description": "O Mule Strap Snow vem se destacando no cenário da moda, proporcionando muito conforto, além de manter o seu estilo em visuais casuais, perfeita para o dia a dia. Elegante, arrojado e com presença indispensável quando se trata de estilo e personalidade, o Mule Strap Snow representa a beleza e bom gosto do brasileiro.",
+    "price": 59.9,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1756857002/produtos/ngncfx4uq5rbyhxrp3u9.webp",
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1756857043/produtos/wkjild9ghuehrairxycr.webp"
+    ],
+    "category": "calçados",
+    "stock": 11,
+    "isAvailable": true,
+    "organizationId": "68ae0e7fa3d25def02fb8a2b",
+    "organizationName": "admin colab"
+  },
+  {
+    "id": "68b7848c1cabed9d7d099973",
+    "name": "ALPARGATAS HAVAIANAS ORIGINE",
+    "description": "Alpargatas Havaianas Origine IV",
+    "price": 79.99,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1756857471/produtos/cgoq543p83ow2kfqezc5.avif"
+    ],
+    "category": "calçados",
+    "stock": 32,
+    "isAvailable": true,
+    "organizationId": "68ae0e7fa3d25def02fb8a2b",
+    "organizationName": "admin colab"
+  },
+  {
+    "id": "68c20b2a498768092cc6cf99",
+    "name": "SAPATÊNIS",
+    "description": "Sapatênis azul.",
+    "price": 80,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1757547300/produtos/hhr19todqtzkg9kefdjn.webp"
+    ],
+    "category": "calçados",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68ae0e7fa3d25def02fb8a2b",
+    "organizationName": "admin colab"
+  },
+  {
+    "id": "68c99335e46998c1b4f7d167",
+    "name": "CAMISA OUTUBRO ROSA E NOVEMBRO AZUL",
+    "description": "Camisa outubro rosa e novembro azul.",
+    "price": 40,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1758040851/produtos/aqz2u7bbprll6p9sq4ez.jpg"
+    ],
+    "category": "roupas",
+    "stock": 20,
+    "isAvailable": true,
+    "organizationId": "68ae0e7fa3d25def02fb8a2b",
+    "organizationName": "admin colab"
+  },
+  {
+    "id": "69df79af9fc6f764cd6af84e",
+    "name": "BOLSA LISTRADA",
+    "description": "Bolsa listrada de tamanho médio, ideal para o verão.",
+    "price": 30,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776253029/produtos/nkehtqqv3zwdbghqgjmw.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  },
+  {
+    "id": "69df7a469fc6f764cd6af853",
+    "name": "BOLSA DE ESTAMPA FLORAL",
+    "description": "Bolsa com estampa floral e colorida de tamanho médio",
+    "price": 30,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776253428/produtos/ypszbsxfkacucxcnjjxf.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  },
+  {
+    "id": "69df7aee9fc6f764cd6af85d",
+    "name": "BOLSA LISTRADA",
+    "description": "Bolsa listrada de tamanho médio nos tons de azul e branco",
+    "price": 40,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776253571/produtos/xxfm0lmxcosmvuojlv7n.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  },
+  {
+    "id": "69df7ca59fc6f764cd6af881",
+    "name": "BOLSA FLORAL",
+    "description": "Bolsa com estampa floral de tamanho pequeno.",
+    "price": 15,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776254058/produtos/ivgeemzl7happqsbst2h.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  },
+  {
+    "id": "69df7cff9fc6f764cd6af886",
+    "name": "NÉCESSAIRE",
+    "description": "Nécessarie na cor rosa de tamanho pequeno.",
+    "price": 20,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776254144/produtos/rszzoxlqvtddvzgfzic1.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  },
+  {
+    "id": "69df7d739fc6f764cd6af88b",
+    "name": "BOLSA AZUL",
+    "description": "Bolsa na cor azul marinho de tamanho médio",
+    "price": 40,
+    "imageUrls": [
+      "https://res.cloudinary.com/dkcrbcfcy/image/upload/v1776254316/produtos/ootrszjp2xy075en247j.jpg"
+    ],
+    "category": "outros",
+    "stock": 5,
+    "isAvailable": true,
+    "organizationId": "68fd80eea0df70d96e458c05",
+    "organizationName": "RFCC PB"
+  }
+]

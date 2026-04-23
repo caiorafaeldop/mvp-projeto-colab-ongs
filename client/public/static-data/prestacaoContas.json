@@ -1,1 +1,175 @@
-[]
+[
+  {
+    "id": "68faffd252b30eb8b5f74a19",
+    "titulo": "Portal da Transparência",
+    "descricaoPlanilha": "EMENDA PARLAMENTAR - (SEDHUC)",
+    "origemRecurso": "SEDHUC",
+    "valorTotalRecurso": 100000,
+    "ano": 2025,
+    "mesInicial": 6,
+    "mesFinal": 10,
+    "colunas": [
+      {
+        "id": "item",
+        "nome": "ITEM",
+        "tipo": "text",
+        "largura": 100
+      },
+      {
+        "id": "natureza",
+        "nome": "NATUREZA DA DESPESA",
+        "tipo": "text",
+        "largura": 200,
+        "somavel": false
+      },
+      {
+        "id": "valor",
+        "nome": "VALORES",
+        "tipo": "number",
+        "largura": 150,
+        "somavel": true
+      }
+    ],
+    "linhas": [
+      {
+        "item": "1",
+        "natureza": "FOLHA DE PESSOAL",
+        "valor": "66480.35",
+        "_rowId": "row_1761281021842_0"
+      },
+      {
+        "item": "2",
+        "natureza": "PAGAMENTO DE ALIMENTOS",
+        "valor": "25329",
+        "_rowId": "row_1761281021842_1"
+      },
+      {
+        "_rowId": "row_1771982616608",
+        "item": "3",
+        "natureza": "PAGAMENTO DE DESCARTAVEIS",
+        "valor": "6592.40"
+      },
+      {
+        "_rowId": "row_1771982974108",
+        "item": "4",
+        "natureza": "PAGAMENTO DE MATERIAL DE LIMPEZA",
+        "valor": "1769.10"
+      }
+    ],
+    "mostrarTotal": true,
+    "colunasTotal": [
+      "valor"
+    ],
+    "organizationId": "68ae0e7fa3d25def02fb8a2b"
+  },
+  {
+    "id": "698a178fa341762e3bb52368",
+    "titulo": "Portal da Transparência",
+    "descricaoPlanilha": "Convênio nº 0074/2025 - FUNCEP",
+    "origemRecurso": "FUNCEP",
+    "valorTotalRecurso": 65000,
+    "ano": 2025,
+    "mesInicial": 8,
+    "mesFinal": 10,
+    "colunas": [
+      {
+        "id": "col_1770657313029",
+        "nome": "ITEM",
+        "tipo": "text",
+        "largura": 150,
+        "somavel": false
+      },
+      {
+        "id": "col_1770657328447",
+        "nome": "NATUREZA DA DESPESA",
+        "tipo": "text",
+        "largura": 150,
+        "somavel": false
+      },
+      {
+        "id": "dataEmissao",
+        "nome": "DATA",
+        "tipo": "date",
+        "largura": 150,
+        "somavel": false
+      },
+      {
+        "id": "valor",
+        "nome": "VALORES",
+        "tipo": "number",
+        "largura": 150,
+        "somavel": true
+      }
+    ],
+    "linhas": [
+      {
+        "_rowId": "row_1770657395137",
+        "col_1770657313029": "1",
+        "col_1770657328447": "REFORMA (TROCA DE TELHADO/MANTA - 1ª PARC)",
+        "dataEmissao": "2025-08-26",
+        "valor": "16600"
+      },
+      {
+        "_rowId": "row_1770657442052",
+        "col_1770657313029": "2",
+        "col_1770657328447": "ALIMENTOS",
+        "dataEmissao": "2025-09-04",
+        "valor": "18413.10"
+      },
+      {
+        "_rowId": "row_1770657473875",
+        "col_1770657313029": "3",
+        "col_1770657328447": "REFORMA (TROCA DE TELHADO/MANTA - 2ª PARC)",
+        "dataEmissao": "2025-09-16",
+        "valor": "11000"
+      },
+      {
+        "_rowId": "row_1770657496431",
+        "col_1770657313029": "4",
+        "col_1770657328447": "GERENTE ADMINISTRATIVA",
+        "dataEmissao": "2025-10-02",
+        "valor": "4709.93"
+      },
+      {
+        "_rowId": "row_1770657560997",
+        "col_1770657313029": "5",
+        "col_1770657328447": "AUXILIAR DE COZINHA",
+        "dataEmissao": "2025-10-02",
+        "valor": "1702.57"
+      },
+      {
+        "_rowId": "row_1770657589301",
+        "col_1770657313029": "6",
+        "col_1770657328447": "RECEPCIONISTA",
+        "dataEmissao": "2025-10-02",
+        "valor": "1710.25"
+      },
+      {
+        "_rowId": "row_1770657615148",
+        "col_1770657313029": "7",
+        "col_1770657328447": "VIGIA",
+        "dataEmissao": "2025-10-02",
+        "valor": "2126.41"
+      },
+      {
+        "_rowId": "row_1770657635418",
+        "col_1770657313029": "8",
+        "col_1770657328447": "MOTORISTA",
+        "dataEmissao": "2025-10-02",
+        "valor": "1806.30"
+      },
+      {
+        "_rowId": "row_1770657655912",
+        "col_1770657313029": "9",
+        "col_1770657328447": "MATERIAL PERMANENTE (FREEZER)",
+        "dataEmissao": "2025-10-03",
+        "valor": "4099"
+      }
+    ],
+    "mostrarTotal": true,
+    "colunasTotal": [
+      "valor"
+    ],
+    "organizationId": "68ae0e7fa3d25def02fb8a2b"
+  }
+]
