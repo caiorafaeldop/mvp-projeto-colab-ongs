@@ -8,7 +8,7 @@ import JSONbig from "json-bigint";
 // URL base do servidor backend
 const DEFAULT_API_BASE_URL = import.meta.env.DEV
   ? ""
-  : "https://mvp-colab-ongs-backend-c8lx.onrender.com";
+  : "https://mvp-colab-ongs-backend-rdvd.onrender.com";
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
   DEFAULT_API_BASE_URL;
